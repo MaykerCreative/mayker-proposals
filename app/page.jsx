@@ -1,4 +1,8 @@
-'use client';
+useEffect(() => {
+    if (Object.keys(catalog).length >= 0) {
+      fetchProposals();
+    }
+  }, [catalog]);'use client';
 
 import React, { useState, useEffect } from 'react';
 
@@ -166,6 +170,13 @@ export default function ProposalApp() {
   const fetchCatalog = async () => {
     try {
       const response = await fetch('https://docs.google.com/spreadsheets/d/116B97xSSUIDDdDLP6vWch4_BIxbEwPLdLO9FtBQZheU/export?format=csv');
+      
+      if (!response.ok) {
+        console.error('Catalog fetch failed with status:', response.status);
+        setCatalog({});
+        return;
+      }
+      
       const csv = await response.text();
       const lines = csv.split('\n');
       const catalogMap = {};
@@ -184,6 +195,7 @@ export default function ProposalApp() {
         }
       }
       
+      console.log('Catalog loaded:', Object.keys(catalogMap).length, 'products');
       setCatalog(catalogMap);
     } catch (err) {
       console.error('Failed to fetch catalog:', err);
