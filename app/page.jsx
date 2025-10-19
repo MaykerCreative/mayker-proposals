@@ -15,9 +15,12 @@ export default function ProposalApp() {
       .then(data => {
         const parsed = data.map(p => {
           try {
-            p.sections = typeof p.proposalSectionsProducts === 'string' 
-              ? JSON.parse(p.proposalSectionsProducts) 
-              : [];
+            // Only parse if it looks like JSON (starts with [)
+            if (typeof p.proposalSectionsProducts === 'string' && p.proposalSectionsProducts.startsWith('[')) {
+              p.sections = JSON.parse(p.proposalSectionsProducts);
+            } else {
+              p.sections = [];
+            }
           } catch (e) {
             console.error('Parse error:', e);
             p.sections = [];
@@ -28,7 +31,7 @@ export default function ProposalApp() {
             p.duration = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
           }
           return p;
-        });
+        }).filter(p => p.sections && p.sections.length > 0); // Only include proposals with valid sections
         setProposals(parsed);
         setLoading(false);
       })
