@@ -24,9 +24,10 @@ export default function ProposalApp() {
 
         const parsed = data.map(p => {
           try {
-            // Only parse if it looks like JSON (contains [ and {)
-            if (typeof p.proposalSectionsProducts === 'string' && p.proposalSectionsProducts.trim().startsWith('[')) {
-              p.sections = JSON.parse(p.proposalSectionsProducts.trim());
+            // Check for the column with ampersand in the name
+            const rawData = p["proposalSections&Products"] || p.proposalSectionsProducts || "[]";
+            if (typeof rawData === 'string' && rawData.trim().startsWith('[')) {
+              p.sections = JSON.parse(rawData.trim());
             } else {
               p.sections = [];
             }
@@ -40,7 +41,7 @@ export default function ProposalApp() {
             p.duration = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
           }
           return p;
-        }).filter(p => p.sections && p.sections.length > 0); // Only include proposals with valid sections
+        }).filter(p => p.sections && p.sections.length > 0);
         console.log('Parsed proposals:', parsed.length);
         setProposals(parsed);
         setLoading(false);
@@ -106,7 +107,7 @@ function ProposalView({ proposal, onBack }) {
       proposal.sections.forEach(section => {
         if (section.products && Array.isArray(section.products)) {
           section.products.forEach(product => {
-            productSubtotal += (product.price || 0) * (product.qty || 1);
+            productSubtotal += (product.price || 0) * (product.qty || product.quantity || 1);
           });
         }
       });
@@ -114,7 +115,7 @@ function ProposalView({ proposal, onBack }) {
 
     const duration = proposal.duration || 1;
     const extendedRental = duration > 1 ? productSubtotal * 0.3 * (duration - 1) : 0;
-    const discountPercent = parseFloat(proposal.discountPercent) || 0;
+    const discountPercent = parseFloat(proposal["discount%"]) || 0;
     const subtotalWithExtended = productSubtotal + extendedRental;
     const discount = subtotalWithExtended * (discountPercent / 100);
     const rentalTotal = subtotalWithExtended - discount;
@@ -163,7 +164,7 @@ function ProposalView({ proposal, onBack }) {
         proposal.sections.map((section, sectionIdx) => (
           <div key={sectionIdx} className="min-h-screen p-12 page-break">
             <h2 className="text-3xl font-light mb-8 pb-4 border-b border-gray-300">
-              {section.placement}
+              {section.name || section.placement}
             </h2>
             
             {section.products && section.products.length > 0 ? (
@@ -174,7 +175,7 @@ function ProposalView({ proposal, onBack }) {
                       <span className="text-gray-400 text-center px-4">Product Image</span>
                     </div>
                     <h3 className="font-semibold text-lg">{product.name}</h3>
-                    <p className="text-gray-600 text-sm mt-2">Qty: {product.qty}</p>
+                    <p className="text-gray-600 text-sm mt-2">Qty: {product.quantity || product.qty}</p>
                   </div>
                 ))}
               </div>
@@ -208,7 +209,7 @@ function ProposalView({ proposal, onBack }) {
               )}
               {pricing.discount > 0 && (
                 <tr className="border-b">
-                  <td className="py-2">{proposal.discountName || 'Discount'} ({proposal.discountPercent}%)</td>
+                  <td className="py-2">{proposal.discountName || 'Discount'} ({proposal["discount%"]}%)</td>
                   <td className="text-right text-red-600">-${pricing.discount.toFixed(2)}</td>
                 </tr>
               )}
