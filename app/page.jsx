@@ -240,89 +240,17 @@ function ProposalView({ proposal, onBack, onPrint }) {
         
         @media print {
           .no-print { display: none !important; }
-         {/* Page 1: Cover Page */}
-<div className="print-break-after" style={{
-  backgroundColor: brandTaupe,
-  height: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-  padding: '60px 48px',
-  position: 'relative',
-  boxSizing: 'border-box'
-}}>
-  {/* Content centered on page */}
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: '40px'
-  }}>
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
-      <img 
-        src="/mayker_wordmark-events-whisper.svg"
-        alt="MAYKER EVENTS"
-        style={{
-          height: '32px',
-          marginBottom: '24px'
-        }}
-      />
-      
-      <div style={{
-        width: '60px',
-        height: '0.5px',
-        backgroundColor: 'rgba(255,255,255,0.4)',
-        marginBottom: '24px'
-      }}></div>
-      
-      <p style={{
-        fontSize: '14px',
-        color: 'white',
-        letterSpacing: '0.2em',
-        marginBottom: '16px',
-        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
-        textTransform: 'uppercase'
-      }}>Product Selections</p>
-      
-      <p style={{
-        fontSize: '18px',
-        color: 'white',
-        marginBottom: '6px',
-        fontWeight: '300',
-        fontFamily: "'Domaine Text', serif"
-      }}>{proposal.clientName}</p>
-      
-      <p style={{
-        fontSize: '13px',
-        color: 'rgba(255,255,255,0.9)',
-        marginBottom: '4px',
-        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-      }}>{proposal.venueName}</p>
-      
-      <p style={{
-        fontSize: '13px',
-        color: 'rgba(255,255,255,0.9)',
-        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-      }}>{formatDateRange(proposal)}</p>
-    </div>
-    
-    <img 
-      src="/mayker_icon-whisper.svg"
-      alt="Mayker Events"
-      style={{
-        width: '60px',
-        height: '60px'
-      }}
-    />
-  </div>
-</div>
+          .print-break-after { page-break-after: always; }
+          body { 
+            -webkit-print-color-adjust: exact; 
+            print-color-adjust: exact;
+          }
+          @page {
+            size: letter;
+            margin: 0;
+          }
+        }
+      ` }} />
 
       <div className="no-print" style={{
         position: 'fixed',
@@ -373,71 +301,78 @@ function ProposalView({ proposal, onBack, onPrint }) {
         alignItems: 'center',
         padding: '60px 48px',
         position: 'relative',
-        marginTop: '60px'
+        marginTop: '60px',
+        boxSizing: 'border-box'
       }}>
         <div style={{
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          alignItems: 'center'
+          alignItems: 'center',
+          gap: '40px'
         }}>
-          <img 
-            src="/mayker_wordmark-events-whisper.svg"
-            alt="MAYKER EVENTS"
-            style={{
-              height: '32px',
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <img 
+              src="/mayker_wordmark-events-whisper.svg"
+              alt="MAYKER EVENTS"
+              style={{
+                height: '32px',
+                marginBottom: '24px'
+              }}
+            />
+            
+            <div style={{
+              width: '60px',
+              height: '0.5px',
+              backgroundColor: 'rgba(255,255,255,0.4)',
               marginBottom: '24px'
+            }}></div>
+            
+            <p style={{
+              fontSize: '14px',
+              color: 'white',
+              letterSpacing: '0.2em',
+              marginBottom: '16px',
+              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
+              textTransform: 'uppercase'
+            }}>Product Selections</p>
+            
+            <p style={{
+              fontSize: '18px',
+              color: 'white',
+              marginBottom: '6px',
+              fontWeight: '300',
+              fontFamily: "'Domaine Text', serif"
+            }}>{proposal.clientName}</p>
+            
+            <p style={{
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.9)',
+              marginBottom: '4px',
+              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+            }}>{proposal.venueName}</p>
+            
+            <p style={{
+              fontSize: '13px',
+              color: 'rgba(255,255,255,0.9)',
+              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+            }}>{formatDateRange(proposal)}</p>
+          </div>
+          
+          <img 
+            src="/mayker_icon-whisper.svg"
+            alt="Mayker Events"
+            style={{
+              width: '60px',
+              height: '60px'
             }}
           />
-          
-          <div style={{
-            width: '60px',
-            height: '0.5px',
-            backgroundColor: 'rgba(255,255,255,0.4)',
-            marginBottom: '24px'
-          }}></div>
-          
-          <p style={{
-            fontSize: '14px',
-            color: 'white',
-            letterSpacing: '0.2em',
-            marginBottom: '16px',
-            fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
-            textTransform: 'uppercase'
-          }}>Product Selections</p>
-          
-          <p style={{
-            fontSize: '18px',
-            color: 'white',
-            marginBottom: '6px',
-            fontWeight: '300',
-            fontFamily: "'Domaine Text', serif"
-          }}>{proposal.clientName}</p>
-          
-          <p style={{
-            fontSize: '13px',
-            color: 'rgba(255,255,255,0.9)',
-            marginBottom: '4px',
-            fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-          }}>{proposal.venueName}</p>
-          
-          <p style={{
-            fontSize: '13px',
-            color: 'rgba(255,255,255,0.9)',
-            fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-          }}>{formatDateRange(proposal)}</p>
         </div>
-        
-        <img 
-          src="/mayker_icon-whisper.svg"
-          alt="Mayker Events"
-          style={{
-            width: '60px',
-            height: '60px',
-            marginTop: 'auto',
-            marginBottom: '20px'
-          }}
-        />
       </div>
 
       {sections.map((section, sectionIndex) => {
