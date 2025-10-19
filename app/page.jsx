@@ -79,8 +79,12 @@ export default function ProposalApp() {
               {proposals.map((p, i) => (
                 <div 
                   key={i}
-                  onClick={() => setSelectedProposal(p)}
-                  className="p-4 bg-white border border-gray-200 rounded cursor-pointer hover:shadow-md transition"
+                  onClick={() => {
+                    console.log('Clicked proposal:', p);
+                    setSelectedProposal(p);
+                  }}
+                  className="p-4 bg-white border border-gray-200 rounded cursor-pointer hover:shadow-lg hover:bg-gray-50 transition"
+                  style={{ cursor: 'pointer' }}
                 >
                   <div className="font-semibold text-lg">{p.clientName}</div>
                   <div className="text-sm text-gray-600">{p.venueName} • {p.city}, {p.state}</div>
