@@ -236,7 +236,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
       <style dangerouslySetInnerHTML={{ __html: `
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/Test Domaine Text Light-2e27.otf') format('opentype');
+          src: url('/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
         }
