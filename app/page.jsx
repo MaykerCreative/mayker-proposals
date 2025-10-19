@@ -24,14 +24,14 @@ export default function ProposalApp() {
 
         const parsed = data.map(p => {
           try {
-            // Only parse if it looks like JSON (starts with [)
-            if (typeof p.proposalSectionsProducts === 'string' && p.proposalSectionsProducts.startsWith('[')) {
-              p.sections = JSON.parse(p.proposalSectionsProducts);
+            // Only parse if it looks like JSON (contains [ and {)
+            if (typeof p.proposalSectionsProducts === 'string' && p.proposalSectionsProducts.trim().startsWith('[')) {
+              p.sections = JSON.parse(p.proposalSectionsProducts.trim());
             } else {
               p.sections = [];
             }
           } catch (e) {
-            console.error('Parse error:', e);
+            console.error('Parse error for', p.clientName, ':', e);
             p.sections = [];
           }
           if (p.startDate && p.endDate) {
@@ -41,6 +41,7 @@ export default function ProposalApp() {
           }
           return p;
         }).filter(p => p.sections && p.sections.length > 0); // Only include proposals with valid sections
+        console.log('Parsed proposals:', parsed.length);
         setProposals(parsed);
         setLoading(false);
       })
