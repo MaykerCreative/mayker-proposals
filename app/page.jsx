@@ -146,7 +146,7 @@ function ProposalView({ proposal, onBack }) {
       </div>
 
       {/* Product Sections */}
-      {proposal.sections && proposal.sections.length > 0 ? (
+      {Array.isArray(proposal.sections) && proposal.sections.length > 0 ? (
         proposal.sections.map((section, sectionIdx) => (
           <div key={sectionIdx} className="min-h-screen p-12 page-break">
             <h2 className="text-3xl font-light mb-8 pb-4 border-b border-gray-300">
