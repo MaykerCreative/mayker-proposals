@@ -125,7 +125,7 @@ export default function ProposalApp() {
   }
 
   if (selectedProposal) {
-    return <ProposalView proposal={selectedProposal} onBack={backToDashboard} onPrint={printProposal} />;
+    return <ProposalView proposal={selectedProposal} onBack={backToDashboard} onPrint={printProposal} onRefresh={fetchProposals} />;
   }
 
   return (
@@ -203,7 +203,49 @@ export default function ProposalApp() {
   );
 }
 
-function ProposalView({ proposal, onBack, onPrint }) {
+function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (isEditing) {
+      setEditData(JSON.parse(JSON.stringify(proposal)));
+    }
+  }, [isEditing, proposal]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec', {
+        method: 'POST',
+        body: JSON.stringify(editData)
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Proposal saved successfully as ' + result.clientName);
+        setIsEditing(false);
+        onRefresh();
+      } else {
+        alert('Error saving proposal: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error saving proposal: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (isEditing && editData) {
+    return <EditProposalView proposal={editData} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
+  }
+
+  return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={() => setIsEditing(true)} />;
+}
+
+function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
   const totals = calculateDetailedTotals(proposal);
   const brandTaupe = '#545142';
@@ -262,7 +304,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
         zIndex: 1000,
         padding: '16px 24px'
       }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
           <button 
             onClick={onBack}
             style={{
@@ -275,20 +317,36 @@ function ProposalView({ proposal, onBack, onPrint }) {
           >
             ← Back to Dashboard
           </button>
-          <button
-            onClick={onPrint}
-            style={{
-              padding: '8px 20px',
-              backgroundColor: brandCharcoal,
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
-            Print / Export as PDF
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={onEdit}
+              style={{
+                padding: '8px 20px',
+                backgroundColor: '#059669',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Edit
+            </button>
+            <button
+              onClick={onPrint}
+              style={{
+                padding: '8px 20px',
+                backgroundColor: brandCharcoal,
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Print / Export as PDF
+            </button>
+          </div>
         </div>
       </div>
 
@@ -301,6 +359,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
         alignItems: 'center',
         padding: '60px 48px',
         position: 'relative',
+        marginTop: '60px',
         boxSizing: 'border-box'
       }}>
         <div style={{
@@ -683,105 +742,111 @@ function ProposalView({ proposal, onBack, onPrint }) {
           </tbody>
         </table>
         
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <table style={{ width: '350px', borderCollapse: 'collapse' }}>
-            <tbody>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+          <tbody>
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '55%' }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '15%', textAlign: 'left' }}>Product Subtotal</td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '30%' }}>
+                ${formatNumber(totals.productSubtotal)}
+              </td>
+            </tr>
+            
+            {totals.standardRateDiscount > 0 && (
               <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Product Subtotal
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                  {proposal.discountName || 'Discount'} ({proposal.discount}% off)
                 </td>
-                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  ${formatNumber(totals.productSubtotal)}
-                </td>
-              </tr>
-              
-              {totals.standardRateDiscount > 0 && (
-                <tr>
-                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    {proposal.discountName || 'Discount'} ({proposal.discount}% off)
-                  </td>
-                  <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    -${formatNumber(totals.standardRateDiscount)}
-                  </td>
-                </tr>
-              )}
-              
-              {totals.extendedRental > 0 && (
-                <tr>
-                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    Extended Rental
-                  </td>
-                  <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    ${formatNumber(totals.extendedRental)}
-                  </td>
-                </tr>
-              )}
-              
-              <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Rental Total
-                </td>
-                <td style={{ padding: '10px 0 10px 60px', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  ${formatNumber(totals.rentalTotal)}
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  -${formatNumber(totals.standardRateDiscount)}
                 </td>
               </tr>
-              
+            )}
+            
+            {totals.extendedRental > 0 && (
               <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Product Care (10%)
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                  Extended Rental
                 </td>
-                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  ${formatNumber(totals.productCare)}
-                </td>
-              </tr>
-              
-              <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Service Fee (5%)
-                </td>
-                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  ${formatNumber(totals.serviceFee)}
+                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.extendedRental)}
                 </td>
               </tr>
-              
-              <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Delivery
-                </td>
-                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  ${formatNumber(totals.delivery)}
-                </td>
-              </tr>
-              
-              <tr style={{ borderTop: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Subtotal
-                </td>
-                <td style={{ padding: '10px 0 10px 60px', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  ${formatNumber(totals.subtotal)}
-                </td>
-              </tr>
-              
-              <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Tax (9.75%)
-                </td>
-                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  ${formatNumber(totals.tax)}
-                </td>
-              </tr>
-              
-              <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
-                <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  TOTAL
-                </td>
-                <td style={{ padding: '14px 0 14px 60px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  ${formatNumber(totals.total)}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+            )}
+            
+            <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                Rental Total
+              </td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.rentalTotal)}
+              </td>
+            </tr>
+            
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                Product Care (10%)
+              </td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.productCare)}
+              </td>
+            </tr>
+            
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                Service Fee (5%)
+              </td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.serviceFee)}
+              </td>
+            </tr>
+            
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                Delivery
+              </td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.delivery)}
+              </td>
+            </tr>
+            
+            <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                Subtotal
+              </td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.subtotal)}
+              </td>
+            </tr>
+            
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                Tax (9.75%)
+              </td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.tax)}
+              </td>
+            </tr>
+            
+            <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                TOTAL
+              </td>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.total)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
         
         <div style={{
           position: 'absolute',
@@ -791,6 +856,265 @@ function ProposalView({ proposal, onBack, onPrint }) {
           color: '#999',
           fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
         }}>{sections.length + 2}</div>
+      </div>
+    </div>
+  );
+}
+
+function EditProposalView({ proposal, onSave, onCancel, saving }) {
+  const [formData, setFormData] = useState(proposal);
+  const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleProductChange = (sectionIdx, productIdx, field, value) => {
+    const newSections = JSON.parse(JSON.stringify(sections));
+    if (field === 'quantity' || field === 'price') {
+      newSections[sectionIdx].products[productIdx][field] = field === 'quantity' ? parseInt(value) || 0 : parseFloat(value) || 0;
+    } else {
+      newSections[sectionIdx].products[productIdx][field] = value;
+    }
+    setSections(newSections);
+  };
+
+  const handleAddProduct = (sectionIdx) => {
+    const newSections = JSON.parse(JSON.stringify(sections));
+    newSections[sectionIdx].products.push({
+      name: 'New Product',
+      quantity: 1,
+      price: 0,
+      imageUrl: ''
+    });
+    setSections(newSections);
+  };
+
+  const handleRemoveProduct = (sectionIdx, productIdx) => {
+    const newSections = JSON.parse(JSON.stringify(sections));
+    newSections[sectionIdx].products.splice(productIdx, 1);
+    setSections(newSections);
+  };
+
+  const handleSaveClick = () => {
+    const finalData = {
+      ...formData,
+      sectionsJSON: JSON.stringify(sections)
+    };
+    // Pass the final data to parent's onSave
+    onSave(finalData);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '80px 24px 24px', marginTop: '60px' }}>
+      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827' }}>Edit Proposal</h1>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button
+              onClick={onCancel}
+              disabled={saving}
+              style={{
+                padding: '10px 24px',
+                backgroundColor: '#e5e7eb',
+                color: '#111827',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500'
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSaveClick}
+              disabled={saving}
+              style={{
+                padding: '10px 24px',
+                backgroundColor: '#059669',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '500',
+                opacity: saving ? 0.7 : 1
+              }}
+            >
+              {saving ? 'Saving...' : 'Save as New Version'}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Client Details</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Client Name</label>
+                <input 
+                  type="text" 
+                  value={formData.clientName}
+                  onChange={(e) => handleInputChange('clientName', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Venue Name</label>
+                <input 
+                  type="text" 
+                  value={formData.venueName}
+                  onChange={(e) => handleInputChange('venueName', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>City</label>
+                <input 
+                  type="text" 
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>State</label>
+                <input 
+                  type="text" 
+                  value={formData.state}
+                  onChange={(e) => handleInputChange('state', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Start Date</label>
+                <input 
+                  type="date" 
+                  value={formData.startDate}
+                  onChange={(e) => handleInputChange('startDate', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>End Date</label>
+                <input 
+                  type="date" 
+                  value={formData.endDate}
+                  onChange={(e) => handleInputChange('endDate', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Delivery Fee</label>
+                <input 
+                  type="number" 
+                  value={formData.deliveryFee}
+                  onChange={(e) => handleInputChange('deliveryFee', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Discount %</label>
+                <input 
+                  type="number" 
+                  value={formData.discount}
+                  onChange={(e) => handleInputChange('discount', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Discount Name</label>
+                <input 
+                  type="text" 
+                  value={formData.discountName}
+                  onChange={(e) => handleInputChange('discountName', e.target.value)}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Products by Section</h2>
+            {sections.map((section, sectionIdx) => (
+              <div key={sectionIdx} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '12px' }}>{section.name}</h3>
+                {section.products.map((product, productIdx) => (
+                  <div key={productIdx} style={{ marginBottom: '12px', padding: '12px', backgroundColor: 'white', borderRadius: '6px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Product Name</label>
+                      <input 
+                        type="text" 
+                        value={product.name}
+                        onChange={(e) => handleProductChange(sectionIdx, productIdx, 'name', e.target.value)}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Quantity</label>
+                      <input 
+                        type="number" 
+                        value={product.quantity}
+                        onChange={(e) => handleProductChange(sectionIdx, productIdx, 'quantity', e.target.value)}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Price</label>
+                      <input 
+                        type="number" 
+                        value={product.price}
+                        onChange={(e) => handleProductChange(sectionIdx, productIdx, 'price', e.target.value)}
+                        step="0.01"
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Total</label>
+                      <div style={{ padding: '6px 8px', fontSize: '13px', fontWeight: '500', color: '#111827' }}>
+                        ${formatNumber(product.price * product.quantity)}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveProduct(sectionIdx, productIdx)}
+                      style={{
+                        padding: '6px 12px',
+                        backgroundColor: '#fee2e2',
+                        color: '#dc2626',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        fontWeight: '500'
+                      }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => handleAddProduct(sectionIdx)}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: '#e0e7ff',
+                    color: '#4f46e5',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    fontWeight: '500'
+                  }}
+                >
+                  + Add Product
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -883,4 +1207,3 @@ function getDuration(proposal) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return diffDays;
 }
-
