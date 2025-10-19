@@ -683,111 +683,105 @@ function ProposalView({ proposal, onBack, onPrint }) {
           </tbody>
         </table>
         
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-  <tbody>
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '55%' }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '15%', textAlign: 'left' }}>Product Subtotal</td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '30%' }}>
-        ${formatNumber(totals.productSubtotal)}
-      </td>
-    </tr>
-    
-    {totals.standardRateDiscount > 0 && (
-      <tr>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-          {proposal.discountName || 'Discount'} ({proposal.discount}% off)
-        </td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-          -${formatNumber(totals.standardRateDiscount)}
-        </td>
-      </tr>
-    )}
-    
-    {totals.extendedRental > 0 && (
-      <tr>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-          Extended Rental
-        </td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-          ${formatNumber(totals.extendedRental)}
-        </td>
-      </tr>
-    )}
-    
-    <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-        Rental Total
-      </td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.rentalTotal)}
-      </td>
-    </tr>
-    
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-        Product Care (10%)
-      </td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.productCare)}
-      </td>
-    </tr>
-    
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-        Service Fee (5%)
-      </td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.serviceFee)}
-      </td>
-    </tr>
-    
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-        Delivery
-      </td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.delivery)}
-      </td>
-    </tr>
-    
-    <tr style={{ borderTop: '1px solid #e5e7eb' }}>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-        Subtotal
-      </td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.subtotal)}
-      </td>
-    </tr>
-    
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-        Tax (9.75%)
-      </td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.tax)}
-      </td>
-    </tr>
-    
-    <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
-      <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-        TOTAL
-      </td>
-      <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.total)}
-      </td>
-    </tr>
-  </tbody>
-</table>
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <table style={{ width: '350px', borderCollapse: 'collapse' }}>
+            <tbody>
+              <tr>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  Product Subtotal
+                </td>
+                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.productSubtotal)}
+                </td>
+              </tr>
+              
+              {totals.standardRateDiscount > 0 && (
+                <tr>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    {proposal.discountName || 'Discount'} ({proposal.discount}% off)
+                  </td>
+                  <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    -${formatNumber(totals.standardRateDiscount)}
+                  </td>
+                </tr>
+              )}
+              
+              {totals.extendedRental > 0 && (
+                <tr>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    Extended Rental
+                  </td>
+                  <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    ${formatNumber(totals.extendedRental)}
+                  </td>
+                </tr>
+              )}
+              
+              <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  Rental Total
+                </td>
+                <td style={{ padding: '10px 0 10px 60px', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.rentalTotal)}
+                </td>
+              </tr>
+              
+              <tr>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  Product Care (10%)
+                </td>
+                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.productCare)}
+                </td>
+              </tr>
+              
+              <tr>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  Service Fee (5%)
+                </td>
+                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.serviceFee)}
+                </td>
+              </tr>
+              
+              <tr>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  Delivery
+                </td>
+                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.delivery)}
+                </td>
+              </tr>
+              
+              <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  Subtotal
+                </td>
+                <td style={{ padding: '10px 0 10px 60px', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.subtotal)}
+                </td>
+              </tr>
+              
+              <tr>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  Tax (9.75%)
+                </td>
+                <td style={{ padding: '8px 0 8px 60px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.tax)}
+                </td>
+              </tr>
+              
+              <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
+                <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  TOTAL
+                </td>
+                <td style={{ padding: '14px 0 14px 60px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  ${formatNumber(totals.total)}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
         
         <div style={{
           position: 'absolute',
@@ -889,3 +883,4 @@ function getDuration(proposal) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return diffDays;
 }
+
