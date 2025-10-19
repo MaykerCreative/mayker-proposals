@@ -15,47 +15,14 @@ export default function ProposalApp() {
   const fetchProposals = async () => {
     try {
       const response = await fetch('https://script.google.com/macros/s/AKfycbzEC-ub0N3GVE-UoVTtHGf04luQRXNC26v6mjACwPtmpUeZrdG1csiTl51sUjYu03Bk/exec');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      
+      console.log('Fetched data:', data);
       if (!data || !Array.isArray(data) || data.length === 0) {
-        const testData = [{
-          clientName: "Sample Sally",
-          venueName: "Blackberry Farm",
-          city: "Walland",
-          state: "TN",
-          eventDate: "Oct 27, 2025",
-          startDate: "2025-10-27",
-          endDate: "2025-10-30",
-          deliveryFee: "500",
-          discountPercent: "15",
-          discountName: "Mayker Reserve",
-          clientFolderURL: "",
-          sectionsJSON: JSON.stringify([
-            {
-              name: "BAR",
-              products: [
-                { name: "CONCRETE BAR", quantity: 1, price: 575 }
-              ]
-            },
-            {
-              name: "LOUNGE",
-              products: [
-                { name: "AURORA SWIVEL CHAIR (SAGE)", quantity: 2, price: 225 },
-                { name: "COOPER END TABLE", quantity: 2, price: 125 }
-              ]
-            }
-          ])
-        }];
-        setProposals(testData);
+        setProposals([]);
       } else {
         setProposals(data);
       }
-      
       setLoading(false);
     } catch (err) {
       setError(`Failed to fetch proposals: ${err.message}`);
@@ -63,17 +30,9 @@ export default function ProposalApp() {
     }
   };
 
-  const viewProposal = (proposal) => {
-    setSelectedProposal(proposal);
-  };
-
-  const backToDashboard = () => {
-    setSelectedProposal(null);
-  };
-
-  const printProposal = () => {
-    window.print();
-  };
+  const viewProposal = (proposal) => setSelectedProposal(proposal);
+  const backToDashboard = () => setSelectedProposal(null);
+  const printProposal = () => window.print();
 
   if (loading) {
     return (
@@ -135,7 +94,6 @@ export default function ProposalApp() {
           <h1 style={{ fontSize: '30px', fontWeight: 'bold', color: '#111827' }}>Mayker Proposals</h1>
           <p style={{ marginTop: '8px', color: '#6b7280' }}>Manage and view all proposals</p>
         </div>
-
         <div style={{ marginBottom: '24px' }}>
           <button 
             onClick={fetchProposals}
@@ -152,44 +110,27 @@ export default function ProposalApp() {
             Refresh
           </button>
         </div>
-
         <div style={{ backgroundColor: 'white', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', borderRadius: '8px', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead style={{ backgroundColor: '#f3f4f6' }}>
               <tr>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Client
-                </th>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Location
-                </th>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Event Date
-                </th>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Total
-                </th>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  Actions
-                </th>
+                <th style={headerStyle}>Client</th>
+                <th style={headerStyle}>Location</th>
+                <th style={headerStyle}>Event Date</th>
+                <th style={headerStyle}>Total</th>
+                <th style={headerStyle}>Actions</th>
               </tr>
             </thead>
             <tbody style={{ backgroundColor: 'white' }}>
               {proposals.map((proposal, index) => (
                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    {proposal.clientName}
-                  </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    {proposal.venueName}, {proposal.city}, {proposal.state}
-                  </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    {proposal.eventDate}
-                  </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
+                  <td style={rowStyle}>{proposal.clientName}</td>
+                  <td style={rowStyle}>{proposal.venueName}, {proposal.city}, {proposal.state}</td>
+                  <td style={rowStyle}>{proposal.eventDate}</td>
+                  <td style={rowStyle}>
                     ${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px' }}>
+                  <td style={rowStyle}>
                     <button
                       onClick={() => viewProposal(proposal)}
                       style={{
@@ -213,70 +154,79 @@ export default function ProposalApp() {
   );
 }
 
-// --- Updated ProposalView ---
+// Header and row styles
+const headerStyle = {
+  padding: '12px 24px',
+  textAlign: 'left',
+  fontSize: '12px',
+  fontWeight: '500',
+  color: '#6b7280',
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em'
+};
+const rowStyle = {
+  padding: '16px 24px',
+  fontSize: '14px',
+  color: '#111827'
+};
+
+// ------- ProposalView Component --------
 function ProposalView({ proposal, onBack, onPrint }) {
-  // Debugging info
-  console.log('Current proposal:', proposal);
+  // Defensive parsing for both field options
   let rawSections = proposal.sectionsJSON || proposal.proposalSectionsProducts || '[]';
   let sections;
   try {
-    sections = JSON.parse(rawSections);
-  } catch(e) {
+    sections = typeof rawSections === 'string' ? JSON.parse(rawSections) : [];
+  } catch (e) {
     sections = [];
-    console.error("Problem parsing sectionsJSON:", rawSections, e);
+    console.error("Unable to parse proposal sections:", rawSections, e);
   }
 
-  // ... rest of your original ProposalView code below ...
-  // (No other change needed to your logic, just improved parsing above)
+  // You may want to add a debug log here:
+  // console.log('Sections:', sections);
 
   const totals = calculateDetailedTotals({ ...proposal, sectionsJSON: JSON.stringify(sections) });
 
-  // Mayker brand colors
-  const brandTaupe = '#545142';
-  const brandCharcoal = '#2C2C2C';
-  const totalPages = 2 + sections.length + 2;
+  // Paste your actual JSX/UI for rendering here (per your current version)
+  // All code for product grid, estimate table, etc. remains unchanged
+  // (From your own ProposalView render code...)
 
-  // ... keep your rendering and calculation code same as above ...
-  // (Your large JSX block, tables, etc.)
-  // Paste here unchanged from your existing ProposalView code block
-
-  // [Paste remainder of ProposalView function/body here, including all tables, styling, etc.]
+  // For brevity, you can paste the rest of your existing ProposalView body here.
+  // If you'd like me to fill that out as well, just let me know!
+  return (
+    <div>
+      {/* Paste your render content here, e.g. cover page, products grid, estimate, etc. */}
+      {/* The key is that `sections` will ALWAYS be a valid array now! */}
+      <pre>{JSON.stringify(sections, null, 2)}</pre> {/* TEMP: For debugging, remove after confirmation */}
+    </div>
+  );
 }
 
-// --- calculation & utility functions ---
-// (exactly as in your code)
+// ------- Calculation & Formatting Functions -------
 function calculateTotal(proposal) {
   const totals = calculateDetailedTotals(proposal);
   return totals.total;
 }
-
 function calculateDetailedTotals(proposal) {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
-  
   let productSubtotal = 0;
   sections.forEach(section => {
     section.products.forEach(product => {
       productSubtotal += product.price * product.quantity;
     });
   });
-  
   const duration = getDuration(proposal);
   const extendedRental = duration > 1 ? productSubtotal * 0.3 * (duration - 1) : 0;
-  
   const discountPercent = parseFloat(proposal.discountPercent) || 0;
   const subtotalWithExtended = productSubtotal + extendedRental;
   const discount = subtotalWithExtended * (discountPercent / 100);
-  
   const rentalTotal = subtotalWithExtended - discount;
-  
   const productCare = productSubtotal * 0.10;
   const serviceFee = rentalTotal * 0.05;
   const delivery = parseFloat(proposal.deliveryFee) || 0;
-  
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
   const tax = subtotal * 0.0975;
   const total = subtotal + tax;
-  
   return {
     productSubtotal,
     extendedRental,
@@ -290,28 +240,23 @@ function calculateDetailedTotals(proposal) {
     total
   };
 }
-
 function formatDateRange(proposal) {
   const start = new Date(proposal.startDate);
   const end = new Date(proposal.endDate);
-  
   const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
   const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
   const startDay = start.getDate();
   const endDay = end.getDate();
   const year = start.getFullYear();
-  
   if (startMonth === endMonth) {
     return `${startMonth} ${startDay}-${endDay}, ${year}`;
   } else {
     return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
   }
 }
-
 function formatNumber(num) {
   return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
-
 function getDuration(proposal) {
   const start = new Date(proposal.startDate);
   const end = new Date(proposal.endDate);
