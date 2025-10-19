@@ -214,8 +214,33 @@ export default function ProposalApp() {
 }
 
 function ProposalView({ proposal, onBack, onPrint }) {
-  const sections = JSON.parse(proposal.sectionsJSON || '[]');
-  const totals = calculateDetailedTotals(proposal);
+  // Other proposal fields as before
+
+  // Just read the multi-line string directly
+  const productSummary = proposal.sectionsJSON || "";
+
+  // ...all your usual render...
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
+      {/* ...other content... */}
+
+      <div style={{
+        backgroundColor: "#e0f2f1",
+        borderRadius: "8px",
+        padding: "24px",
+        margin: "32px 0",
+        fontFamily: "'Inter', 'sans-serif'",
+        fontSize: "16px",
+        whiteSpace: "pre-line" // enables multi-line display
+      }}>
+        {productSummary}
+      </div>
+
+      {/* ...other JSX, e.g. cover, pricing, etc. */}
+    </div>
+  );
+}
+
   
   // Mayker brand colors
   const brandTaupe = '#545142';
