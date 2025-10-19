@@ -97,7 +97,7 @@ export default function ProposalApp() {
     const fetchProposals = async () => {
       try {
         setLoading(true);
-        const response = await fetch('https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycbzEC-ub0N3GVE-UoVTtHGf04luQRXNC26v6mjACwPtmpUeZrdG1csiTl51sUjYu03Bk/exec');
+        const response = await fetch('/api/proposals');
         const data = await response.json();
         
         const parsedProposals = data.map(proposal => {
@@ -141,7 +141,7 @@ export default function ProposalApp() {
   const handleRefresh = async () => {
     setLoading(true);
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzEC-ub0N3GVE-UoVTtHGf04luQRXNC26v6mjACwPtmpUeZrdG1csiTl51sUjYu03Bk/exec');
+      const response = await fetch('https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycbzEC-ub0N3GVE-UoVTtHGf04luQRXNC26v6mjACwPtmpUeZrdG1csiTl51sUjYu03Bk/exec');
       const data = await response.json();
       
       const parsedProposals = data.map(proposal => {
