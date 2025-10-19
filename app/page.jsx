@@ -258,6 +258,53 @@ Dinner
   );
 }
 
+function parseProductsFromText(productText, catalog = {}) {
+  if (!productText || typeof productText !== 'string') {
+    return [];
+  }
+
+  const lines = productText.split('\n').map(line => line.trim()).filter(line => line);
+  const sections = [];
+  let currentSection = null;
+
+  lines.forEach(line => {
+    if (line.startsWith('- ')) {
+      // This is a product line
+      if (currentSection) {
+        const productLine = line.substring(2); // Remove "- "
+        
+        // Parse "Product Name, Quantity" format
+        const lastCommaIndex = productLine.lastIndexOf(',');
+        if (lastCommaIndex !== -1) {
+          const name = productLine.substring(0, lastCommaIndex).trim();
+          const quantity = parseInt(productLine.substring(lastCommaIndex + 1).trim(), 10);
+          
+          if (!isNaN(quantity)) {
+            // Look up price from catalog
+            const productKey = name.toUpperCase();
+            const price = catalog[productKey] || 0;
+            
+            currentSection.products.push({
+              name: name,
+              quantity: quantity,
+              price: price
+            });
+          }
+        }
+      }
+    } else {
+      // This is a section header
+      currentSection = {
+        name: line,
+        products: []
+      };
+      sections.push(currentSection);
+    }
+  });
+
+  return sections;
+}
+
 function ProposalView({ proposal, onBack, onPrint, catalog }) {
   const sections = parseProductsFromText(proposal.sectionsAndProducts || '', catalog);
   const totals = calculateDetailedTotals(proposal, sections);
