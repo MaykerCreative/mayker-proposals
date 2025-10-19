@@ -135,114 +135,200 @@ export default function ProposalGenerator() {
     const sections = parseSectionsText(selectedProposal.sectionsText);
 
     return (
-      <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', maxWidth: '1000px', margin: '0 auto' }}>
-        <button onClick={() => setSelectedProposal(null)} style={{ marginBottom: '20px', padding: '10px 20px', cursor: 'pointer' }}>
-          ← Back to Dashboard
-        </button>
-
-        <div style={{ backgroundColor: '#545142', color: 'white', padding: '60px 40px', textAlign: 'center', marginBottom: '40px' }}>
-          <h1 style={{ margin: '0 0 20px 0', fontSize: '48px', fontWeight: 'bold', letterSpacing: '8px' }}>MAYKER EVENTS</h1>
-          <p style={{ margin: 0, fontSize: '18px', letterSpacing: '2px' }}>PROPOSAL</p>
+      <div style={{ fontFamily: 'Georgia, serif', backgroundColor: '#fff', color: '#333' }}>
+        {/* Print Header Button */}
+        <div style={{ padding: '20px', textAlign: 'right', borderBottom: '1px solid #ddd', '@media print': { display: 'none' } }}>
+          <button 
+            onClick={() => setSelectedProposal(null)}
+            style={{ marginRight: '10px', padding: '10px 20px', cursor: 'pointer', backgroundColor: '#f0f0f0', border: '1px solid #ccc', borderRadius: '4px' }}
+          >
+            ← Back to Dashboard
+          </button>
+          <button 
+            onClick={() => window.print()}
+            style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: '#545142', color: 'white', border: 'none', borderRadius: '4px' }}
+          >
+            Print / Export as PDF
+          </button>
         </div>
 
-        <div style={{ padding: '40px', borderBottom: '1px solid #e5e5e5', marginBottom: '30px' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '20px' }}>
-            <div>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Client</div>
-              <div style={{ fontSize: '16px', fontWeight: '500' }}>{selectedProposal.clientName}</div>
+        {/* Proposal Document */}
+        <div style={{ maxWidth: '900px', margin: '0 auto', padding: '40px 20px' }}>
+          
+          {/* Cover Page */}
+          <div style={{ 
+            backgroundColor: '#545142', 
+            color: 'white', 
+            padding: '100px 40px',
+            textAlign: 'center',
+            marginBottom: '60px',
+            pageBreakAfter: 'avoid'
+          }}>
+            <div style={{ fontSize: '48px', fontWeight: 'bold', letterSpacing: '6px', marginBottom: '40px', fontFamily: 'Arial, sans-serif' }}>
+              MAYKER EVENTS
             </div>
-            <div>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Location</div>
-              <div style={{ fontSize: '16px', fontWeight: '500' }}>{selectedProposal.venueName}, {selectedProposal.city}, {selectedProposal.state}</div>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
-            <div>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Event Dates</div>
-              <div style={{ fontSize: '16px', fontWeight: '500' }}>{formatDate(selectedProposal.startDate)} - {formatDate(selectedProposal.endDate)}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Duration</div>
-              <div style={{ fontSize: '16px', fontWeight: '500' }}>{totals.days} days</div>
+            <div style={{ fontSize: '18px', letterSpacing: '3px', marginBottom: '60px' }}>
+              PROPOSAL
             </div>
           </div>
-        </div>
 
-        {sections.map((section, idx) => (
-          <div key={idx} style={{ padding: '40px', borderBottom: '1px solid #e5e5e5', marginBottom: '30px' }}>
-            <h2 style={{ fontSize: '16px', fontFamily: 'Georgia, serif', marginBottom: '30px', color: '#545142', margin: '0 0 30px 0' }}>
-              {section.name}
-            </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
-              {section.products.map((item, pIdx) => {
-                const product = products.find(p => p.name === item.name);
-                return (
-                  <div key={pIdx}>
-                    <div style={{ backgroundColor: '#f5f5f5', height: '250px', marginBottom: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ccc' }}>
-                      [Product Image]
+          {/* Client Info Header */}
+          <div style={{ marginBottom: '50px', pageBreakInside: 'avoid' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', marginBottom: '30px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>
+                  CLIENT
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: '500' }}>
+                  {selectedProposal.clientName}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>
+                  LOCATION
+                </div>
+                <div style={{ fontSize: '18px', fontWeight: '500' }}>
+                  {selectedProposal.venueName}, {selectedProposal.city}, {selectedProposal.state}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px', borderTop: '1px solid #ddd', paddingTop: '30px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>
+                  EVENT DATES
+                </div>
+                <div style={{ fontSize: '16px' }}>
+                  {formatDate(selectedProposal.startDate)} - {formatDate(selectedProposal.endDate)}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>
+                  DURATION
+                </div>
+                <div style={{ fontSize: '16px' }}>
+                  {totals.days} days
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Product Sections */}
+          {sections.map((section, idx) => (
+            <div key={idx} style={{ marginBottom: '60px', pageBreakInside: 'avoid' }}>
+              <h2 style={{ fontSize: '20px', fontFamily: 'Georgia, serif', marginBottom: '30px', color: '#545142', fontWeight: 'normal', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                {section.name}
+              </h2>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '30px' }}>
+                {section.products.map((item, pIdx) => {
+                  const product = products.find(p => p.name === item.name);
+                  return (
+                    <div key={pIdx} style={{ pageBreakInside: 'avoid' }}>
+                      <div style={{ 
+                        backgroundColor: '#f5f5f5', 
+                        height: '200px', 
+                        marginBottom: '15px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#ccc',
+                        fontSize: '14px'
+                      }}>
+                        [Product Image]
+                      </div>
+                      <div style={{ fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
+                        {item.name}
+                      </div>
+                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                        Qty: {item.quantity}
+                      </div>
+                      <div style={{ fontSize: '13px', fontWeight: '600' }}>
+                        ${((product?.price || 0) * item.quantity).toFixed(2)}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px' }}>
-                      {item.name}
-                    </div>
-                    <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>Qty: {item.quantity}</div>
-                    <div style={{ fontSize: '12px', fontWeight: '500' }}>${((product?.price || 0) * item.quantity).toFixed(2)}</div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
 
-        <div style={{ padding: '40px', maxWidth: '600px', marginLeft: 'auto' }}>
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px' }}>Product Subtotal</span>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>${totals.productSubtotal.toFixed(2)}</span>
-          </div>
-          {totals.extendedRental > 0 && (
-            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '13px' }}>Extended Rental ({totals.days} days)</span>
-              <span style={{ fontSize: '13px', fontWeight: '500' }}>${totals.extendedRental.toFixed(2)}</span>
-            </div>
-          )}
-          {totals.discount > 0 && (
-            <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', color: '#2ecc71' }}>
-              <span style={{ fontSize: '13px' }}>{selectedProposal.discountName || 'Discount'} ({selectedProposal.discountPercent}% off)</span>
-              <span style={{ fontSize: '13px', fontWeight: '500' }}>-${totals.discount.toFixed(2)}</span>
-            </div>
-          )}
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e5e5', paddingTop: '16px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '600' }}>Rental Total</span>
-            <span style={{ fontSize: '13px', fontWeight: '600' }}>${totals.productsAfterDiscount.toFixed(2)}</span>
-          </div>
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px' }}>Product Care (10%)</span>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>${totals.productCare.toFixed(2)}</span>
-          </div>
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px' }}>Service Fee (5%)</span>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>${totals.serviceFee.toFixed(2)}</span>
-          </div>
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px' }}>Delivery</span>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>${totals.deliveryFee.toFixed(2)}</span>
-          </div>
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between', borderTop: '1px solid #e5e5e5', paddingTop: '16px' }}>
-            <span style={{ fontSize: '13px' }}>Subtotal</span>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>${totals.subtotal.toFixed(2)}</span>
-          </div>
-          <div style={{ marginBottom: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '13px' }}>Tax (9.75%)</span>
-            <span style={{ fontSize: '13px', fontWeight: '500' }}>${totals.tax.toFixed(2)}</span>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #545142', paddingTop: '16px' }}>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>TOTAL</span>
-            <span style={{ fontSize: '14px', fontWeight: '700' }}>${totals.total.toFixed(2)}</span>
+          {/* Pricing Table */}
+          <div style={{ marginTop: '80px', pageBreakInside: 'avoid' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '10px 0', fontSize: '13px', borderBottom: '1px solid #e5e5e5' }}>Product Subtotal</td>
+                  <td style={{ padding: '10px 0', fontSize: '13px', textAlign: 'right', borderBottom: '1px solid #e5e5e5', fontWeight: '500' }}>
+                    ${totals.productSubtotal.toFixed(2)}
+                  </td>
+                </tr>
+                {totals.extendedRental > 0 && (
+                  <tr>
+                    <td style={{ padding: '10px 0', fontSize: '13px', borderBottom: '1px solid #e5e5e5' }}>
+                      Extended Rental ({totals.days} days)
+                    </td>
+                    <td style={{ padding: '10px 0', fontSize: '13px', textAlign: 'right', borderBottom: '1px solid #e5e5e5', fontWeight: '500' }}>
+                      ${totals.extendedRental.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
+                {totals.discount > 0 && (
+                  <tr style={{ color: '#27ae60' }}>
+                    <td style={{ padding: '10px 0', fontSize: '13px', borderBottom: '1px solid #e5e5e5' }}>
+                      {selectedProposal.discountName || 'Discount'} ({selectedProposal.discountPercent}% off)
+                    </td>
+                    <td style={{ padding: '10px 0', fontSize: '13px', textAlign: 'right', borderBottom: '1px solid #e5e5e5', fontWeight: '500' }}>
+                      -${totals.discount.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
+                <tr style={{ fontWeight: '600' }}>
+                  <td style={{ padding: '12px 0', fontSize: '13px', borderBottom: '2px solid #545142' }}>Rental Total</td>
+                  <td style={{ padding: '12px 0', fontSize: '13px', textAlign: 'right', borderBottom: '2px solid #545142' }}>
+                    ${totals.productsAfterDiscount.toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '10px 0', fontSize: '13px', borderBottom: '1px solid #e5e5e5' }}>Product Care (10%)</td>
+                  <td style={{ padding: '10px 0', fontSize: '13px', textAlign: 'right', borderBottom: '1px solid #e5e5e5', fontWeight: '500' }}>
+                    ${totals.productCare.toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '10px 0', fontSize: '13px', borderBottom: '1px solid #e5e5e5' }}>Service Fee (5%)</td>
+                  <td style={{ padding: '10px 0', fontSize: '13px', textAlign: 'right', borderBottom: '1px solid #e5e5e5', fontWeight: '500' }}>
+                    ${totals.serviceFee.toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '10px 0', fontSize: '13px', borderBottom: '1px solid #e5e5e5' }}>Delivery</td>
+                  <td style={{ padding: '10px 0', fontSize: '13px', textAlign: 'right', borderBottom: '1px solid #e5e5e5', fontWeight: '500' }}>
+                    ${totals.deliveryFee.toFixed(2)}
+                  </td>
+                </tr>
+                <tr style={{ fontWeight: '600' }}>
+                  <td style={{ padding: '12px 0', fontSize: '13px', borderBottom: '2px solid #e5e5e5' }}>Subtotal</td>
+                  <td style={{ padding: '12px 0', fontSize: '13px', textAlign: 'right', borderBottom: '2px solid #e5e5e5' }}>
+                    ${totals.subtotal.toFixed(2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style={{ padding: '10px 0', fontSize: '13px', borderBottom: '1px solid #e5e5e5' }}>Tax (9.75%)</td>
+                  <td style={{ padding: '10px 0', fontSize: '13px', textAlign: 'right', borderBottom: '1px solid #e5e5e5', fontWeight: '500' }}>
+                    ${totals.tax.toFixed(2)}
+                  </td>
+                </tr>
+                <tr style={{ fontWeight: 'bold', fontSize: '16px' }}>
+                  <td style={{ padding: '15px 0' }}>TOTAL</td>
+                  <td style={{ padding: '15px 0', textAlign: 'right', borderTop: '2px solid #545142' }}>
+                    ${totals.total.toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <button onClick={() => window.print()} style={{ marginTop: '40px', width: '100%', padding: '15px', fontSize: '16px', backgroundColor: '#545142', color: 'white', border: 'none', cursor: 'pointer', borderRadius: '4px' }}>
-          Print / Export as PDF
-        </button>
       </div>
     );
   }
@@ -269,7 +355,7 @@ export default function ProposalGenerator() {
       {proposals.length === 0 ? (
         <p style={{ color: '#666', fontSize: '16px' }}>No proposals found. Submit a form through Fillout and click Refresh to load proposals.</p>
       ) : (
-        <div style={{ backgroundColor: 'white', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+        <div style={{ backgroundColor: 'white', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ backgroundColor: '#f5f5f5', borderBottom: '2px solid #ddd' }}>
