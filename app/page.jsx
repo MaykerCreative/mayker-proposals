@@ -15,7 +15,8 @@ export default function ProposalApp() {
   const fetchProposals = async () => {
     try {
       console.log('Fetching proposals...');
-      const response = await fetch('https://script.google.com/macros/s/AKfycbxI5yUBaFt9dvrPKnEZo4aKH0g8YMDSXMBCrDx5s8W8nxZfgCaafvEGsIcjOmOpZ-hM/exec');
+      // Updated with your new Google Apps Script URL
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzEC-ub0N3GVE-UoVTtHGf04luQRXNC26v6mjACwPtmpUeZrdG1csiTl51sUjYu03Bk/exec');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
