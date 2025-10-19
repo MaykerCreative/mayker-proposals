@@ -2,6 +2,150 @@
 
 import React, { useState, useEffect } from 'react';
 
+// Helper function to parse product text
+function parseProductsFromText(productText, catalog = {}) {
+  if (!productText || typeof productText !== 'string') {
+    return [];
+  }
+
+  const lines = productText.split('\n').map(line => line.trim()).filter(line => line);
+  const sections = [];
+  let currentSection = null;
+
+  lines.forEach(line => {
+    if (line.startsWith('- ')) {
+      if (currentSection) {
+        const productLine = line.substring(2);
+        const lastCommaIndex = productLine.lastIndexOf(',');
+        if (lastCommaIndex !== -1) {
+          const name = productLine.substring(0, lastCommaIndex).trim();
+          const quantity = parseInt(productLine.substring(lastCommaIndex + 1).trim(), 10);
+          
+          if (!isNaN(quantity)) {
+            const productKey = name.toUpperCase();
+            const price = catalog[productKey] || 0;
+            
+            currentSection.products.push({
+              name: name,
+              quantity: quantity,
+              price: price
+            });
+          }
+        }
+      }
+    } else {
+      currentSection = {
+        name: line,
+        products: []
+      };
+      sections.push(currentSection);
+    }
+  });
+
+  return sections;
+}
+
+// CSV line parser
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// Calculate detailed totals
+function calculateDetailedTotals(proposal, sections) {
+  let productSubtotal = 0;
+  sections.forEach(section => {
+    section.products.forEach(product => {
+      productSubtotal += product.price * product.quantity;
+    });
+  });
+  
+  const duration = getDuration(proposal);
+  const extendedRental = duration > 1 ? productSubtotal * 0.3 * (duration - 1) : 0;
+  
+  const discountPercent = parseFloat(proposal.discountPercent) || 0;
+  const subtotalWithExtended = productSubtotal + extendedRental;
+  const discount = subtotalWithExtended * (discountPercent / 100);
+  
+  const rentalTotal = subtotalWithExtended - discount;
+  
+  const productCare = productSubtotal * 0.10;
+  const serviceFee = rentalTotal * 0.05;
+  const delivery = parseFloat(proposal.deliveryFee) || 0;
+  
+  const subtotal = rentalTotal + productCare + serviceFee + delivery;
+  const tax = subtotal * 0.0975;
+  const total = subtotal + tax;
+  
+  return {
+    productSubtotal,
+    extendedRental,
+    discount,
+    rentalTotal,
+    productCare,
+    serviceFee,
+    delivery,
+    subtotal,
+    tax,
+    total
+  };
+}
+
+// Format date range
+function formatDateRange(proposal) {
+  const start = new Date(proposal.startDate);
+  const end = new Date(proposal.endDate);
+  
+  const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+  const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const year = start.getFullYear();
+  
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay}-${endDay}, ${year}`;
+  } else {
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+  }
+}
+
+// Format number with commas
+function formatNumber(num) {
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+// Get duration in days
+function getDuration(proposal) {
+  const start = new Date(proposal.startDate);
+  const end = new Date(proposal.endDate);
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  return diffDays;
+}
+
+// Calculate total for dashboard
+function calculateTotal(proposal, catalog) {
+  const sections = parseProductsFromText(proposal.sectionsAndProducts || '', catalog);
+  const totals = calculateDetailedTotals(proposal, sections);
+  return totals.total;
+}
+
+// Main App Component
 export default function ProposalApp() {
   const [proposals, setProposals] = useState([]);
   const [selectedProposal, setSelectedProposal] = useState(null);
@@ -26,12 +170,10 @@ export default function ProposalApp() {
       const lines = csv.split('\n');
       const catalogMap = {};
       
-      // Skip header row and build product -> price map
       for (let i = 1; i < lines.length; i++) {
         const line = lines[i].trim();
         if (!line) continue;
         
-        // CSV parsing - handle quotes and commas
         const parsed = parseCSVLine(line);
         if (parsed.length >= 2) {
           const productName = parsed[0].trim().toUpperCase();
@@ -49,25 +191,7 @@ export default function ProposalApp() {
     }
   };
 
-  const parseCSVLine = (line) => {
-    const result = [];
-    let current = '';
-    let inQuotes = false;
-    
-    for (let i = 0; i < line.length; i++) {
-      const char = line[i];
-      if (char === '"') {
-        inQuotes = !inQuotes;
-      } else if (char === ',' && !inQuotes) {
-        result.push(current);
-        current = '';
-      } else {
-        current += char;
-      }
-    }
-    result.push(current);
-    return result;
-  };
+  const fetchProposals = async () => {
     try {
       const response = await fetch('https://script.google.com/macros/s/AKfycbzEC-ub0N3GVE-UoVTtHGf04luQRXNC26v6mjACwPtmpUeZrdG1csiTl51sUjYu03Bk/exec');
       
@@ -232,7 +356,7 @@ Dinner
                     {proposal.eventDate}
                   </td>
                   <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    ${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    ${calculateTotal(proposal, catalog).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td style={{ padding: '16px 24px', fontSize: '14px' }}>
                     <button
@@ -258,63 +382,13 @@ Dinner
   );
 }
 
-function parseProductsFromText(productText, catalog = {}) {
-  if (!productText || typeof productText !== 'string') {
-    return [];
-  }
-
-  const lines = productText.split('\n').map(line => line.trim()).filter(line => line);
-  const sections = [];
-  let currentSection = null;
-
-  lines.forEach(line => {
-    if (line.startsWith('- ')) {
-      // This is a product line
-      if (currentSection) {
-        const productLine = line.substring(2); // Remove "- "
-        
-        // Parse "Product Name, Quantity" format
-        const lastCommaIndex = productLine.lastIndexOf(',');
-        if (lastCommaIndex !== -1) {
-          const name = productLine.substring(0, lastCommaIndex).trim();
-          const quantity = parseInt(productLine.substring(lastCommaIndex + 1).trim(), 10);
-          
-          if (!isNaN(quantity)) {
-            // Look up price from catalog
-            const productKey = name.toUpperCase();
-            const price = catalog[productKey] || 0;
-            
-            currentSection.products.push({
-              name: name,
-              quantity: quantity,
-              price: price
-            });
-          }
-        }
-      }
-    } else {
-      // This is a section header
-      currentSection = {
-        name: line,
-        products: []
-      };
-      sections.push(currentSection);
-    }
-  });
-
-  return sections;
-}
-
+// Proposal View Component
 function ProposalView({ proposal, onBack, onPrint, catalog }) {
   const sections = parseProductsFromText(proposal.sectionsAndProducts || '', catalog);
   const totals = calculateDetailedTotals(proposal, sections);
   
-  // Mayker brand colors
   const brandTaupe = '#545142';
   const brandCharcoal = '#2C2C2C';
-  
-  // Calculate total pages
-  const totalPages = 2 + sections.length + 2; // Cover + Info + Product sections + Itemized + Pricing
   
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
@@ -359,7 +433,6 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
         }
       ` }} />
 
-      {/* Navigation Bar - Only shows on screen */}
       <div className="no-print" style={{
         position: 'fixed',
         top: 0,
@@ -400,7 +473,7 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
         </div>
       </div>
 
-      {/* Page 1: Cover Page */}
+      {/* Cover Page */}
       <div className="print-break-after" style={{
         backgroundColor: brandTaupe,
         minHeight: '100vh',
@@ -411,7 +484,6 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
         padding: '60px 48px',
         position: 'relative'
       }}>
-        {/* Top section with logo and text */}
         <div style={{
           flex: 1,
           display: 'flex',
@@ -467,7 +539,6 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
           }}>{formatDateRange(proposal)}</p>
         </div>
         
-        {/* Bottom section with logo mark */}
         <img 
           src="/mayker_icon-whisper.svg"
           alt="Mayker Events"
@@ -479,22 +550,20 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
         />
       </div>
 
-      {/* Page 2 onwards: Product Section Pages with integrated header */}
+      {/* Product Pages */}
       {sections.map((section, sectionIndex) => {
-        const pageNum = sectionIndex + 2; // Starting from page 2
+        const pageNum = sectionIndex + 2;
         return (
           <div key={sectionIndex} className="print-break-after" style={{ 
             minHeight: '100vh',
             padding: '30px 60px 40px',
             position: 'relative'
           }}>
-            {/* Compact Header with stacked info */}
             <div style={{
               marginBottom: '20px',
               paddingBottom: '15px',
               borderBottom: '1px solid #e5e7eb'
             }}>
-              {/* Top row: Logo and stacked event info */}
               <div style={{
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -506,7 +575,6 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
                   style={{ height: '22px', marginTop: '4px' }}
                 />
                 
-                {/* Stacked info on right */}
                 <div style={{
                   textAlign: 'right',
                   display: 'flex',
@@ -534,7 +602,6 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
               </div>
             </div>
             
-            {/* Section Title */}
             <h2 style={{
               fontSize: '18px',
               fontWeight: '400',
@@ -547,7 +614,6 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
               {section.name}
             </h2>
             
-            {/* Products Grid */}
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(3, 1fr)',
@@ -592,12 +658,11 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
                     fontWeight: '400',
                     color: brandCharcoal,
                     fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>$0.00</p>
+                  }}>${formatNumber(product.price)}</p>
                 </div>
               ))}
             </div>
             
-            {/* Page number */}
             <div style={{
               position: 'absolute',
               bottom: '30px',
@@ -610,19 +675,17 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
         );
       })}
 
-      {/* Combined Estimate Page - Itemized List + Pricing */}
+      {/* Estimate Page */}
       <div style={{ 
         minHeight: '100vh',
         padding: '30px 60px 40px',
         position: 'relative'
       }}>
-        {/* Compact Header with stacked info */}
         <div style={{
           marginBottom: '20px',
           paddingBottom: '15px',
           borderBottom: '1px solid #e5e7eb'
         }}>
-          {/* Top row: Logo and stacked event info */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
@@ -634,7 +697,6 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
               style={{ height: '22px', marginTop: '4px' }}
             />
             
-            {/* Stacked info on right */}
             <div style={{
               textAlign: 'right',
               display: 'flex',
@@ -673,109 +735,34 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
           fontFamily: "'Domaine Text', serif"
         }}>Estimate</h2>
         
-        {/* Itemized Products Table */}
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'left',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Section</th>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'left',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Product</th>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'center',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Qty</th>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'right',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Unit Price</th>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'right',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Total</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Section</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Product</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Qty</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Unit Price</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Total</th>
             </tr>
           </thead>
           <tbody>
             {sections.map((section, sectionIndex) => (
               section.products.map((product, productIndex) => (
                 <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: '#888',
-                    fontStyle: 'italic',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
+                  <td style={{ padding: '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                     {productIndex === 0 ? section.name : ''}
                   </td>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: brandCharcoal,
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
+                  <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                     {product.name}
                   </td>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: brandCharcoal,
-                    textAlign: 'center',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
+                  <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                     {product.quantity}
                   </td>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: brandCharcoal,
-                    textAlign: 'right',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    $0.00
+                  <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    ${formatNumber(product.price)}
                   </td>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: brandCharcoal,
-                    textAlign: 'right',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    $0.00
+                  <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    ${formatNumber(product.price * product.quantity)}
                   </td>
                 </tr>
               ))
@@ -783,108 +770,66 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
           </tbody>
         </table>
         
-        {/* Pricing Breakdown - Right aligned */}
         <div style={{ maxWidth: '350px', marginLeft: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Product Subtotal
-                </td>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  $0.00
-                </td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Product Subtotal</td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.productSubtotal)}</td>
               </tr>
               
               {totals.extendedRental > 0 && (
                 <tr>
-                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    Extended Rental ({getDuration(proposal)} days)
-                  </td>
-                  <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    $0.00
-                  </td>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Extended Rental ({getDuration(proposal)} days)</td>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.extendedRental)}</td>
                 </tr>
               )}
               
               {totals.discount > 0 && (
                 <tr>
-                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    {proposal.discountName || 'Discount'} ({proposal.discountPercent}% off)
-                  </td>
-                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    -$0.00
-                  </td>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{proposal.discountName || 'Discount'} ({proposal.discountPercent}% off)</td>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>-${formatNumber(totals.discount)}</td>
                 </tr>
               )}
               
               <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Rental Total
-                </td>
-                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  $0.00
-                </td>
+                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Rental Total</td>
+                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.rentalTotal)}</td>
               </tr>
               
               <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Product Care (10%)
-                </td>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  $0.00
-                </td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Product Care (10%)</td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.productCare)}</td>
               </tr>
               
               <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Service Fee (5%)
-                </td>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  $0.00
-                </td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Service Fee (5%)</td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.serviceFee)}</td>
               </tr>
               
               <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Delivery
-                </td>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  $0.00
-                </td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Delivery</td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
               </tr>
               
               <tr style={{ borderTop: '1px solid #e5e7eb' }}>
-                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Subtotal
-                </td>
-                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  $0.00
-                </td>
+                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Subtotal</td>
+                <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.subtotal)}</td>
               </tr>
               
               <tr>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Tax (9.75%)
-                </td>
-                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  $0.00
-                </td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Tax (9.75%)</td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.tax)}</td>
               </tr>
               
               <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
-                <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  TOTAL
-                </td>
-                <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  $0.00
-                </td>
+                <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>TOTAL</td>
+                <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.total)}</td>
               </tr>
             </tbody>
           </table>
         </div>
         
-        {/* Page number */}
         <div style={{
           position: 'absolute',
           bottom: '30px',
@@ -896,125 +841,4 @@ function ProposalView({ proposal, onBack, onPrint, catalog }) {
       </div>
     </div>
   );
-}
-
-function parseProductsFromText(productText) {
-  if (!productText || typeof productText !== 'string') {
-    return [];
-  }
-
-  const lines = productText.split('\n').map(line => line.trim()).filter(line => line);
-  const sections = [];
-  let currentSection = null;
-
-  lines.forEach(line => {
-    if (line.startsWith('- ')) {
-      // This is a product line
-      if (currentSection) {
-        const productLine = line.substring(2); // Remove "- "
-        
-        // Parse "Product Name, Quantity" format
-        const lastCommaIndex = productLine.lastIndexOf(',');
-        if (lastCommaIndex !== -1) {
-          const name = productLine.substring(0, lastCommaIndex).trim();
-          const quantity = parseInt(productLine.substring(lastCommaIndex + 1).trim(), 10);
-          
-          if (!isNaN(quantity)) {
-            // Look up price from catalog
-            const productKey = name.toUpperCase();
-            const price = catalog[productKey] || 0;
-            
-            currentSection.products.push({
-              name: name,
-              quantity: quantity,
-              price: price
-            });
-          }
-        }
-      }
-    } else {
-      // This is a section header
-      currentSection = {
-        name: line,
-        products: []
-      };
-      sections.push(currentSection);
-    }
-  });
-
-  return sections;
-}
-
-function calculateTotal(proposal) {
-  const sections = parseProductsFromText(proposal.sectionsAndProducts || '', {});
-  const totals = calculateDetailedTotals(proposal, sections);
-  return totals.total;
-}
-
-function calculateDetailedTotals(proposal, sections) {
-  let productSubtotal = 0;
-  sections.forEach(section => {
-    section.products.forEach(product => {
-      productSubtotal += product.price * product.quantity;
-    });
-  });
-  
-  const duration = getDuration(proposal);
-  const extendedRental = duration > 1 ? productSubtotal * 0.3 * (duration - 1) : 0;
-  
-  const discountPercent = parseFloat(proposal.discountPercent) || 0;
-  const subtotalWithExtended = productSubtotal + extendedRental;
-  const discount = subtotalWithExtended * (discountPercent / 100);
-  
-  const rentalTotal = subtotalWithExtended - discount;
-  
-  const productCare = productSubtotal * 0.10;
-  const serviceFee = rentalTotal * 0.05;
-  const delivery = parseFloat(proposal.deliveryFee) || 0;
-  
-  const subtotal = rentalTotal + productCare + serviceFee + delivery;
-  const tax = subtotal * 0.0975;
-  const total = subtotal + tax;
-  
-  return {
-    productSubtotal,
-    extendedRental,
-    discount,
-    rentalTotal,
-    productCare,
-    serviceFee,
-    delivery,
-    subtotal,
-    tax,
-    total
-  };
-}
-
-function formatDateRange(proposal) {
-  const start = new Date(proposal.startDate);
-  const end = new Date(proposal.endDate);
-  
-  const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
-  const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
-  const startDay = start.getDate();
-  const endDay = end.getDate();
-  const year = start.getFullYear();
-  
-  if (startMonth === endMonth) {
-    return `${startMonth} ${startDay}-${endDay}, ${year}`;
-  } else {
-    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
-  }
-}
-
-function formatNumber(num) {
-  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function getDuration(proposal) {
-  const start = new Date(proposal.startDate);
-  const end = new Date(proposal.endDate);
-  const diffTime = Math.abs(end - start);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return diffDays;
 }
