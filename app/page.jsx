@@ -13,6 +13,15 @@ export default function ProposalApp() {
     fetch('https://script.google.com/macros/s/AKfycbzEC-ub0N3GVE-UoVTtHGf04luQRXNC26v6mjACwPtmpUeZrdG1csiTl51sUjYu03Bk/exec')
       .then(r => r.json())
       .then(data => {
+        console.log('Raw data from API:', data, 'Is array?', Array.isArray(data));
+        
+        if (!Array.isArray(data)) {
+          console.error('Data is not an array!', typeof data);
+          setProposals([]);
+          setLoading(false);
+          return;
+        }
+
         const parsed = data.map(p => {
           try {
             // Only parse if it looks like JSON (starts with [)
