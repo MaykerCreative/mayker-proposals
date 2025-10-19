@@ -191,7 +191,7 @@ export default function ProposalApp() {
                     {proposal.eventDate}
                   </td>
                   <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    ${calculateTotal(proposal).toFixed(2)}
+                    ${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                   <td style={{ padding: '16px 24px', fontSize: '14px' }}>
                     <button
@@ -345,9 +345,9 @@ function ProposalView({ proposal, onBack, onPrint }) {
           src="/mayker_icon-whisper.svg"
           alt="Mayker Events"
           style={{
-            width: '160px',
-            height: '160px',
-            marginBottom: '60px'
+            width: '100px',
+            height: '100px',
+            marginBottom: '40px'
           }}
         />
         
@@ -356,8 +356,8 @@ function ProposalView({ proposal, onBack, onPrint }) {
           src="/mayker_wordmark-events-whisper.svg"
           alt="MAYKER EVENTS"
           style={{
-            height: '60px',
-            marginBottom: '40px'
+            height: '40px',
+            marginBottom: '30px'
           }}
         />
         
@@ -415,12 +415,12 @@ function ProposalView({ proposal, onBack, onPrint }) {
           <img 
             src="/mayker_wordmark-events-black.svg" 
             alt="Mayker Events"
-            style={{ height: '35px' }}
+            style={{ height: '28px' }}
           />
           <img 
             src="/mayker_icon-black.svg" 
             alt="M"
-            style={{ height: '35px' }}
+            style={{ height: '45px' }}
           />
         </div>
 
@@ -548,12 +548,152 @@ function ProposalView({ proposal, onBack, onPrint }) {
                       fontSize: '14px',
                       fontWeight: '600',
                       color: brandCharcoal
-                    }}>${product.price.toFixed(2)}</p>
+                    }}>${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
                 ))}
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Itemized Product List Page */}
+        <div style={{ 
+          padding: '60px',
+          pageBreakBefore: 'always',
+          minHeight: '100vh'
+        }}>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: brandCharcoal,
+            marginBottom: '40px',
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em'
+          }}>Itemized Product List</h2>
+          
+          <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #e5e7eb' }}>
+                  <th style={{ 
+                    padding: '12px 0', 
+                    fontSize: '11px', 
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: '#666',
+                    textAlign: 'left' 
+                  }}>Section</th>
+                  <th style={{ 
+                    padding: '12px 0', 
+                    fontSize: '11px', 
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: '#666',
+                    textAlign: 'left' 
+                  }}>Product</th>
+                  <th style={{ 
+                    padding: '12px 0', 
+                    fontSize: '11px', 
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: '#666',
+                    textAlign: 'center' 
+                  }}>Qty</th>
+                  <th style={{ 
+                    padding: '12px 0', 
+                    fontSize: '11px', 
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: '#666',
+                    textAlign: 'right' 
+                  }}>Unit Price</th>
+                  <th style={{ 
+                    padding: '12px 0', 
+                    fontSize: '11px', 
+                    fontWeight: '600',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.1em',
+                    color: '#666',
+                    textAlign: 'right' 
+                  }}>Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sections.map((section, sectionIndex) => (
+                  section.products.map((product, productIndex) => (
+                    <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                      <td style={{ 
+                        padding: '14px 0', 
+                        fontSize: '13px', 
+                        color: '#888',
+                        fontStyle: 'italic'
+                      }}>
+                        {productIndex === 0 ? section.name : ''}
+                      </td>
+                      <td style={{ 
+                        padding: '14px 0', 
+                        fontSize: '13px', 
+                        color: brandCharcoal,
+                        fontWeight: '500'
+                      }}>
+                        {product.name}
+                      </td>
+                      <td style={{ 
+                        padding: '14px 0', 
+                        fontSize: '13px', 
+                        color: brandCharcoal,
+                        textAlign: 'center'
+                      }}>
+                        {product.quantity}
+                      </td>
+                      <td style={{ 
+                        padding: '14px 0', 
+                        fontSize: '13px', 
+                        color: brandCharcoal,
+                        textAlign: 'right'
+                      }}>
+                        ${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ 
+                        padding: '14px 0', 
+                        fontSize: '13px', 
+                        color: brandCharcoal,
+                        fontWeight: '500',
+                        textAlign: 'right'
+                      }}>
+                        ${(product.price * product.quantity).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  ))
+                ))}
+                <tr style={{ borderTop: '2px solid #e5e7eb' }}>
+                  <td colSpan="4" style={{ 
+                    padding: '16px 0', 
+                    fontSize: '14px', 
+                    fontWeight: '600',
+                    color: brandCharcoal,
+                    textAlign: 'right'
+                  }}>
+                    Product Subtotal
+                  </td>
+                  <td style={{ 
+                    padding: '16px 0', 
+                    fontSize: '14px', 
+                    fontWeight: '600',
+                    color: brandCharcoal,
+                    textAlign: 'right'
+                  }}>
+                    ${formatNumber(totals.productSubtotal)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {/* Pricing Table Page */}
@@ -576,7 +716,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
                 <tr>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Product Subtotal</td>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
-                    ${totals.productSubtotal.toFixed(2)}
+                    ${formatNumber(totals.productSubtotal)}
                   </td>
                 </tr>
                 
@@ -586,7 +726,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
                       Extended Rental ({getDuration(proposal)} days)
                     </td>
                     <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
-                      ${totals.extendedRental.toFixed(2)}
+                      ${formatNumber(totals.extendedRental)}
                     </td>
                   </tr>
                 )}
@@ -597,7 +737,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
                       {proposal.discountName || 'Discount'} ({proposal.discountPercent}% off)
                     </td>
                     <td style={{ padding: '12px 0', fontSize: '14px', color: '#059669', textAlign: 'right' }}>
-                      -${totals.discount.toFixed(2)}
+                      -${formatNumber(totals.discount)}
                     </td>
                   </tr>
                 )}
@@ -607,28 +747,28 @@ function ProposalView({ proposal, onBack, onPrint }) {
                     Rental Total
                   </td>
                   <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>
-                    ${totals.rentalTotal.toFixed(2)}
+                    ${formatNumber(totals.rentalTotal)}
                   </td>
                 </tr>
                 
                 <tr>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Product Care (10%)</td>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
-                    ${totals.productCare.toFixed(2)}
+                    ${formatNumber(totals.productCare)}
                   </td>
                 </tr>
                 
                 <tr>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Service Fee (5%)</td>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
-                    ${totals.serviceFee.toFixed(2)}
+                    ${formatNumber(totals.serviceFee)}
                   </td>
                 </tr>
                 
                 <tr>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Delivery</td>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
-                    ${totals.delivery.toFixed(2)}
+                    ${formatNumber(totals.delivery)}
                   </td>
                 </tr>
                 
@@ -637,14 +777,14 @@ function ProposalView({ proposal, onBack, onPrint }) {
                     Subtotal
                   </td>
                   <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>
-                    ${totals.subtotal.toFixed(2)}
+                    ${formatNumber(totals.subtotal)}
                   </td>
                 </tr>
                 
                 <tr>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Tax (9.75%)</td>
                   <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
-                    ${totals.tax.toFixed(2)}
+                    ${formatNumber(totals.tax)}
                   </td>
                 </tr>
                 
@@ -653,7 +793,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
                     TOTAL
                   </td>
                   <td style={{ padding: '20px 0', fontSize: '20px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>
-                    ${totals.total.toFixed(2)}
+                    ${formatNumber(totals.total)}
                   </td>
                 </tr>
               </tbody>
@@ -715,10 +855,23 @@ function formatDateRange(proposal) {
   const start = new Date(proposal.startDate);
   const end = new Date(proposal.endDate);
   
-  const startStr = start.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  const endStr = end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+  const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const year = start.getFullYear();
   
-  return `${startStr} - ${endStr}`;
+  // If same month, format as "October 26-29, 2025"
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay}-${endDay}, ${year}`;
+  } else {
+    // Different months: "October 26 - November 2, 2025"
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+  }
+}
+
+function formatNumber(num) {
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 function getDuration(proposal) {
