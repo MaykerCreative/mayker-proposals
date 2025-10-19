@@ -57,32 +57,14 @@ export default function ProposalApp() {
   const [error, setError] = useState(null);
   const [catalog, setCatalog] = useState([]);
 
-  // Fetch product catalog from Google Sheet
+  // Fetch product catalog from Vercel API
   useEffect(() => {
     const fetchCatalog = async () => {
       try {
-        const sheetUrl = `https://sheets.googleapis.com/v4/spreadsheets/116B97xSSUIDDdDLP6vWch4_BIxbEwPLdLO9FtBQZheU/values/'Current Catalog'?key=AIzaSyDr57l3XebOxUoHO5W1VoPatGGMQ8q_9fQ`;
-        const response = await fetch(sheetUrl);
+        const response = await fetch('/api/catalog');
         const data = await response.json();
-        
-        if (data.values) {
-          const rows = data.values.slice(1);
-          const catalogData = rows
-            .filter(row => row[0] && row[4])
-            .map(row => {
-              let fileId = '';
-              if (row[4]) {
-                const match = row[4].match(/\/d\/([a-zA-Z0-9-_]+)/);
-                fileId = match ? match[1] : '';
-              }
-              return {
-                name: row[0],
-                category: row[1],
-                price: parseFloat(row[2]) || 0,
-                imageUrl: fileId ? `https://drive.google.com/uc?id=${fileId}&export=download` : null
-              };
-            });
-          setCatalog(catalogData);
+        if (Array.isArray(data)) {
+          setCatalog(data);
         }
       } catch (err) {
         console.error('Error fetching catalog:', err);
@@ -138,10 +120,9 @@ export default function ProposalApp() {
     fetchProposals();
   }, []);
 
-  const handleRefresh = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch('https://cors-anywhere.herokuapp.com/https://script.google.com/macros/s/AKfycbzEC-ub0N3GVE-UoVTtHGf04luQRXNC26v6mjACwPtmpUeZrdG1csiTl51sUjYu03Bk/exec');
+      try {
+        setLoading(true);
+        const response = await fetch('/api/proposals');
       const data = await response.json();
       
       const parsedProposals = data.map(proposal => {
