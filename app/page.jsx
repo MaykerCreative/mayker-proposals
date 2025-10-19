@@ -214,22 +214,8 @@ export default function ProposalApp() {
 }
 
 function ProposalView({ proposal, onBack, onPrint }) {
-  // Robust JSON parsing for either column
-  let sections = [];
-  try {
-    const rawSections =
-      proposal.sectionsJSON && proposal.sectionsJSON !== '[]'
-        ? proposal.sectionsJSON
-        : proposal.proposalSectionsProducts && proposal.proposalSectionsProducts !== '[]'
-        ? proposal.proposalSectionsProducts
-        : '[]';
-    sections = JSON.parse(rawSections);
-  } catch (e) {
-    sections = [];
-    console.error("Unable to parse proposal sections", e);
-  }
-
-  const totals = calculateDetailedTotals({ ...proposal, sectionsJSON: JSON.stringify(sections) });
+  const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  const totals = calculateDetailedTotals(proposal);
   
   // Mayker brand colors
   const brandTaupe = '#545142';
