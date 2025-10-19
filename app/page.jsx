@@ -10,12 +10,6 @@ export default function ProposalApp() {
 
   useEffect(() => {
     fetchProposals();
-    
-    // Load fonts
-    const link = document.createElement('link');
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap';
-    link.rel = 'stylesheet';
-    document.head.appendChild(link);
   }, []);
 
   const fetchProposals = async () => {
@@ -227,16 +221,19 @@ function ProposalView({ proposal, onBack, onPrint }) {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
   const totals = calculateDetailedTotals(proposal);
   
-  // Mayker brand colors
-  const brandTaupe = '#545142';
+  // Mayker brand colors - using the exact taupe from your Hunter example
+  const brandTaupe = '#6B6055';
   const brandCharcoal = '#2C2C2C';
+  const brandWhite = '#FFFFFF';
   
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
       <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype');
+          src: url('/TestDomaineText-Light.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
         }
@@ -250,11 +247,22 @@ function ProposalView({ proposal, onBack, onPrint }) {
         
         * {
           box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        
+        body {
+          font-family: 'Neue Haas Unica', 'Inter', sans-serif;
+        }
+        
+        h1, h2, h3 {
+          font-family: 'Domaine Text', 'Playfair Display', serif;
         }
         
         @media print {
           .no-print { display: none !important; }
           .print-break-after { page-break-after: always; }
+          .print-break-before { page-break-before: always; }
           body { 
             -webkit-print-color-adjust: exact; 
             print-color-adjust: exact;
@@ -262,17 +270,13 @@ function ProposalView({ proposal, onBack, onPrint }) {
             padding: 0;
           }
           .proposal-cover { 
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: #545142 !important;
+            height: 100vh !important;
+            page-break-after: always;
           }
           .product-grid {
             display: grid !important;
             grid-template-columns: repeat(3, 1fr) !important;
-            gap: 30px !important;
+            gap: 20px !important;
           }
         }
         
@@ -282,13 +286,15 @@ function ProposalView({ proposal, onBack, onPrint }) {
         }
       ` }} />
 
-      {/* Navigation Bar */}
+      {/* Navigation Bar - Only shows on screen */}
       <div className="no-print" style={{
-        position: 'sticky',
+        position: 'fixed',
         top: 0,
+        left: 0,
+        right: 0,
         backgroundColor: 'white',
         borderBottom: '1px solid #e5e7eb',
-        zIndex: 50,
+        zIndex: 1000,
         padding: '16px 24px'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -301,8 +307,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
               cursor: 'pointer',
               fontSize: '14px',
               display: 'flex',
-              alignItems: 'center',
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+              alignItems: 'center'
             }}
           >
             ← Back to Dashboard
@@ -316,8 +321,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
               border: 'none',
               borderRadius: '4px',
               cursor: 'pointer',
-              fontSize: '14px',
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+              fontSize: '14px'
             }}
           >
             Print / Export as PDF
@@ -325,304 +329,335 @@ function ProposalView({ proposal, onBack, onPrint }) {
         </div>
       </div>
 
-      {/* Header with Logo */}
-      <div style={{
-        padding: '40px',
-        borderBottom: '1px solid #e5e7eb',
+      {/* Cover Page - Full taupe background like Hunter example */}
+      <div className="proposal-cover print-break-after" style={{
+        backgroundColor: brandTaupe,
+        minHeight: '100vh',
         display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        maxWidth: '1100px',
-        margin: '0 auto'
+        position: 'relative',
+        paddingTop: '60px'
       }}>
+        {/* White circular logo with whisper version */}
         <img 
-          src="/mayker_wordmark-events-black.svg" 
-          alt="Mayker Events" 
-          style={{ height: '40px' }}
+          src="/mayker_icon-whisper.svg"
+          alt="Mayker Events"
+          style={{
+            width: '160px',
+            height: '160px',
+            marginBottom: '60px'
+          }}
         />
+        
+        {/* MAYKER EVENTS text using wordmark */}
         <img 
-          src="/mayker_icon-black.svg" 
-          alt="Mayker" 
-          style={{ height: '40px' }}
+          src="/mayker_wordmark-events-whisper.svg"
+          alt="MAYKER EVENTS"
+          style={{
+            height: '60px',
+            marginBottom: '40px'
+          }}
         />
+        
+        {/* Divider line */}
+        <div style={{
+          width: '100px',
+          height: '1px',
+          backgroundColor: brandWhite,
+          opacity: 0.5,
+          marginBottom: '40px'
+        }}></div>
+        
+        {/* PRODUCT SELECTIONS text */}
+        <p style={{
+          fontSize: '18px',
+          color: brandWhite,
+          letterSpacing: '0.2em',
+          marginBottom: '20px'
+        }}>PRODUCT SELECTIONS</p>
+        
+        {/* Event name */}
+        <p style={{
+          fontSize: '24px',
+          color: brandWhite,
+          marginBottom: '10px',
+          fontWeight: '300'
+        }}>{proposal.clientName}</p>
+        
+        {/* Location */}
+        <p style={{
+          fontSize: '16px',
+          color: brandWhite,
+          opacity: 0.9,
+          marginBottom: '10px'
+        }}>{proposal.venueName}</p>
+        
+        {/* Dates */}
+        <p style={{
+          fontSize: '16px',
+          color: brandWhite,
+          opacity: 0.9
+        }}>{formatDateRange(proposal)}</p>
       </div>
 
-      {/* Proposal Info Section */}
-      <div style={{
-        padding: '40px',
-        maxWidth: '1100px',
-        margin: '0 auto'
-      }}>
-        <h1 style={{
-          fontSize: '36px',
-          fontWeight: '300',
-          marginBottom: '40px',
-          fontFamily: "'Domaine Text', serif",
-          letterSpacing: '0.05em'
-        }}>PROPOSAL</h1>
-        
+      {/* Interior Pages - White background with products */}
+      <div style={{ backgroundColor: 'white' }}>
+        {/* Header for interior pages */}
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(2, 1fr)',
-          gap: '40px 60px',
-          marginBottom: '60px'
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '40px 60px',
+          borderBottom: '1px solid #e5e7eb'
         }}>
-          <div>
-            <p style={{
-              fontSize: '11px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.15em',
-              color: '#666',
-              marginBottom: '8px',
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>CLIENT</p>
-            <p style={{
-              fontSize: '16px',
-              color: brandCharcoal,
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>{proposal.clientName}</p>
-          </div>
-          <div>
-            <p style={{
-              fontSize: '11px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.15em',
-              color: '#666',
-              marginBottom: '8px',
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>LOCATION</p>
-            <p style={{
-              fontSize: '16px',
-              color: brandCharcoal,
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>{proposal.venueName}, {proposal.city}, {proposal.state}</p>
-          </div>
-          <div>
-            <p style={{
-              fontSize: '11px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.15em',
-              color: '#666',
-              marginBottom: '8px',
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>EVENT DATES</p>
-            <p style={{
-              fontSize: '16px',
-              color: brandCharcoal,
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>{formatDateRange(proposal)}</p>
-          </div>
-          <div>
-            <p style={{
-              fontSize: '11px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.15em',
-              color: '#666',
-              marginBottom: '8px',
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>DURATION</p>
-            <p style={{
-              fontSize: '16px',
-              color: brandCharcoal,
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>{getDuration(proposal)} days</p>
+          <img 
+            src="/mayker_wordmark-events-black.svg" 
+            alt="Mayker Events"
+            style={{ height: '35px' }}
+          />
+          <img 
+            src="/mayker_icon-black.svg" 
+            alt="M"
+            style={{ height: '35px' }}
+          />
+        </div>
+
+        {/* Event Info Section */}
+        <div style={{ padding: '40px 60px' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '30px',
+            marginBottom: '40px',
+            paddingBottom: '40px',
+            borderBottom: '1px solid #e5e7eb'
+          }}>
+            <div>
+              <p style={{
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#888',
+                marginBottom: '6px'
+              }}>CLIENT</p>
+              <p style={{
+                fontSize: '16px',
+                color: brandCharcoal
+              }}>{proposal.clientName}</p>
+            </div>
+            <div>
+              <p style={{
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#888',
+                marginBottom: '6px'
+              }}>LOCATION</p>
+              <p style={{
+                fontSize: '16px',
+                color: brandCharcoal
+              }}>{proposal.venueName}, {proposal.city}, {proposal.state}</p>
+            </div>
+            <div>
+              <p style={{
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#888',
+                marginBottom: '6px'
+              }}>EVENT DATES</p>
+              <p style={{
+                fontSize: '16px',
+                color: brandCharcoal
+              }}>{formatDateRange(proposal)}</p>
+            </div>
+            <div>
+              <p style={{
+                fontSize: '10px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.15em',
+                color: '#888',
+                marginBottom: '6px'
+              }}>DURATION</p>
+              <p style={{
+                fontSize: '16px',
+                color: brandCharcoal
+              }}>{getDuration(proposal)} days</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Products Section */}
-      <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '0 40px 60px' }}>
-        {sections.map((section, sectionIndex) => (
-          <div key={sectionIndex} style={{ marginTop: sectionIndex > 0 ? '60px' : '0' }}>
-            <h2 style={{
-              fontSize: '24px',
-              fontWeight: '300',
-              color: brandCharcoal,
-              marginBottom: '30px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              borderBottom: `1px solid #e5e7eb`,
-              paddingBottom: '12px',
-              fontFamily: "'Domaine Text', serif"
+        {/* Products Sections */}
+        <div style={{ padding: '0 60px 60px' }}>
+          {sections.map((section, sectionIndex) => (
+            <div key={sectionIndex} style={{ 
+              marginBottom: '60px',
+              pageBreakInside: 'avoid'
             }}>
-              {section.name}
-            </h2>
-            
-            <div className="product-grid" style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '30px'
-            }}>
-              {section.products.map((product, productIndex) => (
-                <div key={productIndex} style={{ textAlign: 'center' }}>
-                  <div style={{
-                    aspectRatio: '1',
+              <h2 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                color: brandCharcoal,
+                marginBottom: '30px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em'
+              }}>
+                {section.name}
+              </h2>
+              
+              <div className="product-grid" style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '20px'
+              }}>
+                {section.products.map((product, productIndex) => (
+                  <div key={productIndex} style={{ 
                     backgroundColor: '#f9f9f9',
-                    marginBottom: '16px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    border: '1px solid #e5e7eb'
+                    padding: '15px',
+                    borderRadius: '4px'
                   }}>
-                    <span style={{
-                      color: '#9ca3af',
+                    <div style={{
+                      aspectRatio: '1',
+                      backgroundColor: '#e5e5e5',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      color: '#999'
+                    }}>
+                      [Product Image]
+                    </div>
+                    <h3 style={{
                       fontSize: '12px',
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>[Product Image]</span>
+                      fontWeight: '600',
+                      color: brandCharcoal,
+                      textTransform: 'uppercase',
+                      marginBottom: '4px'
+                    }}>
+                      {product.name}
+                    </h3>
+                    <p style={{
+                      fontSize: '11px',
+                      color: '#666',
+                      marginBottom: '4px'
+                    }}>Quantity: {product.quantity}</p>
+                    <p style={{
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      color: brandCharcoal
+                    }}>${product.price.toFixed(2)}</p>
                   </div>
-                  <h3 style={{
-                    fontWeight: '400',
-                    color: brandCharcoal,
-                    textTransform: 'uppercase',
-                    fontSize: '12px',
-                    marginBottom: '4px',
-                    letterSpacing: '0.05em',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    {product.name}
-                  </h3>
-                  <p style={{
-                    color: '#666',
-                    fontSize: '12px',
-                    marginBottom: '6px',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>Qty: {product.quantity}</p>
-                  <p style={{
-                    color: brandCharcoal,
-                    fontWeight: '500',
-                    fontSize: '14px',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>${product.price.toFixed(2)}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
-        {/* Pricing Table */}
-        <div style={{
-          marginTop: '80px',
-          borderTop: '1px solid #e5e7eb',
-          paddingTop: '40px'
+        {/* Pricing Table Page */}
+        <div style={{ 
+          padding: '60px',
+          pageBreakBefore: 'always',
+          minHeight: '100vh'
         }}>
-          <div style={{ maxWidth: '450px', marginLeft: 'auto' }}>
-            <div style={{ fontSize: '13px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '10px 0'
-              }}>
-                <span style={{ color: '#666' }}>Product Subtotal</span>
-                <span style={{ color: brandCharcoal }}>${totals.productSubtotal.toFixed(2)}</span>
-              </div>
-              
-              {totals.extendedRental > 0 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '10px 0'
-                }}>
-                  <span style={{ color: '#666' }}>Extended Rental ({getDuration(proposal)} days)</span>
-                  <span style={{ color: brandCharcoal }}>${totals.extendedRental.toFixed(2)}</span>
-                </div>
-              )}
-              
-              {totals.discount > 0 && (
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '10px 0'
-                }}>
-                  <span style={{ color: '#059669' }}>
-                    {proposal.discountName || 'Discount'} ({proposal.discountPercent}% off)
-                  </span>
-                  <span style={{ color: '#059669' }}>-${totals.discount.toFixed(2)}</span>
-                </div>
-              )}
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '14px 0',
-                borderTop: '1px solid #e5e7eb',
-                borderBottom: '1px solid #e5e7eb',
-                fontWeight: '500',
-                marginTop: '6px',
-                marginBottom: '6px'
-              }}>
-                <span style={{ color: brandCharcoal }}>Rental Total</span>
-                <span style={{ color: brandCharcoal }}>${totals.rentalTotal.toFixed(2)}</span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '10px 0'
-              }}>
-                <span style={{ color: '#666' }}>Product Care (10%)</span>
-                <span style={{ color: brandCharcoal }}>${totals.productCare.toFixed(2)}</span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '10px 0'
-              }}>
-                <span style={{ color: '#666' }}>Service Fee (5%)</span>
-                <span style={{ color: brandCharcoal }}>${totals.serviceFee.toFixed(2)}</span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '10px 0'
-              }}>
-                <span style={{ color: '#666' }}>Delivery</span>
-                <span style={{ color: brandCharcoal }}>${totals.delivery.toFixed(2)}</span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '14px 0',
-                borderTop: '1px solid #e5e7eb',
-                fontWeight: '500',
-                marginTop: '6px'
-              }}>
-                <span style={{ color: brandCharcoal }}>Subtotal</span>
-                <span style={{ color: brandCharcoal }}>${totals.subtotal.toFixed(2)}</span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '10px 0'
-              }}>
-                <span style={{ color: '#666' }}>Tax (9.75%)</span>
-                <span style={{ color: brandCharcoal }}>${totals.tax.toFixed(2)}</span>
-              </div>
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                padding: '18px 0',
-                borderTop: '2px solid ' + brandCharcoal,
-                marginTop: '10px'
-              }}>
-                <span style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: brandCharcoal,
-                  fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                }}>TOTAL</span>
-                <span style={{
-                  fontSize: '18px',
-                  fontWeight: '600',
-                  color: brandCharcoal,
-                  fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                }}>${totals.total.toFixed(2)}</span>
-              </div>
-            </div>
+          <h2 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: brandCharcoal,
+            marginBottom: '40px',
+            textAlign: 'center'
+          }}>PRICING BREAKDOWN</h2>
+          
+          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <tbody>
+                <tr>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Product Subtotal</td>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
+                    ${totals.productSubtotal.toFixed(2)}
+                  </td>
+                </tr>
+                
+                {totals.extendedRental > 0 && (
+                  <tr>
+                    <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>
+                      Extended Rental ({getDuration(proposal)} days)
+                    </td>
+                    <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
+                      ${totals.extendedRental.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
+                
+                {totals.discount > 0 && (
+                  <tr>
+                    <td style={{ padding: '12px 0', fontSize: '14px', color: '#059669' }}>
+                      {proposal.discountName || 'Discount'} ({proposal.discountPercent}% off)
+                    </td>
+                    <td style={{ padding: '12px 0', fontSize: '14px', color: '#059669', textAlign: 'right' }}>
+                      -${totals.discount.toFixed(2)}
+                    </td>
+                  </tr>
+                )}
+                
+                <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal }}>
+                    Rental Total
+                  </td>
+                  <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>
+                    ${totals.rentalTotal.toFixed(2)}
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Product Care (10%)</td>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
+                    ${totals.productCare.toFixed(2)}
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Service Fee (5%)</td>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
+                    ${totals.serviceFee.toFixed(2)}
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Delivery</td>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
+                    ${totals.delivery.toFixed(2)}
+                  </td>
+                </tr>
+                
+                <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal }}>
+                    Subtotal
+                  </td>
+                  <td style={{ padding: '16px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>
+                    ${totals.subtotal.toFixed(2)}
+                  </td>
+                </tr>
+                
+                <tr>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: '#666' }}>Tax (9.75%)</td>
+                  <td style={{ padding: '12px 0', fontSize: '14px', color: brandCharcoal, textAlign: 'right' }}>
+                    ${totals.tax.toFixed(2)}
+                  </td>
+                </tr>
+                
+                <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
+                  <td style={{ padding: '20px 0', fontSize: '20px', fontWeight: '600', color: brandCharcoal }}>
+                    TOTAL
+                  </td>
+                  <td style={{ padding: '20px 0', fontSize: '20px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>
+                    ${totals.total.toFixed(2)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -638,7 +673,6 @@ function calculateTotal(proposal) {
 function calculateDetailedTotals(proposal) {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
   
-  // Calculate product subtotal
   let productSubtotal = 0;
   sections.forEach(section => {
     section.products.forEach(product => {
@@ -646,30 +680,21 @@ function calculateDetailedTotals(proposal) {
     });
   });
   
-  // Calculate extended rental (30% per additional day after first day)
   const duration = getDuration(proposal);
   const extendedRental = duration > 1 ? productSubtotal * 0.3 * (duration - 1) : 0;
   
-  // Calculate discount
   const discountPercent = parseFloat(proposal.discountPercent) || 0;
   const subtotalWithExtended = productSubtotal + extendedRental;
   const discount = subtotalWithExtended * (discountPercent / 100);
   
-  // Calculate rental total
   const rentalTotal = subtotalWithExtended - discount;
   
-  // Calculate fees
   const productCare = productSubtotal * 0.10;
   const serviceFee = rentalTotal * 0.05;
   const delivery = parseFloat(proposal.deliveryFee) || 0;
   
-  // Calculate subtotal
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
-  
-  // Calculate tax
   const tax = subtotal * 0.0975;
-  
-  // Calculate total
   const total = subtotal + tax;
   
   return {
