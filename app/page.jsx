@@ -301,7 +301,6 @@ function ProposalView({ proposal, onBack, onPrint }) {
         alignItems: 'center',
         padding: '60px 48px',
         position: 'relative',
-        marginTop: '60px',
         boxSizing: 'border-box'
       }}>
         <div style={{
