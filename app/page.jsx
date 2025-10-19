@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz327RAdHGdwXmwyHVygb78JtzQ09819Kih3zvJ3wVpiHbDV6jpgYZDz8q6x0acS1r6/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwTjGeZhAIGtnUwCeiw9N8Bd0xs7gNAfJYA6nPdjyRXAuw2acSs8Sc_y9bUfBjwzldB/exec';
 
 export default function ProposalApp() {
   const [proposals, setProposals] = useState([]);
@@ -204,6 +204,30 @@ function ProposalView({ proposal, onBack, onPrint }) {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
       <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        
+        @font-face {
+          font-family: 'Neue Haas Unica';
+          src: url('/NeueHaasUnica-Regular.ttf') format('truetype');
+          font-weight: 400;
+        }
+        
+        @font-face {
+          font-family: 'Domaine Text';
+          src: url('/TestDomaineText-Light.otf') format('opentype');
+          font-weight: 300;
+        }
+        
+        * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+        }
+        
+        body {
+          font-family: 'Neue Haas Unica', 'Inter', sans-serif;
+        }
+        
         @media print {
           .no-print { display: none !important; }
           .print-break-after { page-break-after: always; }
@@ -284,7 +308,8 @@ function ProposalView({ proposal, onBack, onPrint }) {
             fontWeight: 'bold',
             color: 'white',
             marginBottom: '24px',
-            letterSpacing: '0.05em'
+            letterSpacing: '0.05em',
+            fontFamily: "'Neue Haas Unica', sans-serif"
           }}>
             MAYKER EVENTS
           </div>
@@ -302,25 +327,29 @@ function ProposalView({ proposal, onBack, onPrint }) {
             letterSpacing: '0.2em',
             marginBottom: '16px',
             textTransform: 'uppercase',
-            fontWeight: '500'
+            fontWeight: '500',
+            fontFamily: "'Neue Haas Unica', sans-serif"
           }}>Product Selections</p>
           
           <p style={{
             fontSize: '24px',
             color: 'white',
             marginBottom: '6px',
-            fontWeight: '300'
+            fontWeight: '300',
+            fontFamily: "'Domaine Text', serif"
           }}>{proposal.clientName}</p>
           
           <p style={{
             fontSize: '13px',
             color: 'rgba(255,255,255,0.9)',
-            marginBottom: '4px'
+            marginBottom: '4px',
+            fontFamily: "'Neue Haas Unica', sans-serif"
           }}>{proposal.venueName}</p>
           
           <p style={{
             fontSize: '13px',
-            color: 'rgba(255,255,255,0.9)'
+            color: 'rgba(255,255,255,0.9)',
+            fontFamily: "'Neue Haas Unica', sans-serif"
           }}>{formatDateRange(proposal)}</p>
         </div>
       </div>
@@ -342,7 +371,12 @@ function ProposalView({ proposal, onBack, onPrint }) {
               justifyContent: 'space-between',
               alignItems: 'flex-start'
             }}>
-              <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: brandCharcoal }}>MAYKER EVENTS</h1>
+              <h1 style={{ 
+                fontSize: '24px', 
+                fontWeight: 'bold', 
+                color: brandCharcoal,
+                fontFamily: "'Neue Haas Unica', sans-serif"
+              }}>MAYKER EVENTS</h1>
               
               <div style={{
                 textAlign: 'right',
@@ -355,7 +389,8 @@ function ProposalView({ proposal, onBack, onPrint }) {
                   color: '#666',
                   lineHeight: '1.4',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.05em'
+                  letterSpacing: '0.05em',
+                  fontFamily: "'Neue Haas Unica', sans-serif"
                 }}>
                   <div>{proposal.clientName}</div>
                   <div>{formatDateRange(proposal)}</div>
@@ -371,7 +406,8 @@ function ProposalView({ proposal, onBack, onPrint }) {
             color: brandCharcoal,
             marginBottom: '20px',
             textTransform: 'uppercase',
-            letterSpacing: '0.1em'
+            letterSpacing: '0.1em',
+            fontFamily: "'Domaine Text', serif"
           }}>
             {section.name}
           </h2>
@@ -424,7 +460,8 @@ function ProposalView({ proposal, onBack, onPrint }) {
                   fontWeight: '500',
                   color: brandCharcoal,
                   textTransform: 'uppercase',
-                  marginBottom: '4px'
+                  marginBottom: '4px',
+                  fontFamily: "'Neue Haas Unica', sans-serif"
                 }}>
                   {product.name}
                 </h3>
@@ -432,13 +469,15 @@ function ProposalView({ proposal, onBack, onPrint }) {
                 <p style={{
                   fontSize: '10px',
                   color: '#666',
-                  marginBottom: '4px'
+                  marginBottom: '4px',
+                  fontFamily: "'Neue Haas Unica', sans-serif"
                 }}>Quantity: {product.quantity}</p>
                 
                 <p style={{
                   fontSize: '13px',
                   fontWeight: '400',
-                  color: brandCharcoal
+                  color: brandCharcoal,
+                  fontFamily: "'Neue Haas Unica', sans-serif"
                 }}>${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
               </div>
             ))}
@@ -449,7 +488,8 @@ function ProposalView({ proposal, onBack, onPrint }) {
             bottom: '30px',
             right: '60px',
             fontSize: '10px',
-            color: '#999'
+            color: '#999',
+            fontFamily: "'Neue Haas Unica', sans-serif"
           }}>{sectionIndex + 2}</div>
         </div>
       ))}
@@ -465,7 +505,12 @@ function ProposalView({ proposal, onBack, onPrint }) {
           paddingBottom: '15px',
           borderBottom: '1px solid #e5e7eb'
         }}>
-          <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: brandCharcoal }}>MAYKER EVENTS</h1>
+          <h1 style={{ 
+            fontSize: '24px', 
+            fontWeight: 'bold', 
+            color: brandCharcoal,
+            fontFamily: "'Neue Haas Unica', sans-serif"
+          }}>MAYKER EVENTS</h1>
         </div>
         
         <h2 style={{
@@ -475,11 +520,12 @@ function ProposalView({ proposal, onBack, onPrint }) {
           marginBottom: '20px',
           textTransform: 'uppercase',
           letterSpacing: '0.1em',
-          textAlign: 'center'
+          textAlign: 'center',
+          fontFamily: "'Domaine Text', serif"
         }}>Estimate</h2>
         
         {/* Itemized Table */}
-        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px', fontFamily: "'Neue Haas Unica', sans-serif" }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
               <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left' }}>Section</th>
@@ -515,7 +561,7 @@ function ProposalView({ proposal, onBack, onPrint }) {
         </table>
         
         {/* Pricing Breakdown */}
-        <div style={{ maxWidth: '350px', marginLeft: 'auto' }}>
+        <div style={{ maxWidth: '350px', marginLeft: 'auto', fontFamily: "'Neue Haas Unica', sans-serif" }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
@@ -524,6 +570,26 @@ function ProposalView({ proposal, onBack, onPrint }) {
                   ${formatNumber(totals.productSubtotal)}
                 </td>
               </tr>
+              {totals.standardRateDiscount > 0 && (
+                <tr>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669' }}>
+                    {proposal.discountName || 'Discount'} ({proposal.discount}% off)
+                  </td>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontWeight: '500' }}>
+                    -${formatNumber(totals.standardRateDiscount)}
+                  </td>
+                </tr>
+              )}
+              {totals.extendedRental > 0 && (
+                <tr>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: '#666' }}>
+                    Extended Rental
+                  </td>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontWeight: '500' }}>
+                    ${formatNumber(totals.extendedRental)}
+                  </td>
+                </tr>
+              )}
               <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
                 <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal }}>Rental Total</td>
                 <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right' }}>
@@ -575,7 +641,8 @@ function ProposalView({ proposal, onBack, onPrint }) {
           bottom: '30px',
           right: '60px',
           fontSize: '10px',
-          color: '#999'
+          color: '#999',
+          fontFamily: "'Neue Haas Unica', sans-serif"
         }}>{sections.length + 2}</div>
       </div>
     </div>
@@ -598,14 +665,20 @@ function calculateDetailedTotals(proposal) {
   });
   
   const duration = getDuration(proposal);
-  const extendedRental = duration > 1 ? productSubtotal * 0.3 * (duration - 1) : 0;
+  const rentalMultiplier = getRentalMultiplier(duration);
   
+  // Discount applies only to the standard rental rate (day 1)
   const discountPercent = parseFloat(proposal.discount) || 0;
-  const subtotalWithExtended = productSubtotal + extendedRental;
-  const discount = subtotalWithExtended * (discountPercent / 100);
+  const standardRateDiscount = productSubtotal * (discountPercent / 100);
+  const standardRateAfterDiscount = productSubtotal - standardRateDiscount;
   
-  const rentalTotal = subtotalWithExtended - discount;
+  // Extended rental is calculated on the full standard rate (before discount)
+  const extendedRental = productSubtotal * (rentalMultiplier - 1);
   
+  // Total rental = discounted standard rate + extended rental
+  const rentalTotal = standardRateAfterDiscount + extendedRental;
+  
+  // Fees
   const productCare = productSubtotal * 0.10;
   const serviceFee = rentalTotal * 0.05;
   const delivery = parseFloat(proposal.deliveryFee) || 0;
@@ -616,8 +689,8 @@ function calculateDetailedTotals(proposal) {
   
   return {
     productSubtotal,
+    standardRateDiscount,
     extendedRental,
-    discount,
     rentalTotal,
     productCare,
     serviceFee,
@@ -626,6 +699,19 @@ function calculateDetailedTotals(proposal) {
     tax,
     total
   };
+}
+
+function getRentalMultiplier(duration) {
+  if (duration <= 1) return 1.0;
+  if (duration === 2) return 1.1;
+  if (duration === 3) return 1.2;
+  if (duration === 4) return 1.3;
+  if (duration === 5) return 1.4;
+  if (duration === 6) return 1.5;
+  if (duration >= 7 && duration <= 14) return 2.0;
+  if (duration >= 15 && duration <= 21) return 3.0;
+  if (duration >= 22 && duration <= 28) return 4.0;
+  return 4.0;
 }
 
 function formatDateRange(proposal) {
