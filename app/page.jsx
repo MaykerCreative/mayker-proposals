@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-// Fuzzy string matching for typo tolerance
 function levenshteinDistance(str1, str2) {
   const len1 = str1.length;
   const len2 = str2.length;
@@ -120,9 +119,10 @@ export default function ProposalApp() {
     fetchProposals();
   }, []);
 
-      try {
-        setLoading(true);
-        const response = await fetch('/api/proposals');
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/proposals');
       const data = await response.json();
       
       const parsedProposals = data.map(proposal => {
@@ -244,8 +244,7 @@ function ProposalView({ proposal, catalog, onBack }) {
         ← Back
       </button>
 
-      {/* Cover Page */}
-      <div className="min-h-screen bg-gradient-to-br from-[#8B8B7F] to-[#A9A99E] flex flex-col justify-center items-center text-white p-8 page-break">
+      <div className="min-h-screen bg-gradient-to-br from-[#8B8B7F] to-[#A9A99E] flex flex-col justify-center items-center text-white p-8">
         <div className="text-center">
           <div className="mb-8">
             <svg width="80" height="80" viewBox="0 0 100 100" className="mx-auto">
@@ -258,9 +257,8 @@ function ProposalView({ proposal, catalog, onBack }) {
         </div>
       </div>
 
-      {/* Product Sections */}
       {proposal.sections && proposal.sections.map((section, sectionIdx) => (
-        <div key={sectionIdx} className="min-h-screen p-12 page-break">
+        <div key={sectionIdx} className="min-h-screen p-12">
           <h2 className="text-3xl font-light mb-8 pb-4 border-b border-gray-300">{section.placement}</h2>
           
           <div className="grid grid-cols-2 gap-8">
@@ -287,8 +285,7 @@ function ProposalView({ proposal, catalog, onBack }) {
         </div>
       ))}
 
-      {/* Estimate Page */}
-      <div className="min-h-screen p-12 page-break">
+      <div className="min-h-screen p-12">
         <h2 className="text-3xl font-light mb-8 pb-4 border-b border-gray-300">Estimate</h2>
         
         <div className="mb-8">
