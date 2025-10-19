@@ -14,12 +14,57 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
+      console.log('Fetching proposals...');
       const response = await fetch('https://script.google.com/macros/s/AKfycbxI5yUBaFt9dvrPKnEZo4aKH0g8YMDSXMBCrDx5s8W8nxZfgCaafvEGsIcjOmOpZ-hM/exec');
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
-      setProposals(data);
+      console.log('Fetched data:', data);
+      
+      // If data is empty or not an array, use test data
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        console.log('No data from API, using test data');
+        // Test data for development
+        const testData = [{
+          clientName: "Sample Sally",
+          venueName: "Blackberry Farm",
+          city: "Walland",
+          state: "TN",
+          eventDate: "Oct 27, 2025",
+          startDate: "2025-10-27",
+          endDate: "2025-10-30",
+          deliveryFee: "500",
+          discountPercent: "15",
+          discountName: "Mayker Reserve",
+          clientFolderURL: "",
+          sectionsJSON: JSON.stringify([
+            {
+              name: "BAR",
+              products: [
+                { name: "CONCRETE BAR", quantity: 1, price: 575 }
+              ]
+            },
+            {
+              name: "LOUNGE",
+              products: [
+                { name: "AURORA SWIVEL CHAIR (SAGE)", quantity: 2, price: 225 },
+                { name: "COOPER END TABLE", quantity: 2, price: 125 }
+              ]
+            }
+          ])
+        }];
+        setProposals(testData);
+      } else {
+        setProposals(data);
+      }
+      
       setLoading(false);
     } catch (err) {
-      setError('Failed to fetch proposals');
+      console.error('Error fetching proposals:', err);
+      setError(`Failed to fetch proposals: ${err.message}`);
       setLoading(false);
     }
   };
