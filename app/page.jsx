@@ -214,61 +214,37 @@ function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
     }
   }, [isEditing, proposal]);
 
-  const handleSave = async () => {
-  setSaving(true);
-  try {
-    const finalData = {
-      ...editData,
-      sectionsJSON: JSON.stringify(JSON.parse(editData.sectionsJSON || '[]'))
-    };
+  const handleSave = async (finalData) => {
+    setSaving(true);
+    try {
+      const dataToSave = {
+        ...finalData,
+        sectionsJSON: JSON.stringify(JSON.parse(finalData.sectionsJSON || '[]'))
+      };
 
-    const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(finalData)
-    });
+      const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(dataToSave)
+      });
 
-    const result = await response.json();
-    
-    if (result.success) {
-      alert('Proposal saved successfully as ' + result.clientName);
-      setIsEditing(false);
-      onRefresh();
-    } else {
-      alert('Error saving proposal: ' + result.error);
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Proposal saved successfully as ' + result.clientName);
+        setIsEditing(false);
+        onRefresh();
+      } else {
+        alert('Error saving proposal: ' + result.error);
+      }
+    } catch (err) {
+      alert('Error saving proposal: ' + err.message);
+    } finally {
+      setSaving(false);
     }
-  } catch (err) {
-    alert('Error saving proposal: ' + err.message);
-  } finally {
-    setSaving(false);
-  }
-};
-
-    const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(finalData)
-    });
-
-    const result = await response.json();
-    
-    if (result.success) {
-      alert('Proposal saved successfully as ' + result.clientName);
-      setIsEditing(false);
-      onRefresh();
-    } else {
-      alert('Error saving proposal: ' + result.error);
-    }
-  } catch (err) {
-    alert('Error saving proposal: ' + err.message);
-  } finally {
-    setSaving(false);
-  }
-};
+  };
 
   if (isEditing && editData) {
     return <EditProposalView proposal={editData} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
@@ -288,20 +264,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
-        @font-face {
-          font-family: 'Domaine Text';
-          src: url('/TestDomaineText-Light.otf') format('opentype');
-          font-weight: 300;
-          font-style: normal;
-        }
-        
-        @font-face {
-          font-family: 'Neue Haas Unica';
-          src: url('/NeueHaasUnica-Regular.ttf') format('truetype');
-          font-weight: 400;
-          font-style: normal;
-        }
-        
         * {
           box-sizing: border-box;
           margin: 0;
@@ -309,7 +271,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         }
         
         body {
-          font-family: 'Neue Haas Unica', 'Inter', sans-serif;
+          font-family: 'Inter', sans-serif;
         }
         
         @media print {
@@ -932,12 +894,12 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
   };
 
   const handleSaveClick = () => {
-  const finalData = {
-    ...formData,
-    sectionsJSON: JSON.stringify(sections)
+    const finalData = {
+      ...formData,
+      sectionsJSON: JSON.stringify(sections)
+    };
+    onSave(finalData);
   };
-  onSave(finalData);
-};
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '80px 24px 24px', marginTop: '60px' }}>
