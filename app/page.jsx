@@ -214,20 +214,12 @@ function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
     }
   }, [isEditing, proposal]);
 
-  const handleSave = async (finalData) => {
+  const handleSave = async () => {
     setSaving(true);
     try {
-      const dataToSave = {
-        ...finalData,
-        sectionsJSON: JSON.stringify(JSON.parse(finalData.sectionsJSON || '[]'))
-      };
-
       const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(dataToSave)
+        body: JSON.stringify(editData)
       });
 
       const result = await response.json();
@@ -264,6 +256,20 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
+        @font-face {
+          font-family: 'Domaine Text';
+          src: url('/TestDomaineText-Light.otf') format('opentype');
+          font-weight: 300;
+          font-style: normal;
+        }
+        
+        @font-face {
+          font-family: 'Neue Haas Unica';
+          src: url('/NeueHaasUnica-Regular.ttf') format('truetype');
+          font-weight: 400;
+          font-style: normal;
+        }
+        
         * {
           box-sizing: border-box;
           margin: 0;
@@ -271,7 +277,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         }
         
         body {
-          font-family: 'Inter', sans-serif;
+          font-family: 'Neue Haas Unica', 'Inter', sans-serif;
         }
         
         @media print {
@@ -898,6 +904,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
       ...formData,
       sectionsJSON: JSON.stringify(sections)
     };
+    // Pass the final data to parent's onSave
     onSave(finalData);
   };
 
@@ -1200,3 +1207,5 @@ function getDuration(proposal) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return diffDays;
 }
+
+
