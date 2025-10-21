@@ -891,8 +891,13 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
   };
 
   const handleSaveClick = () => {
+    // Strip version from client name for saving - the backend will auto-increment
+    const clientNameWithoutVersion = formData.clientName
+      .replace(/\s*\(V\d+\)\s*$/, ''); // Remove (V1), (V2), etc.
+    
     const finalData = {
       ...formData,
+      clientName: clientNameWithoutVersion,
       sectionsJSON: JSON.stringify(sections)
     };
     onSave(finalData);
