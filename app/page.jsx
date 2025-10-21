@@ -939,7 +939,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
         <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <div style={{ marginBottom: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Client Details</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', maxWidth: '800px' }}>
               <div style={{ gridColumn: '1 / -1' }}>
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Client Name</label>
                 <div 
@@ -955,7 +955,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                   type="text" 
                   value={formData.venueName || ''}
                   onChange={(e) => handleInputChange('venueName', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -964,7 +964,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                   type="text" 
                   value={formData.city || ''}
                   onChange={(e) => handleInputChange('city', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -973,7 +973,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                   type="text" 
                   value={formData.state || ''}
                   onChange={(e) => handleInputChange('state', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -982,7 +982,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                   type="date" 
                   value={formData.startDate || ''}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -991,7 +991,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                   type="date" 
                   value={formData.endDate || ''}
                   onChange={(e) => handleInputChange('endDate', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -1000,7 +1000,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                   type="number" 
                   value={formData.deliveryFee || ''}
                   onChange={(e) => handleInputChange('deliveryFee', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -1009,7 +1009,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                   type="number" 
                   value={formData.discount || ''}
                   onChange={(e) => handleInputChange('discount', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
               <div>
@@ -1018,7 +1018,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                   type="text" 
                   value={formData.discountName || ''}
                   onChange={(e) => handleInputChange('discountName', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
             </div>
@@ -1031,13 +1031,13 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '12px' }}>{section.name}</h3>
                 {section.products.map((product, productIdx) => (
                   <div key={productIdx} style={{ marginBottom: '12px', padding: '12px', backgroundColor: 'white', borderRadius: '6px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
-                    <div>
+                    <div style={{ minWidth: 0 }}>
                       <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Product Name</label>
                       <input 
                         type="text" 
                         value={product.name || ''}
                         onChange={(e) => handleProductChange(sectionIdx, productIdx, 'name', e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
                       />
                     </div>
                     <div>
@@ -1046,7 +1046,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                         type="number" 
                         value={product.quantity || 0}
                         onChange={(e) => handleProductChange(sectionIdx, productIdx, 'quantity', e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
                       />
                     </div>
                     <div>
@@ -1056,7 +1056,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                         value={product.price || 0}
                         onChange={(e) => handleProductChange(sectionIdx, productIdx, 'price', e.target.value)}
                         step="0.01"
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
+                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
                       />
                     </div>
                     <div>
@@ -1075,7 +1075,8 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                         borderRadius: '4px',
                         cursor: 'pointer',
                         fontSize: '13px',
-                        fontWeight: '500'
+                        fontWeight: '500',
+                        whiteSpace: 'nowrap'
                       }}
                     >
                       Remove
