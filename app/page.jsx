@@ -884,19 +884,11 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
   };
 
   const handleSaveClick = () => {
-    // Extract base client name (remove any existing version)
-    const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '').trim();
-    
-    // Clean up date formatting - remove time portion if it exists
-    const cleanStartDate = formData.startDate ? formData.startDate.split('T')[0] : '';
-    const cleanEndDate = formData.endDate ? formData.endDate.split('T')[0] : '';
+    const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
     
     const finalData = {
       ...formData,
       clientName: clientNameWithoutVersion,
-      startDate: cleanStartDate,
-      endDate: cleanEndDate,
-      discount: formData.discount || formData.discountPercent || '',
       sectionsJSON: JSON.stringify(sections)
     };
     onSave(finalData);
