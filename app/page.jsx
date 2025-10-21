@@ -939,15 +939,14 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
         <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
           <div style={{ marginBottom: '24px' }}>
             <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Client Details</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div style={{ gridColumn: '1 / -1' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '8px' }}>
+              <div>
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Client Name</label>
                 <div 
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', backgroundColor: '#f3f4f6', color: '#6b7280', minHeight: '36px', display: 'flex', alignItems: 'center', marginBottom: '4px' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', backgroundColor: '#f3f4f6', color: '#6b7280', minHeight: '36px', display: 'flex', alignItems: 'center' }}
                 >
                   {formData.clientName || ''}
                 </div>
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0' }}>Version will auto-increment on save</p>
               </div>
               <div>
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Venue Name</label>
@@ -1022,6 +1021,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 />
               </div>
             </div>
+            <p style={{ fontSize: '12px', color: '#6b7280', margin: '0' }}>Version will auto-increment on save</p>
           </div>
 
           <div>
