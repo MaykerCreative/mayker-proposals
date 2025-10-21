@@ -217,22 +217,15 @@ function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-      const dataToSave = {
-        ...finalData,
-        sectionsJSON: JSON.stringify(JSON.parse(finalData.sectionsJSON || '[]'))
-      };
-
       const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec', {
         method: 'POST',
         headers: {
           'Content-Type': 'text/plain'
         },
-        body: JSON.stringify(dataToSave),
+        body: JSON.stringify(finalData),
         mode: 'no-cors'
       });
 
-      // With no-cors mode, we can't read the response, so we just assume success
-      // and refresh the data
       alert('Proposal saved successfully');
       setIsEditing(false);
       onRefresh();
@@ -891,9 +884,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
   };
 
   const handleSaveClick = () => {
-    // Strip version from client name for saving - the backend will auto-increment
-    const clientNameWithoutVersion = formData.clientName
-      .replace(/\s*\(V\d+\)\s*$/, ''); // Remove (V1), (V2), etc.
+    const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
     
     const finalData = {
       ...formData,
@@ -951,18 +942,18 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Client Name</label>
-                <input 
-                  type="text" 
-                  value={formData.clientName}
-                  onChange={(e) => handleInputChange('clientName', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
-                />
+                <div 
+                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', backgroundColor: '#f3f4f6', color: '#6b7280', minHeight: '36px', display: 'flex', alignItems: 'center' }}
+                >
+                  {formData.clientName || ''}
+                </div>
+                <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>Version will auto-increment on save</p>
               </div>
               <div>
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Venue Name</label>
                 <input 
                   type="text" 
-                  value={formData.venueName}
+                  value={formData.venueName || ''}
                   onChange={(e) => handleInputChange('venueName', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
                 />
@@ -971,7 +962,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>City</label>
                 <input 
                   type="text" 
-                  value={formData.city}
+                  value={formData.city || ''}
                   onChange={(e) => handleInputChange('city', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
                 />
@@ -980,7 +971,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>State</label>
                 <input 
                   type="text" 
-                  value={formData.state}
+                  value={formData.state || ''}
                   onChange={(e) => handleInputChange('state', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
                 />
@@ -989,7 +980,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Start Date</label>
                 <input 
                   type="date" 
-                  value={formData.startDate}
+                  value={formData.startDate || ''}
                   onChange={(e) => handleInputChange('startDate', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
                 />
@@ -998,7 +989,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>End Date</label>
                 <input 
                   type="date" 
-                  value={formData.endDate}
+                  value={formData.endDate || ''}
                   onChange={(e) => handleInputChange('endDate', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
                 />
@@ -1007,7 +998,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Delivery Fee</label>
                 <input 
                   type="number" 
-                  value={formData.deliveryFee}
+                  value={formData.deliveryFee || ''}
                   onChange={(e) => handleInputChange('deliveryFee', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
                 />
@@ -1016,7 +1007,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Discount %</label>
                 <input 
                   type="number" 
-                  value={formData.discount}
+                  value={formData.discount || ''}
                   onChange={(e) => handleInputChange('discount', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
                 />
@@ -1025,7 +1016,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Discount Name</label>
                 <input 
                   type="text" 
-                  value={formData.discountName}
+                  value={formData.discountName || ''}
                   onChange={(e) => handleInputChange('discountName', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px' }}
                 />
@@ -1044,7 +1035,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                       <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Product Name</label>
                       <input 
                         type="text" 
-                        value={product.name}
+                        value={product.name || ''}
                         onChange={(e) => handleProductChange(sectionIdx, productIdx, 'name', e.target.value)}
                         style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                       />
@@ -1053,7 +1044,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                       <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Quantity</label>
                       <input 
                         type="number" 
-                        value={product.quantity}
+                        value={product.quantity || 0}
                         onChange={(e) => handleProductChange(sectionIdx, productIdx, 'quantity', e.target.value)}
                         style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
                       />
@@ -1062,7 +1053,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                       <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Price</label>
                       <input 
                         type="number" 
-                        value={product.price}
+                        value={product.price || 0}
                         onChange={(e) => handleProductChange(sectionIdx, productIdx, 'price', e.target.value)}
                         step="0.01"
                         style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px' }}
@@ -1071,7 +1062,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                     <div>
                       <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Total</label>
                       <div style={{ padding: '6px 8px', fontSize: '13px', fontWeight: '500', color: '#111827' }}>
-                        ${formatNumber(product.price * product.quantity)}
+                        ${formatNumber((product.price || 0) * (product.quantity || 0))}
                       </div>
                     </div>
                     <button
