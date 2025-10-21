@@ -246,6 +246,30 @@ function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
   }
 };
 
+    const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(finalData)
+    });
+
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('Proposal saved successfully as ' + result.clientName);
+      setIsEditing(false);
+      onRefresh();
+    } else {
+      alert('Error saving proposal: ' + result.error);
+    }
+  } catch (err) {
+    alert('Error saving proposal: ' + err.message);
+  } finally {
+    setSaving(false);
+  }
+};
+
   if (isEditing && editData) {
     return <EditProposalView proposal={editData} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
   }
@@ -908,13 +932,12 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
   };
 
   const handleSaveClick = () => {
-    const finalData = {
-      ...formData,
-      sectionsJSON: JSON.stringify(sections)
-    };
-    // Pass the final data to parent's onSave
-    onSave(finalData);
+  const finalData = {
+    ...formData,
+    sectionsJSON: JSON.stringify(sections)
   };
+  onSave(finalData);
+};
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '80px 24px 24px', marginTop: '60px' }}>
