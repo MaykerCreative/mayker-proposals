@@ -893,6 +893,14 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
     };
     onSave(finalData);
   };
+    
+    const finalData = {
+      ...formData,
+      clientName: clientNameWithoutVersion,
+      sectionsJSON: JSON.stringify(sections)
+    };
+    onSave(finalData);
+  };
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '80px 24px 24px', marginTop: '60px' }}>
