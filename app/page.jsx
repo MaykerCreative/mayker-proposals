@@ -14,7 +14,8 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
-const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec');      
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec');
+      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -216,7 +217,8 @@ function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {        method: 'POST',
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+        method: 'POST',
         headers: {
           'Content-Type': 'text/plain'
         },
@@ -483,65 +485,69 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               gridTemplateColumns: 'repeat(3, 1fr)',
               gap: '20px'
             }}>
-              {section.products.map((product, productIndex) => (
-                <div key={productIndex} style={{ 
-                  backgroundColor: '#f9f9f9',
-                  padding: '15px',
-                  borderRadius: '4px'
-                }}>
-                  <div style={{
-                    aspectRatio: '1',
-                    backgroundColor: '#e5e5e5',
-                    marginBottom: '12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '11px',
-                    color: '#999',
-                    overflow: 'hidden',
-                    borderRadius: '2px'
+              {section.products.map((product, productIndex) => {
+                const extendedPrice = product.price * totals.rentalMultiplier;
+                
+                return (
+                  <div key={productIndex} style={{ 
+                    backgroundColor: '#f9f9f9',
+                    padding: '15px',
+                    borderRadius: '4px'
                   }}>
-                    {product.imageUrl ? (
-                      <img 
-                        src={product.imageUrl}
-                        alt={product.name}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
-                    ) : (
-                      '[Product Image]'
-                    )}
+                    <div style={{
+                      aspectRatio: '1',
+                      backgroundColor: '#e5e5e5',
+                      marginBottom: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '11px',
+                      color: '#999',
+                      overflow: 'hidden',
+                      borderRadius: '2px'
+                    }}>
+                      {product.imageUrl ? (
+                        <img 
+                          src={product.imageUrl}
+                          alt={product.name}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      ) : (
+                        '[Product Image]'
+                      )}
+                    </div>
+                    <h3 style={{
+                      fontSize: '11px',
+                      fontWeight: '500',
+                      color: brandCharcoal,
+                      textTransform: 'uppercase',
+                      marginBottom: '4px',
+                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+                    }}>
+                      {product.name}
+                    </h3>
+                    <p style={{
+                      fontSize: '10px',
+                      color: '#666',
+                      marginBottom: '4px',
+                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+                    }}>Quantity: {product.quantity}</p>
+                    <p style={{
+                      fontSize: '13px',
+                      fontWeight: '400',
+                      color: brandCharcoal,
+                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+                    }}>${extendedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                   </div>
-                  <h3 style={{
-                    fontSize: '11px',
-                    fontWeight: '500',
-                    color: brandCharcoal,
-                    textTransform: 'uppercase',
-                    marginBottom: '4px',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    {product.name}
-                  </h3>
-                  <p style={{
-                    fontSize: '10px',
-                    color: '#666',
-                    marginBottom: '4px',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>Quantity: {product.quantity}</p>
-                  <p style={{
-                    fontSize: '13px',
-                    fontWeight: '400',
-                    color: brandCharcoal,
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>${product.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-                </div>
-              ))}
+                );
+              })}
             </div>
             
             <div style={{
@@ -672,183 +678,174 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           </thead>
           <tbody>
             {sections.map((section, sectionIndex) => (
-              section.products.map((product, productIndex) => (
-                <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: '#888',
-                    fontStyle: 'italic',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    {productIndex === 0 ? section.name : ''}
-                  </td>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: brandCharcoal,
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    {product.name}
-                  </td>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: brandCharcoal,
-                    textAlign: 'center',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    {product.quantity}
-                  </td>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: brandCharcoal,
-                    textAlign: 'right',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    ${formatNumber(product.price)}
-                  </td>
-                  <td style={{ 
-                    padding: '10px 0', 
-                    fontSize: '11px', 
-                    color: brandCharcoal,
-                    textAlign: 'right',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                  }}>
-                    ${formatNumber(product.price * product.quantity)}
-                  </td>
-                </tr>
-              ))
+              section.products.map((product, productIndex) => {
+                const extendedPrice = product.price * totals.rentalMultiplier;
+                const lineTotal = extendedPrice * product.quantity;
+                
+                return (
+                  <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
+                    <td style={{ 
+                      padding: '10px 0', 
+                      fontSize: '11px', 
+                      color: '#888',
+                      fontStyle: 'italic',
+                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+                    }}>
+                      {productIndex === 0 ? section.name : ''}
+                    </td>
+                    <td style={{ 
+                      padding: '10px 0', 
+                      fontSize: '11px', 
+                      color: brandCharcoal,
+                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+                    }}>
+                      {product.name}
+                    </td>
+                    <td style={{ 
+                      padding: '10px 0', 
+                      fontSize: '11px', 
+                      color: brandCharcoal,
+                      textAlign: 'center',
+                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+                    }}>
+                      {product.quantity}
+                    </td>
+                    <td style={{ 
+                      padding: '10px 0', 
+                      fontSize: '11px', 
+                      color: brandCharcoal,
+                      textAlign: 'right',
+                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+                    }}>
+                      ${formatNumber(extendedPrice)}
+                    </td>
+                    <td style={{ 
+                      padding: '10px 0', 
+                      fontSize: '11px', 
+                      color: brandCharcoal,
+                      textAlign: 'right',
+                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+                    }}>
+                      ${formatNumber(lineTotal)}
+                    </td>
+                  </tr>
+                );
+              })
             ))}
           </tbody>
         </table>
         
-<table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
-  <tbody>
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '10%' }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '50%' }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '10%' }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '15%', textAlign: 'right' }}>Product Subtotal</td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '15%' }}>
-        ${formatNumber(totals.productSubtotal)}
-      </td>
-    </tr>
-    
-    {totals.standardRateDiscount > 0 && (
-      <tr>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-          {proposal.discountName || 'Discount'} ({proposal.discount}% off)
-        </td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-          -${formatNumber(totals.standardRateDiscount)}
-        </td>
-      </tr>
-    )}
-    
-    {totals.extendedRental > 0 && (
-      <tr>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-          Extended Rental
-        </td>
-        <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-          ${formatNumber(totals.extendedRental)}
-        </td>
-      </tr>
-    )}
-    
-    <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-        Rental Total
-      </td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.rentalTotal)}
-      </td>
-    </tr>
-    
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-        Product Care (10%)
-      </td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.productCare)}
-      </td>
-    </tr>
-    
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-        Service Fee (5%)
-      </td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.serviceFee)}
-      </td>
-    </tr>
-    
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-        Delivery
-      </td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.delivery)}
-      </td>
-    </tr>
-    
-    <tr style={{ borderTop: '1px solid #e5e7eb' }}>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-        Subtotal
-      </td>
-      <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.subtotal)}
-      </td>
-    </tr>
-    
-    <tr>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-        Tax (9.75%)
-      </td>
-      <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.tax)}
-      </td>
-    </tr>
-    
-    <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
-      <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-      <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-        TOTAL
-      </td>
-      <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-        ${formatNumber(totals.total)}
-      </td>
-    </tr>
-  </tbody>
-</table>
+        <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+          <tbody>
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '10%' }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '50%' }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '10%' }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '15%', textAlign: 'right' }}>Product Subtotal</td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '15%' }}>
+                ${formatNumber(totals.productSubtotal)}
+              </td>
+            </tr>
+            
+            {totals.standardRateDiscount > 0 && (
+              <tr>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                  {proposal.discountName || 'Discount'} ({proposal.discount}% off)
+                </td>
+                <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  -${formatNumber(totals.standardRateDiscount)}
+                </td>
+              </tr>
+            )}
+            
+            <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                Rental Total
+              </td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.rentalTotal)}
+              </td>
+            </tr>
+            
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                Product Care (10%)
+              </td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.productCare)}
+              </td>
+            </tr>
+            
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                Service Fee (5%)
+              </td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.serviceFee)}
+              </td>
+            </tr>
+            
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                Delivery
+              </td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.delivery)}
+              </td>
+            </tr>
+            
+            <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                Subtotal
+              </td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.subtotal)}
+              </td>
+            </tr>
+            
+            <tr>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                Tax (9.75%)
+              </td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.tax)}
+              </td>
+            </tr>
+            
+            <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                TOTAL
+              </td>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                ${formatNumber(totals.total)}
+              </td>
+            </tr>
+          </tbody>
+        </table>
         
         <div style={{
           position: 'absolute',
@@ -1132,22 +1129,20 @@ function calculateTotal(proposal) {
 
 function calculateDetailedTotals(proposal) {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  const duration = getDuration(proposal);
+  const rentalMultiplier = getRentalMultiplier(duration);
   
   let productSubtotal = 0;
   sections.forEach(section => {
     section.products.forEach(product => {
-      productSubtotal += product.price * product.quantity;
+      const extendedPrice = product.price * rentalMultiplier;
+      productSubtotal += extendedPrice * product.quantity;
     });
   });
   
-  const duration = getDuration(proposal);
-  const rentalMultiplier = getRentalMultiplier(duration);
-  
   const discountPercent = parseFloat(proposal.discount) || 0;
   const standardRateDiscount = productSubtotal * (discountPercent / 100);
-  const standardRateAfterDiscount = productSubtotal - standardRateDiscount;
-  const extendedRental = productSubtotal * (rentalMultiplier - 1);
-  const rentalTotal = standardRateAfterDiscount + extendedRental;
+  const rentalTotal = productSubtotal - standardRateDiscount;
   
   const productCare = productSubtotal * 0.10;
   const serviceFee = rentalTotal * 0.05;
@@ -1160,14 +1155,14 @@ function calculateDetailedTotals(proposal) {
   return {
     productSubtotal,
     standardRateDiscount,
-    extendedRental,
     rentalTotal,
     productCare,
     serviceFee,
     delivery,
     subtotal,
     tax,
-    total
+    total,
+    rentalMultiplier
   };
 }
 
@@ -1212,4 +1207,3 @@ function getDuration(proposal) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return diffDays;
 }
-
