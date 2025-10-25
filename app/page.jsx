@@ -14,7 +14,7 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzMzgGbHgjGQSQQM9-hrm-FtTcl3xhFJ_otCo0hpvUHaEXVBXZxUnb5ea_amx9SnvGB/exec');
+      const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -884,11 +884,19 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
   };
 
   const handleSaveClick = () => {
-    const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
+    // Extract base client name (remove any existing version)
+    const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '').trim();
+    
+    // Clean up date formatting - remove time portion if it exists
+    const cleanStartDate = formData.startDate ? formData.startDate.split('T')[0] : '';
+    const cleanEndDate = formData.endDate ? formData.endDate.split('T')[0] : '';
     
     const finalData = {
       ...formData,
       clientName: clientNameWithoutVersion,
+      startDate: cleanStartDate,
+      endDate: cleanEndDate,
+      discount: formData.discount || formData.discountPercent || '',
       sectionsJSON: JSON.stringify(sections)
     };
     onSave(finalData);
