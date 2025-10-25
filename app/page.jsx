@@ -14,8 +14,7 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec');
-      
+const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec');      
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -217,8 +216,7 @@ function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec', {
-        method: 'POST',
+const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {        method: 'POST',
         headers: {
           'Content-Type': 'text/plain'
         },
