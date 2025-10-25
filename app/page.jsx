@@ -14,7 +14,7 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzMzgGbHgjGQSQQM9-hrm-FtTcl3xhFJ_otCo0hpvUHaEXVBXZxUnb5ea_amx9SnvGB/exec');
+      const response = await fetch('https://script.google.com/macros/s/AKfycbw5vbBhh_zLfF-6lSf6Bl4T9oMrfRtICxLgT1kZXFqA-azeomw3DeFrfW-xdialxLEc/exec');
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -1194,3 +1194,4 @@ function getDuration(proposal) {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return diffDays;
 }
+
