@@ -8,6 +8,7 @@ export default function ProposalApp() {
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchProposals();
@@ -55,7 +56,13 @@ export default function ProposalApp() {
         setProposals(testData);
         setCatalog([]);
       } else {
-        setProposals(data.proposals);
+        // Sort proposals by timestamp (newest first)
+        const sortedProposals = data.proposals.sort((a, b) => {
+          const dateA = new Date(a.timestamp);
+          const dateB = new Date(b.timestamp);
+          return dateB - dateA; // Newest first
+        });
+        setProposals(sortedProposals);
         setCatalog(data.catalog || []);
       }
       
@@ -65,6 +72,20 @@ export default function ProposalApp() {
       setLoading(false);
     }
   };
+
+  // Filter proposals based on search term
+  const filteredProposals = proposals.filter(proposal => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      proposal.clientName.toLowerCase().includes(searchLower) ||
+      proposal.venueName.toLowerCase().includes(searchLower) ||
+      proposal.city.toLowerCase().includes(searchLower) ||
+      proposal.state.toLowerCase().includes(searchLower) ||
+      `${proposal.venueName}, ${proposal.city}, ${proposal.state}`.toLowerCase().includes(searchLower)
+    );
+  });
 
   const viewProposal = (proposal) => {
     setSelectedProposal(proposal);
@@ -139,7 +160,7 @@ export default function ProposalApp() {
           <p style={{ marginTop: '8px', color: '#6b7280' }}>Manage and view all proposals</p>
         </div>
 
-        <div style={{ marginBottom: '24px' }}>
+        <div style={{ marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center' }}>
           <button 
             onClick={fetchProposals}
             style={{
@@ -154,7 +175,47 @@ export default function ProposalApp() {
           >
             Refresh
           </button>
+          
+          <div style={{ flex: 1, maxWidth: '400px' }}>
+            <input
+              type="text"
+              placeholder="Search by client, venue, or location..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 16px',
+                border: '1px solid #d1d5db',
+                borderRadius: '6px',
+                fontSize: '14px',
+                boxSizing: 'border-box'
+              }}
+            />
+          </div>
+          
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm('')}
+              style={{
+                padding: '10px 16px',
+                backgroundColor: '#f3f4f6',
+                color: '#6b7280',
+                border: 'none',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px'
+              }}
+            >
+              Clear
+            </button>
+          )}
         </div>
+
+        {filteredProposals.length === 0 && searchTerm && (
+          <div style={{ padding: '48px', textAlign: 'center', backgroundColor: 'white', borderRadius: '8px', marginBottom: '24px' }}>
+            <p style={{ color: '#6b7280', fontSize: '16px' }}>No proposals found matching "{searchTerm}"</p>
+          </div>
+        )}
 
         <div style={{ backgroundColor: 'white', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', borderRadius: '8px', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -168,7 +229,7 @@ export default function ProposalApp() {
               </tr>
             </thead>
             <tbody style={{ backgroundColor: 'white' }}>
-              {proposals.map((proposal, index) => (
+              {filteredProposals.map((proposal, index) => (
                 <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
                     {proposal.clientName}
