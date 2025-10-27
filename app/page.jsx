@@ -218,49 +218,53 @@ export default function ProposalApp() {
         )}
 
         <div style={{ backgroundColor: 'white', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', borderRadius: '8px', overflow: 'hidden' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-            <thead style={{ backgroundColor: '#f3f4f6' }}>
-              <tr>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client</th>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location</th>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Event Date</th>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</th>
-                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
-              </tr>
-            </thead>
-            <tbody style={{ backgroundColor: 'white' }}>
-              {filteredProposals.map((proposal, index) => (
-                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    {proposal.clientName}
-                  </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    {proposal.venueName}, {proposal.city}, {proposal.state}
-                  </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    {proposal.eventDate}
-                  </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-                    ${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </td>
-                  <td style={{ padding: '16px 24px', fontSize: '14px' }}>
-                    <button
-                      onClick={() => viewProposal(proposal)}
-                      style={{
-                        color: '#2563eb',
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        textDecoration: 'underline'
-                      }}
-                    >
-                      View
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+<table style={{ width: '100%', borderCollapse: 'collapse' }}>
+  <thead style={{ backgroundColor: '#f3f4f6' }}>
+    <tr>
+      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client</th>
+      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location</th>
+      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Event Date</th>
+      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Updated</th>
+      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</th>
+      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
+    </tr>
+  </thead>
+  <tbody style={{ backgroundColor: 'white' }}>
+    {filteredProposals.map((proposal, index) => (
+      <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
+        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
+          {proposal.clientName}
+        </td>
+        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
+          {proposal.venueName}, {proposal.city}, {proposal.state}
+        </td>
+        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
+          {proposal.eventDate}
+        </td>
+        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#6b7280' }}>
+          {proposal.lastUpdated}
+        </td>
+        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
+          ${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </td>
+        <td style={{ padding: '16px 24px', fontSize: '14px' }}>
+          <button
+            onClick={() => viewProposal(proposal)}
+            style={{
+              color: '#2563eb',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              textDecoration: 'underline'
+            }}
+          >
+            View
+          </button>
+        </td>
+      </tr>
+    ))}
+  </tbody>
+</table>
         </div>
       </div>
     </div>
