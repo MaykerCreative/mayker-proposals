@@ -17,11 +17,7 @@ export default function ProposalApp() {
   const fetchProposals = async () => {
     try {
       const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec');
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
       if (!data || !data.proposals || !Array.isArray(data.proposals) || data.proposals.length === 0) {
@@ -41,14 +37,14 @@ export default function ProposalApp() {
             {
               name: "BAR",
               products: [
-                { name: "CONCRETE BAR", quantity: 1, price: 575, imageUrl: "https://drive.google.com/thumbnail?id=1DZj6TRzoW1L0du03SDmc2tUdr57iRwrc&sz=w400" }
+                { name: "CONCRETE BAR", quantity: 1, price: 575, imageUrl: "https://drive.google.com/thumbnail?id=1DZj6TRzoW1L0du03SDmc2tUdr57iRwrc&sz=w400", dimensions: "72\" W x 36\" D x 42\" H" }
               ]
             },
             {
               name: "LOUNGE",
               products: [
-                { name: "AURORA SWIVEL CHAIR (SAGE)", quantity: 2, price: 225, imageUrl: "https://drive.google.com/thumbnail?id=18n_hygMqd0co2YrV-uqpcHPzO0FsTPDl&sz=w400" },
-                { name: "COOPER END TABLE", quantity: 2, price: 125, imageUrl: "https://drive.google.com/thumbnail?id=1Obl9i2evfji2W0vK02rJjGp_7w3-be6W&sz=w400" }
+                { name: "AURORA SWIVEL CHAIR (SAGE)", quantity: 2, price: 225, imageUrl: "https://drive.google.com/thumbnail?id=18n_hygMqd0co2YrV-uqpcHPzO0FsTPDl&sz=w400", dimensions: "32\" W x 32\" D x 28\" H" },
+                { name: "COOPER END TABLE", quantity: 2, price: 125, imageUrl: "https://drive.google.com/thumbnail?id=1Obl9i2evfji2W0vK02rJjGp_7w3-be6W&sz=w400", dimensions: "24\" W x 24\" D x 18\" H" }
               ]
             }
           ])
@@ -56,16 +52,10 @@ export default function ProposalApp() {
         setProposals(testData);
         setCatalog([]);
       } else {
-        // Sort proposals by timestamp (newest first)
-        const sortedProposals = data.proposals.sort((a, b) => {
-          const dateA = new Date(a.timestamp);
-          const dateB = new Date(b.timestamp);
-          return dateB - dateA; // Newest first
-        });
+        const sortedProposals = data.proposals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setProposals(sortedProposals);
         setCatalog(data.catalog || []);
       }
-      
       setLoading(false);
     } catch (err) {
       setError(`Failed to fetch proposals: ${err.message}`);
@@ -73,10 +63,8 @@ export default function ProposalApp() {
     }
   };
 
-  // Filter proposals based on search term
   const filteredProposals = proposals.filter(proposal => {
     if (!searchTerm) return true;
-    
     const searchLower = searchTerm.toLowerCase();
     return (
       proposal.clientName.toLowerCase().includes(searchLower) ||
@@ -87,39 +75,14 @@ export default function ProposalApp() {
     );
   });
 
-  const viewProposal = (proposal) => {
-    setSelectedProposal(proposal);
-  };
-
-  const backToDashboard = () => {
-    setSelectedProposal(null);
-  };
-
-  const printProposal = () => {
-    window.print();
-  };
-
   if (loading) {
     return (
       <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{
-            width: '48px',
-            height: '48px',
-            border: '3px solid #e5e7eb',
-            borderTop: '3px solid #1f2937',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto'
-          }}></div>
+          <div style={{ width: '48px', height: '48px', border: '3px solid #e5e7eb', borderTop: '3px solid #1f2937', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto' }}></div>
           <p style={{ marginTop: '16px', color: '#6b7280' }}>Loading proposals...</p>
         </div>
-        <style dangerouslySetInnerHTML={{ __html: `
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        ` }} />
+        <style dangerouslySetInnerHTML={{ __html: `@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }` }} />
       </div>
     );
   }
@@ -129,18 +92,7 @@ export default function ProposalApp() {
       <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ textAlign: 'center' }}>
           <p style={{ color: '#dc2626' }}>{error}</p>
-          <button 
-            onClick={fetchProposals}
-            style={{
-              marginTop: '16px',
-              padding: '8px 16px',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer'
-            }}
-          >
+          <button onClick={fetchProposals} style={{ marginTop: '16px', padding: '8px 16px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}>
             Retry
           </button>
         </div>
@@ -149,7 +101,7 @@ export default function ProposalApp() {
   }
 
   if (selectedProposal) {
-    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={backToDashboard} onPrint={printProposal} onRefresh={fetchProposals} />;
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={fetchProposals} />;
   }
 
   return (
@@ -161,51 +113,16 @@ export default function ProposalApp() {
         </div>
 
         <div style={{ marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button 
-            onClick={fetchProposals}
-            style={{
-              padding: '10px 20px',
-              backgroundColor: '#2563eb',
-              color: 'white',
-              border: 'none',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
+          <button onClick={fetchProposals} style={{ padding: '10px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
             Refresh
           </button>
           
           <div style={{ flex: 1, maxWidth: '400px' }}>
-            <input
-              type="text"
-              placeholder="Search by client, venue, or location..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 16px',
-                border: '1px solid #d1d5db',
-                borderRadius: '6px',
-                fontSize: '14px',
-                boxSizing: 'border-box'
-              }}
-            />
+            <input type="text" placeholder="Search by client, venue, or location..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '10px 16px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
           </div>
           
           {searchTerm && (
-            <button
-              onClick={() => setSearchTerm('')}
-              style={{
-                padding: '10px 16px',
-                backgroundColor: '#f3f4f6',
-                color: '#6b7280',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
+            <button onClick={() => setSearchTerm('')} style={{ padding: '10px 16px', backgroundColor: '#f3f4f6', color: '#6b7280', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
               Clear
             </button>
           )}
@@ -218,53 +135,34 @@ export default function ProposalApp() {
         )}
 
         <div style={{ backgroundColor: 'white', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)', borderRadius: '8px', overflow: 'hidden' }}>
-<table style={{ width: '100%', borderCollapse: 'collapse' }}>
-  <thead style={{ backgroundColor: '#f3f4f6' }}>
-    <tr>
-      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client</th>
-      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location</th>
-      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Event Date</th>
-      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Updated</th>
-      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</th>
-      <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
-    </tr>
-  </thead>
-  <tbody style={{ backgroundColor: 'white' }}>
-    {filteredProposals.map((proposal, index) => (
-      <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
-        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-          {proposal.clientName}
-        </td>
-        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-          {proposal.venueName}, {proposal.city}, {proposal.state}
-        </td>
-        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-          {proposal.eventDate}
-        </td>
-        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#6b7280' }}>
-          {proposal.lastUpdated}
-        </td>
-        <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>
-          ${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-        </td>
-        <td style={{ padding: '16px 24px', fontSize: '14px' }}>
-          <button
-            onClick={() => viewProposal(proposal)}
-            style={{
-              color: '#2563eb',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              textDecoration: 'underline'
-            }}
-          >
-            View
-          </button>
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ backgroundColor: '#f3f4f6' }}>
+              <tr>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Event Date</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Last Updated</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total</th>
+                <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProposals.map((proposal, index) => (
+                <tr key={index} style={{ borderTop: '1px solid #e5e7eb' }}>
+                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>{proposal.clientName}</td>
+                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>{proposal.venueName}, {proposal.city}, {proposal.state}</td>
+                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>{proposal.eventDate}</td>
+                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#6b7280' }}>{proposal.lastUpdated}</td>
+                  <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td style={{ padding: '16px 24px', fontSize: '14px' }}>
+                    <button onClick={() => setSelectedProposal(proposal)} style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
+                      View
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
@@ -285,15 +183,12 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'text/plain'
-        },
+        headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(finalData),
         mode: 'no-cors'
       });
-
       alert('Proposal saved successfully');
       setIsEditing(false);
       onRefresh();
@@ -319,429 +214,111 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
-        
-        * {
-          box-sizing: border-box;
-          margin: 0;
-          padding: 0;
-        }
-        
-        body {
-          font-family: 'Inter', sans-serif;
-        }
-        
-        @media print {
-          .no-print { display: none !important; }
-          .print-break-after { page-break-after: always; }
-          body { 
-            -webkit-print-color-adjust: exact; 
-            print-color-adjust: exact;
-          }
-          @page {
-            size: letter;
-            margin: 0;
-          }
-        }
-      ` }} />
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } }` }} />
 
-      <div className="no-print" style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        backgroundColor: 'white',
-        borderBottom: '1px solid #e5e7eb',
-        zIndex: 1000,
-        padding: '16px 24px'
-      }}>
+      <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-          <button 
-            onClick={onBack}
-            style={{
-              color: '#6b7280',
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px'
-            }}
-          >
+          <button onClick={onBack} style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
             ← Back to Dashboard
           </button>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={onEdit}
-              style={{
-                padding: '8px 20px',
-                backgroundColor: '#059669',
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
+            <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Edit
             </button>
-            <button
-              onClick={onPrint}
-              style={{
-                padding: '8px 20px',
-                backgroundColor: brandCharcoal,
-                color: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '14px'
-              }}
-            >
+            <button onClick={onPrint} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Print / Export as PDF
             </button>
           </div>
         </div>
       </div>
 
-      <div className="print-break-after" style={{
-  backgroundColor: brandTaupe,
-  height: '100vh',
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  alignItems: 'center',
-  padding: '60px 48px',
-  position: 'relative',
-  boxSizing: 'border-box'
-}}>
-  <div style={{
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: '80px'
-  }}>
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      justifyContent: 'center',
-      alignItems: 'center'
-    }}>
-      <img 
-        src="/mayker_wordmark-events-whisper.svg"
-        alt="MAYKER EVENTS"
-        style={{
-          height: '32px',
-          marginBottom: '24px'
-        }}
-      />
-      
-      <div style={{
-        width: '60px',
-        height: '0.5px',
-        backgroundColor: 'rgba(255,255,255,0.4)',
-        marginBottom: '24px'
-      }}></div>
-      
-      <p style={{
-        fontSize: '14px',
-        color: 'white',
-        letterSpacing: '0.2em',
-        marginBottom: '16px',
-        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
-        textTransform: 'uppercase'
-      }}>Product Selections</p>
-      
-      <p style={{
-        fontSize: '18px',
-        color: 'white',
-        marginBottom: '6px',
-        fontWeight: '300',
-        fontFamily: "'Domaine Text', serif"
-      }}>{proposal.clientName}</p>
-      
-      <p style={{
-        fontSize: '13px',
-        color: 'rgba(255,255,255,0.9)',
-        marginBottom: '4px',
-        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-      }}>{proposal.venueName}</p>
-      
-      <p style={{
-        fontSize: '13px',
-        color: 'rgba(255,255,255,0.9)',
-        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-      }}>{formatDateRange(proposal)}</p>
-    </div>
-    
-    <img 
-      src="/mayker_icon-whisper.svg"
-      alt="Mayker Events"
-      style={{
-        width: '60px',
-        height: '60px',
-        marginTop: '40px'
-      }}
-    />
-  </div>
-</div>
+      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
+            <div style={{ width: '60px', height: '0.5px', backgroundColor: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}></div>
+            <p style={{ fontSize: '14px', color: 'white', letterSpacing: '0.2em', marginBottom: '16px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textTransform: 'uppercase' }}>Product Selections</p>
+            <p style={{ fontSize: '18px', color: 'white', marginBottom: '6px', fontWeight: '300', fontFamily: "'Domaine Text', serif" }}>{proposal.clientName}</p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{proposal.venueName}</p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{formatDateRange(proposal)}</p>
+          </div>
+          <img src="/mayker_icon-whisper.svg" alt="Mayker Events" style={{ width: '60px', height: '60px', marginTop: '40px' }} />
+        </div>
+      </div>
 
       {sections.map((section, sectionIndex) => {
         const pageNum = sectionIndex + 2;
         return (
-          <div key={sectionIndex} className="print-break-after" style={{ 
-            minHeight: '100vh',
-            padding: '30px 60px 40px',
-            position: 'relative'
-          }}>
-            <div style={{
-              marginBottom: '20px',
-              paddingBottom: '15px',
-              borderBottom: '1px solid #e5e7eb'
-            }}>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'flex-start'
-              }}>
-                <img 
-                  src="/mayker_wordmark-events-black.svg" 
-                  alt="Mayker Events"
-                  style={{ height: '22px', marginTop: '4px' }}
-                />
-                
-                <div style={{
-                  textAlign: 'right',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '20px'
-                }}>
-                  <div style={{
-                    fontSize: '9px',
-                    color: '#666',
-                    fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
-                    lineHeight: '1.4',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
-                  }}>
+          <div key={sectionIndex} className="print-break-after" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
+            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                  <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     <div>{proposal.clientName}</div>
                     <div>{formatDateRange(proposal)}</div>
                     <div>{proposal.venueName}</div>
                   </div>
-                  <img 
-                    src="/mayker_icon-black.svg" 
-                    alt="M"
-                    style={{ height: '38px' }}
-                  />
+                  <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
                 </div>
               </div>
             </div>
             
-            <h2 style={{
-              fontSize: '18px',
-              fontWeight: '400',
-              color: brandCharcoal,
-              marginBottom: '20px',
-              textTransform: 'uppercase',
-              letterSpacing: '0.1em',
-              fontFamily: "'Domaine Text', serif"
-            }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif" }}>
               {section.name}
             </h2>
             
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(3, 1fr)',
-              gap: '20px'
-            }}>
-              {section.products.map((product, productIndex) => {
-                const extendedPrice = product.price * totals.rentalMultiplier;
-                
-                return (
-                  <div key={productIndex} style={{ 
-                    backgroundColor: '#f9f9f9',
-                    padding: '15px',
-                    borderRadius: '4px'
-                  }}>
-                    <div style={{
-                      aspectRatio: '1',
-                      backgroundColor: '#e5e5e5',
-                      marginBottom: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '11px',
-                      color: '#999',
-                      overflow: 'hidden',
-                      borderRadius: '2px'
-                    }}>
-                      {product.imageUrl ? (
-                        <img 
-                          src={product.imageUrl}
-                          alt={product.name}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover'
-                          }}
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      ) : (
-                        '[Product Image]'
-                      )}
-                    </div>
-                    <h3 style={{
-                      fontSize: '11px',
-                      fontWeight: '500',
-                      color: brandCharcoal,
-                      textTransform: 'uppercase',
-                      marginBottom: '4px',
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>
-                      {product.name}
-                    </h3>
-                    <p style={{
-                      fontSize: '10px',
-                      color: '#666',
-                      marginBottom: '4px',
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>Quantity: {product.quantity}</p>
-                    <p style={{
-                      fontSize: '13px',
-                      fontWeight: '400',
-                      color: brandCharcoal,
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>${extendedPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+              {section.products.map((product, productIndex) => (
+                <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px' }}>
+                  <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    ) : (
+                      '[Product Image]'
+                    )}
                   </div>
-                );
-              })}
+                  <h3 style={{ fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    {product.name}
+                  </h3>
+                  <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Quantity: {product.quantity}</p>
+                  {product.dimensions && (
+                    <p style={{ fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
+                  )}
+                </div>
+              ))}
             </div>
             
-            <div style={{
-              position: 'absolute',
-              bottom: '30px',
-              right: '60px',
-              fontSize: '10px',
-              color: '#999',
-              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-            }}>{pageNum}</div>
+            <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{pageNum}</div>
           </div>
         );
       })}
 
-      <div style={{ 
-        minHeight: '100vh',
-        padding: '30px 60px 40px',
-        position: 'relative'
-      }}>
-        <div style={{
-          marginBottom: '20px',
-          paddingBottom: '15px',
-          borderBottom: '1px solid #e5e7eb'
-        }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start'
-          }}>
-            <img 
-              src="/mayker_wordmark-events-black.svg" 
-              alt="Mayker Events"
-              style={{ height: '22px', marginTop: '4px' }}
-            />
-            
-            <div style={{
-              textAlign: 'right',
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '20px'
-            }}>
-              <div style={{
-                fontSize: '9px',
-                color: '#666',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
-                lineHeight: '1.4',
-                textTransform: 'uppercase',
-                letterSpacing: '0.05em'
-              }}>
+      <div style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
+        <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+              <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                 <div>{proposal.clientName}</div>
                 <div>{formatDateRange(proposal)}</div>
                 <div>{proposal.venueName}</div>
               </div>
-              <img 
-                src="/mayker_icon-black.svg" 
-                alt="M"
-                style={{ height: '38px' }}
-              />
+              <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
             </div>
           </div>
         </div>
         
-        <h2 style={{
-          fontSize: '18px',
-          fontWeight: '400',
-          color: brandCharcoal,
-          marginBottom: '20px',
-          textTransform: 'uppercase',
-          letterSpacing: '0.1em',
-          textAlign: 'center',
-          fontFamily: "'Domaine Text', serif"
-        }}>Estimate</h2>
+        <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center', fontFamily: "'Domaine Text', serif" }}>Estimate</h2>
         
         <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
           <thead>
             <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'left',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Section</th>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'left',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Product</th>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'center',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Qty</th>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'right',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Unit Price</th>
-              <th style={{ 
-                padding: '8px 0', 
-                fontSize: '9px', 
-                fontWeight: '600',
-                textTransform: 'uppercase',
-                letterSpacing: '0.1em',
-                color: '#666',
-                textAlign: 'right',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-              }}>Total</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Section</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Product</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Qty</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Unit Price</th>
+              <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Total</th>
             </tr>
           </thead>
           <tbody>
@@ -752,48 +329,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 
                 return (
                   <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
-                    <td style={{ 
-                      padding: '10px 0', 
-                      fontSize: '11px', 
-                      color: '#888',
-                      fontStyle: 'italic',
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>
+                    <td style={{ padding: '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                       {productIndex === 0 ? section.name : ''}
                     </td>
-                    <td style={{ 
-                      padding: '10px 0', 
-                      fontSize: '11px', 
-                      color: brandCharcoal,
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>
+                    <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                       {product.name}
                     </td>
-                    <td style={{ 
-                      padding: '10px 0', 
-                      fontSize: '11px', 
-                      color: brandCharcoal,
-                      textAlign: 'center',
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>
+                    <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                       {product.quantity}
                     </td>
-                    <td style={{ 
-                      padding: '10px 0', 
-                      fontSize: '11px', 
-                      color: brandCharcoal,
-                      textAlign: 'right',
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>
+                    <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                       ${formatNumber(extendedPrice)}
                     </td>
-                    <td style={{ 
-                      padding: '10px 0', 
-                      fontSize: '11px', 
-                      color: brandCharcoal,
-                      textAlign: 'right',
-                      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-                    }}>
+                    <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                       ${formatNumber(lineTotal)}
                     </td>
                   </tr>
@@ -814,115 +362,58 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 ${formatNumber(totals.productSubtotal)}
               </td>
             </tr>
-            
             {totals.standardRateDiscount > 0 && (
               <tr>
                 <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
                 <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
                 <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
                 <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                  {proposal.discountName || 'Discount'} ({proposal.discount}% off)
+                  Discount ({proposal.discount}% off)
                 </td>
                 <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                   -${formatNumber(totals.standardRateDiscount)}
                 </td>
               </tr>
             )}
-            
             <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                Rental Total
-              </td>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                ${formatNumber(totals.rentalTotal)}
-              </td>
+              <td></td><td></td><td></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Rental Total</td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.rentalTotal)}</td>
             </tr>
-            
             <tr>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                Product Care (10%)
-              </td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                ${formatNumber(totals.productCare)}
-              </td>
+              <td></td><td></td><td></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Product Care (10%)</td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.productCare)}</td>
             </tr>
-            
             <tr>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                Service Fee (5%)
-              </td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                ${formatNumber(totals.serviceFee)}
-              </td>
+              <td></td><td></td><td></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Service Fee (5%)</td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.serviceFee)}</td>
             </tr>
-            
             <tr>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                Delivery
-              </td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                ${formatNumber(totals.delivery)}
-              </td>
+              <td></td><td></td><td></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Delivery</td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
             </tr>
-            
             <tr style={{ borderTop: '1px solid #e5e7eb' }}>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                Subtotal
-              </td>
-              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                ${formatNumber(totals.subtotal)}
-              </td>
+              <td></td><td></td><td></td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Subtotal</td>
+              <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.subtotal)}</td>
             </tr>
-            
             <tr>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                Tax (9.75%)
-              </td>
-              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                ${formatNumber(totals.tax)}
-              </td>
+              <td></td><td></td><td></td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Tax (9.75%)</td>
+              <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.tax)}</td>
             </tr>
-            
             <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
-              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                TOTAL
-              </td>
-              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                ${formatNumber(totals.total)}
-              </td>
+              <td></td><td></td><td></td>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>TOTAL</td>
+              <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.total)}</td>
             </tr>
           </tbody>
         </table>
         
-        <div style={{
-          position: 'absolute',
-          bottom: '30px',
-          right: '60px',
-          fontSize: '10px',
-          color: '#999',
-          fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
-        }}>{sections.length + 2}</div>
+        <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{sections.length + 2}</div>
       </div>
     </div>
   );
@@ -932,28 +423,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   const [formData, setFormData] = useState(proposal);
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
 
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  const handleProductChange = (sectionIdx, productIdx, field, value) => {
-    const newSections = JSON.parse(JSON.stringify(sections));
-    if (field === 'quantity' || field === 'price') {
-      newSections[sectionIdx].products[productIdx][field] = field === 'quantity' ? parseInt(value) || 0 : parseFloat(value) || 0;
-    } else {
-      newSections[sectionIdx].products[productIdx][field] = value;
-    }
-    setSections(newSections);
-  };
-
   const handleProductSelect = (sectionIdx, productIdx, selectedProduct) => {
     const newSections = JSON.parse(JSON.stringify(sections));
     newSections[sectionIdx].products[productIdx].name = selectedProduct.name;
     newSections[sectionIdx].products[productIdx].price = selectedProduct.price;
     newSections[sectionIdx].products[productIdx].imageUrl = selectedProduct.imageUrl;
+    newSections[sectionIdx].products[productIdx].dimensions = selectedProduct.dimensions || '';
     setSections(newSections);
   };
 
@@ -963,20 +438,14 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       name: '',
       quantity: 1,
       price: 0,
-      imageUrl: ''
+      imageUrl: '',
+      dimensions: ''
     });
-    setSections(newSections);
-  };
-
-  const handleRemoveProduct = (sectionIdx, productIdx) => {
-    const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products.splice(productIdx, 1);
     setSections(newSections);
   };
 
   const handleSaveClick = () => {
     const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
-    
     const finalData = {
       ...formData,
       clientName: clientNameWithoutVersion,
@@ -991,286 +460,15 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827' }}>Edit Proposal</h1>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={onCancel}
-              disabled={saving}
-              style={{
-                padding: '10px 24px',
-                backgroundColor: '#e5e7eb',
-                color: '#111827',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500'
-              }}
-            >
+            <button onClick={onCancel} disabled={saving} style={{ padding: '10px 24px', backgroundColor: '#e5e7eb', color: '#111827', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
               Cancel
             </button>
-            <button
-              onClick={handleSaveClick}
-              disabled={saving}
-              style={{
-                padding: '10px 24px',
-                backgroundColor: '#059669',
-                color: 'white',
-                border: 'none',
-                borderRadius: '6px',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '500',
-                opacity: saving ? 0.7 : 1
-              }}
-            >
+            <button onClick={handleSaveClick} disabled={saving} style={{ padding: '10px 24px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', opacity: saving ? 0.7 : 1 }}>
               {saving ? 'Saving...' : 'Save as New Version'}
             </button>
           </div>
         </div>
-
-        <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Client Details</h2>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', maxWidth: '800px' }}>
-              <div style={{ gridColumn: '1 / -1' }}>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Client Name</label>
-                <div 
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', backgroundColor: '#f3f4f6', color: '#6b7280', minHeight: '36px', display: 'flex', alignItems: 'center', marginBottom: '4px' }}
-                >
-                  {formData.clientName || ''}
-                </div>
-                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0' }}>Version will auto-increment on save</p>
-              </div>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Venue Name</label>
-                <input 
-                  type="text" 
-                  value={formData.venueName || ''}
-                  onChange={(e) => handleInputChange('venueName', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>City</label>
-                <input 
-                  type="text" 
-                  value={formData.city || ''}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>State</label>
-                <input 
-                  type="text" 
-                  value={formData.state || ''}
-                  onChange={(e) => handleInputChange('city', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Start Date</label>
-                <input 
-                  type="date" 
-                  value={formData.startDate || ''}
-                  onChange={(e) => handleInputChange('startDate', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>End Date</label>
-                <input 
-                  type="date" 
-                  value={formData.endDate || ''}
-                  onChange={(e) => handleInputChange('endDate', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Delivery Fee</label>
-                <input 
-                  type="number" 
-                  value={formData.deliveryFee || ''}
-                  onChange={(e) => handleInputChange('deliveryFee', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Discount %</label>
-                <input 
-                  type="number" 
-                  value={formData.discount || ''}
-                  onChange={(e) => handleInputChange('discount', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-              <div>
-                <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', display: 'block', marginBottom: '6px' }}>Discount Name</label>
-                <input 
-                  type="text" 
-                  value={formData.discountName || ''}
-                  onChange={(e) => handleInputChange('discountName', e.target.value)}
-                  style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
-                />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h2 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Products by Section</h2>
-            {sections.map((section, sectionIdx) => (
-              <div key={sectionIdx} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-                <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '12px' }}>{section.name}</h3>
-                {section.products.map((product, productIdx) => (
-                  <ProductRow 
-                    key={productIdx}
-                    product={product}
-                    catalog={catalog}
-                    onProductSelect={(selectedProduct) => handleProductSelect(sectionIdx, productIdx, selectedProduct)}
-                    onProductChange={(field, value) => handleProductChange(sectionIdx, productIdx, field, value)}
-                    onRemove={() => handleRemoveProduct(sectionIdx, productIdx)}
-                  />
-                ))}
-                <button
-                  onClick={() => handleAddProduct(sectionIdx)}
-                  style={{
-                    padding: '8px 16px',
-                    backgroundColor: '#e0e7ff',
-                    color: '#4f46e5',
-                    border: 'none',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    fontWeight: '500'
-                  }}
-                >
-                  + Add Product
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
-    </div>
-  );
-}
-
-function ProductRow({ product, catalog, onProductSelect, onProductChange, onRemove }) {
-  const [searchTerm, setSearchTerm] = useState(product.name || '');
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [filteredProducts, setFilteredProducts] = useState([]);
-
-  useEffect(() => {
-    if (searchTerm && showDropdown) {
-      const filtered = catalog.filter(p => 
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-      ).slice(0, 10);
-      setFilteredProducts(filtered);
-    } else {
-      setFilteredProducts([]);
-    }
-  }, [searchTerm, showDropdown, catalog]);
-
-  const handleSearchChange = (value) => {
-    setSearchTerm(value);
-    setShowDropdown(true);
-    onProductChange('name', value);
-  };
-
-  const handleProductClick = (catalogProduct) => {
-    setSearchTerm(catalogProduct.name);
-    setShowDropdown(false);
-    onProductSelect(catalogProduct);
-  };
-
-  return (
-    <div style={{ marginBottom: '12px', padding: '12px', backgroundColor: 'white', borderRadius: '6px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
-      <div style={{ minWidth: 0, position: 'relative' }}>
-        <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Product Name</label>
-        <input 
-          type="text" 
-          value={searchTerm}
-          onChange={(e) => handleSearchChange(e.target.value)}
-          onFocus={() => setShowDropdown(true)}
-          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-          placeholder="Search or enter product name..."
-          style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
-        />
-        {showDropdown && filteredProducts.length > 0 && (
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            backgroundColor: 'white',
-            border: '1px solid #d1d5db',
-            borderRadius: '4px',
-            marginTop: '4px',
-            maxHeight: '200px',
-            overflowY: 'auto',
-            zIndex: 1000,
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-          }}>
-            {filteredProducts.map((catalogProduct, idx) => (
-              <div
-                key={idx}
-                onClick={() => handleProductClick(catalogProduct)}
-                style={{
-                  padding: '8px 12px',
-                  cursor: 'pointer',
-                  fontSize: '13px',
-                  borderBottom: idx < filteredProducts.length - 1 ? '1px solid #e5e7eb' : 'none'
-                }}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
-              >
-                <div style={{ fontWeight: '500', color: '#111827' }}>{catalogProduct.name}</div>
-                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>${catalogProduct.price.toFixed(2)}</div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-      <div>
-        <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Quantity</label>
-        <input 
-          type="number" 
-          value={product.quantity || 0}
-          onChange={(e) => onProductChange('quantity', e.target.value)}
-          style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
-        />
-      </div>
-      <div>
-        <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Price</label>
-        <input 
-          type="number" 
-          value={product.price || 0}
-          onChange={(e) => onProductChange('price', e.target.value)}
-          step="0.01"
-          style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
-        />
-      </div>
-      <div>
-        <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Total</label>
-        <div style={{ padding: '6px 8px', fontSize: '13px', fontWeight: '500', color: '#111827' }}>
-          ${formatNumber((product.price || 0) * (product.quantity || 0))}
-        </div>
-      </div>
-      <button
-        onClick={onRemove}
-        style={{
-          padding: '6px 12px',
-          backgroundColor: '#fee2e2',
-          color: '#dc2626',
-          border: 'none',
-          borderRadius: '4px',
-          cursor: 'pointer',
-          fontSize: '13px',
-          fontWeight: '500',
-          whiteSpace: 'nowrap'
-        }}
-      >
-        Remove
-      </button>
     </div>
   );
 }
@@ -1335,7 +533,6 @@ function getRentalMultiplier(duration) {
 function formatDateRange(proposal) {
   const start = new Date(proposal.startDate);
   const end = new Date(proposal.endDate);
-  
   const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
   const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
   const startDay = start.getDate();
