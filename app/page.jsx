@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 
 export default function ProposalApp() {
   const [proposals, setProposals] = useState([]);
+  const [catalog, setCatalog] = useState([]);
   const [selectedProposal, setSelectedProposal] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,7 +23,7 @@ export default function ProposalApp() {
       
       const data = await response.json();
       
-      if (!data || !Array.isArray(data) || data.length === 0) {
+      if (!data || !data.proposals || !Array.isArray(data.proposals) || data.proposals.length === 0) {
         const testData = [{
           clientName: "Sample Sally",
           venueName: "Blackberry Farm",
@@ -52,8 +53,10 @@ export default function ProposalApp() {
           ])
         }];
         setProposals(testData);
+        setCatalog([]);
       } else {
-        setProposals(data);
+        setProposals(data.proposals);
+        setCatalog(data.catalog || []);
       }
       
       setLoading(false);
@@ -125,7 +128,7 @@ export default function ProposalApp() {
   }
 
   if (selectedProposal) {
-    return <ProposalView proposal={selectedProposal} onBack={backToDashboard} onPrint={printProposal} onRefresh={fetchProposals} />;
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={backToDashboard} onPrint={printProposal} onRefresh={fetchProposals} />;
   }
 
   return (
@@ -203,7 +206,7 @@ export default function ProposalApp() {
   );
 }
 
-function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
+function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -237,7 +240,7 @@ function ProposalView({ proposal, onBack, onPrint, onRefresh }) {
   };
 
   if (isEditing && editData) {
-    return <EditProposalView proposal={editData} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
+    return <EditProposalView proposal={editData} catalog={catalog} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
   }
 
   return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={() => setIsEditing(true)} />;
@@ -860,7 +863,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   );
 }
 
-function EditProposalView({ proposal, onSave, onCancel, saving }) {
+function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   const [formData, setFormData] = useState(proposal);
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
 
@@ -881,10 +884,18 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
     setSections(newSections);
   };
 
+  const handleProductSelect = (sectionIdx, productIdx, selectedProduct) => {
+    const newSections = JSON.parse(JSON.stringify(sections));
+    newSections[sectionIdx].products[productIdx].name = selectedProduct.name;
+    newSections[sectionIdx].products[productIdx].price = selectedProduct.price;
+    newSections[sectionIdx].products[productIdx].imageUrl = selectedProduct.imageUrl;
+    setSections(newSections);
+  };
+
   const handleAddProduct = (sectionIdx) => {
     const newSections = JSON.parse(JSON.stringify(sections));
     newSections[sectionIdx].products.push({
-      name: 'New Product',
+      name: '',
       quantity: 1,
       price: 0,
       imageUrl: ''
@@ -987,7 +998,7 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
                 <input 
                   type="text" 
                   value={formData.state || ''}
-                  onChange={(e) => handleInputChange('state', e.target.value)}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
                   style={{ width: '100%', padding: '8px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}
                 />
               </div>
@@ -1045,58 +1056,14 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
               <div key={sectionIdx} style={{ marginBottom: '24px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                 <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '12px' }}>{section.name}</h3>
                 {section.products.map((product, productIdx) => (
-                  <div key={productIdx} style={{ marginBottom: '12px', padding: '12px', backgroundColor: 'white', borderRadius: '6px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
-                    <div style={{ minWidth: 0 }}>
-                      <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Product Name</label>
-                      <input 
-                        type="text" 
-                        value={product.name || ''}
-                        onChange={(e) => handleProductChange(sectionIdx, productIdx, 'name', e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Quantity</label>
-                      <input 
-                        type="number" 
-                        value={product.quantity || 0}
-                        onChange={(e) => handleProductChange(sectionIdx, productIdx, 'quantity', e.target.value)}
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Price</label>
-                      <input 
-                        type="number" 
-                        value={product.price || 0}
-                        onChange={(e) => handleProductChange(sectionIdx, productIdx, 'price', e.target.value)}
-                        step="0.01"
-                        style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
-                      />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Total</label>
-                      <div style={{ padding: '6px 8px', fontSize: '13px', fontWeight: '500', color: '#111827' }}>
-                        ${formatNumber((product.price || 0) * (product.quantity || 0))}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleRemoveProduct(sectionIdx, productIdx)}
-                      style={{
-                        padding: '6px 12px',
-                        backgroundColor: '#fee2e2',
-                        color: '#dc2626',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                        fontSize: '13px',
-                        fontWeight: '500',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
-                      Remove
-                    </button>
-                  </div>
+                  <ProductRow 
+                    key={productIdx}
+                    product={product}
+                    catalog={catalog}
+                    onProductSelect={(selectedProduct) => handleProductSelect(sectionIdx, productIdx, selectedProduct)}
+                    onProductChange={(field, value) => handleProductChange(sectionIdx, productIdx, field, value)}
+                    onRemove={() => handleRemoveProduct(sectionIdx, productIdx)}
+                  />
                 ))}
                 <button
                   onClick={() => handleAddProduct(sectionIdx)}
@@ -1118,6 +1085,127 @@ function EditProposalView({ proposal, onSave, onCancel, saving }) {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ProductRow({ product, catalog, onProductSelect, onProductChange, onRemove }) {
+  const [searchTerm, setSearchTerm] = useState(product.name || '');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [filteredProducts, setFilteredProducts] = useState([]);
+
+  useEffect(() => {
+    if (searchTerm && showDropdown) {
+      const filtered = catalog.filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      ).slice(0, 10);
+      setFilteredProducts(filtered);
+    } else {
+      setFilteredProducts([]);
+    }
+  }, [searchTerm, showDropdown, catalog]);
+
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setShowDropdown(true);
+    onProductChange('name', value);
+  };
+
+  const handleProductClick = (catalogProduct) => {
+    setSearchTerm(catalogProduct.name);
+    setShowDropdown(false);
+    onProductSelect(catalogProduct);
+  };
+
+  return (
+    <div style={{ marginBottom: '12px', padding: '12px', backgroundColor: 'white', borderRadius: '6px', display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr auto', gap: '12px', alignItems: 'end' }}>
+      <div style={{ minWidth: 0, position: 'relative' }}>
+        <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Product Name</label>
+        <input 
+          type="text" 
+          value={searchTerm}
+          onChange={(e) => handleSearchChange(e.target.value)}
+          onFocus={() => setShowDropdown(true)}
+          onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
+          placeholder="Search or enter product name..."
+          style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
+        />
+        {showDropdown && filteredProducts.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            border: '1px solid #d1d5db',
+            borderRadius: '4px',
+            marginTop: '4px',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            zIndex: 1000,
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+          }}>
+            {filteredProducts.map((catalogProduct, idx) => (
+              <div
+                key={idx}
+                onClick={() => handleProductClick(catalogProduct)}
+                style={{
+                  padding: '8px 12px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  borderBottom: idx < filteredProducts.length - 1 ? '1px solid #e5e7eb' : 'none'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#f3f4f6'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+              >
+                <div style={{ fontWeight: '500', color: '#111827' }}>{catalogProduct.name}</div>
+                <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '2px' }}>${catalogProduct.price.toFixed(2)}</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div>
+        <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Quantity</label>
+        <input 
+          type="number" 
+          value={product.quantity || 0}
+          onChange={(e) => onProductChange('quantity', e.target.value)}
+          style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
+        />
+      </div>
+      <div>
+        <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Price</label>
+        <input 
+          type="number" 
+          value={product.price || 0}
+          onChange={(e) => onProductChange('price', e.target.value)}
+          step="0.01"
+          style={{ width: '100%', padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}
+        />
+      </div>
+      <div>
+        <label style={{ fontSize: '12px', fontWeight: '500', color: '#374151' }}>Total</label>
+        <div style={{ padding: '6px 8px', fontSize: '13px', fontWeight: '500', color: '#111827' }}>
+          ${formatNumber((product.price || 0) * (product.quantity || 0))}
+        </div>
+      </div>
+      <button
+        onClick={onRemove}
+        style={{
+          padding: '6px 12px',
+          backgroundColor: '#fee2e2',
+          color: '#dc2626',
+          border: 'none',
+          borderRadius: '4px',
+          cursor: 'pointer',
+          fontSize: '13px',
+          fontWeight: '500',
+          whiteSpace: 'nowrap'
+        }}
+      >
+        Remove
+      </button>
     </div>
   );
 }
@@ -1204,6 +1292,6 @@ function getDuration(proposal) {
   const start = new Date(proposal.startDate);
   const end = new Date(proposal.endDate);
   const diffTime = Math.abs(end - start);
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
   return diffDays;
 }
