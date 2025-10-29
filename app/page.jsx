@@ -429,6 +429,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     setSections(newSections);
   };
 
+  const handleProductQuantityChange = (sectionIdx, productIdx, newQuantity) => {
+    const newSections = JSON.parse(JSON.stringify(sections));
+    newSections[sectionIdx].products[productIdx].quantity = parseInt(newQuantity) || 1;
+    setSections(newSections);
+  };
+
   const handleAddProduct = (sectionIdx) => {
     const newSections = JSON.parse(JSON.stringify(sections));
     newSections[sectionIdx].products.push({
@@ -438,6 +444,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       imageUrl: '',
       dimensions: ''
     });
+    setSections(newSections);
+  };
+
+  const handleRemoveProduct = (sectionIdx, productIdx) => {
+    const newSections = JSON.parse(JSON.stringify(sections));
+    newSections[sectionIdx].products.splice(productIdx, 1);
     setSections(newSections);
   };
 
@@ -453,7 +465,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '80px 24px 24px', marginTop: '60px' }}>
-      <div style={{ maxWidth: '1000px', margin: '0 auto' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827' }}>Edit Proposal</h1>
           <div style={{ display: 'flex', gap: '12px' }}>
@@ -471,8 +483,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Name</label>
-              <input type="text" name="clientName" value={formData.clientName} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Name (Read-only)</label>
+              <input type="text" value={formData.clientName} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Sales Lead</label>
@@ -525,6 +537,48 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               <input type="text" name="clientFolderURL" value={formData.clientFolderURL} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
           </div>
+        </div>
+
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Products by Section</h2>
+          
+          {sections.map((section, sectionIdx) => (
+            <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#111827' }}>{section.name}</h3>
+              
+              {section.products.map((product, productIdx) => (
+                <div key={productIdx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Product</label>
+                    <select value={product.name} onChange={(e) => {
+                      const selected = catalog.find(p => p.name === e.target.value);
+                      if (selected) handleProductSelect(sectionIdx, productIdx, selected);
+                    }} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
+                      <option value="">{product.name || 'Select product...'}</option>
+                      {catalog.map((p, idx) => (
+                        <option key={idx} value={p.name}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Quantity</label>
+                    <input type="number" min="1" value={product.quantity} onChange={(e) => handleProductQuantityChange(sectionIdx, productIdx, e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Price</label>
+                    <input type="number" value={product.price} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6' }} />
+                  </div>
+                  <button onClick={() => handleRemoveProduct(sectionIdx, productIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
+                    Remove
+                  </button>
+                </div>
+              ))}
+              
+              <button onClick={() => handleAddProduct(sectionIdx)} style={{ marginTop: '8px', padding: '8px 16px', backgroundColor: '#dbeafe', color: '#2563eb', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
+                + Add Product
+              </button>
+            </div>
+          ))}
         </div>
       </div>
     </div>
