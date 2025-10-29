@@ -583,9 +583,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 <div style={{ flex: 1 }}>
                   <input 
                     type="text" 
-                    value={section.name} 
-                    onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)}
-                    onKeyDown={(e) => e.stopPropagation()}
+                    value={section.name}
+                    onInput={(e) => handleSectionNameChange(sectionIdx, e.currentTarget.value)}
                     style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }} 
                   />
                 </div>
