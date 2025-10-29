@@ -583,6 +583,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
+              <input type="text" name="clientFolderURL" value={formData.clientFolderURL} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Status</label>
               <select name="status" value={formData.status} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
                 <option value="Pending">Pending</option>
@@ -590,7 +594,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 <option value="Cancelled">Cancelled</option>
               </select>
             </div>
-            <div></div>
+          </div>
+        </div>
 
         <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Products by Section</h2>
