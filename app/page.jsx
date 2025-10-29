@@ -427,7 +427,21 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
 }
 
 function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
-  const [formData, setFormData] = useState(proposal);
+  const [formData, setFormData] = useState({
+    clientName: proposal.clientName || '',
+    venueName: proposal.venueName || '',
+    city: proposal.city || '',
+    state: proposal.state || '',
+    startDate: proposal.startDate || '',
+    endDate: proposal.endDate || '',
+    deliveryTime: proposal.deliveryTime || '',
+    strikeTime: proposal.strikeTime || '',
+    deliveryFee: proposal.deliveryFee || '',
+    discount: proposal.discount || '',
+    discountName: proposal.discountName || '',
+    clientFolderURL: proposal.clientFolderURL || '',
+    salesLead: proposal.salesLead || ''
+  });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
 
   const handleInputChange = (e) => {
