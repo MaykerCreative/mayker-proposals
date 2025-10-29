@@ -645,14 +645,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           {sections.map((section, sectionIdx) => (
             <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
-                <div style={{ flex: 1 }}>
-                  <input 
-                    type="text" 
-                    value={section.name}
-                    onInput={(e) => handleSectionNameChange(sectionIdx, e.currentTarget.value)}
-                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }} 
-                  />
-                </div>
+                <input 
+                  type="text" 
+                  value={section.name}
+                  onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)}
+                  style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '1px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box' }} 
+                />
                 {sections.length > 1 && (
                   <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
                     Remove Section
