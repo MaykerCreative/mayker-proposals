@@ -648,12 +648,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
                 {editingSectionIdx === sectionIdx ? (
                   <div 
-                    ref={(el) => {
-                      if (el && editingSectionIdx === sectionIdx && el.textContent !== section.name) {
-                        el.textContent = section.name;
-                        el.focus();
-                      }
-                    }}
+                    key={`edit-${sectionIdx}`}
+                    autoFocus
                     contentEditable
                     suppressContentEditableWarning
                     onInput={(e) => {
@@ -664,9 +660,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); setEditingSectionIdx(null); } }}
                     style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box', outline: 'none' }}
-                  />
+                  >
+                    {section.name}
+                  </div>
                 ) : (
                   <div 
+                    key={`view-${sectionIdx}`}
                     onClick={() => setEditingSectionIdx(sectionIdx)}
                     style={{ fontSize: '14px', fontWeight: '600', color: '#111827', padding: '10px 12px', borderRadius: '6px', flex: 1, cursor: 'pointer', backgroundColor: '#f3f4f6', border: '1px dashed #d1d5db', userSelect: 'none' }}
                   >
