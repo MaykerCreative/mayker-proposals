@@ -647,14 +647,18 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
                 {editingSectionIdx === sectionIdx ? (
-                  <textarea 
-                    autoFocus
-                    value={section.name}
-                    onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)}
-                    onBlur={() => setEditingSectionIdx(null)}
+                  <div 
+                    contentEditable
+                    suppressContentEditableWarning
+                    onBlur={(e) => {
+                      handleSectionNameChange(sectionIdx, e.currentTarget.textContent);
+                      setEditingSectionIdx(null);
+                    }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); setEditingSectionIdx(null); } }}
-                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box', fontFamily: 'inherit', resize: 'none', height: '40px' }} 
-                  />
+                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box', outline: 'none' }}
+                  >
+                    {section.name}
+                  </div>
                 ) : (
                   <div 
                     onClick={() => setEditingSectionIdx(sectionIdx)}
