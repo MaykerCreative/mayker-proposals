@@ -157,9 +157,21 @@ export default function ProposalApp() {
                   <td style={{ padding: '16px 24px', fontSize: '14px', color: '#6b7280' }}>{proposal.lastUpdated}</td>
                   <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   <td style={{ padding: '16px 24px', fontSize: '14px' }}>
-                    <button onClick={() => setSelectedProposal(proposal)} style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}>
-                      View
-                    </button>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <button onClick={() => setSelectedProposal(proposal)} style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>
+                        View
+                      </button>
+                      <span style={{ color: '#d1d5db' }}>|</span>
+                      <button onClick={() => {
+                        setSelectedProposal(proposal);
+                        setTimeout(() => {
+                          const editBtn = document.querySelector('[data-edit-trigger]');
+                          if (editBtn) editBtn.click();
+                        }, 0);
+                      }} style={{ color: '#059669', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>
+                        Edit
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -224,7 +236,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             ← Back to Dashboard
           </button>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+            <button onClick={onEdit} data-edit-trigger style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Edit
             </button>
             <button onClick={onPrint} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
