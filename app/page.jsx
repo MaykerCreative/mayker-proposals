@@ -648,19 +648,23 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
                 {editingSectionIdx === sectionIdx ? (
                   <div 
+                    ref={(el) => {
+                      if (el && editingSectionIdx === sectionIdx) {
+                        el.focus();
+                        el.textContent = section.name;
+                      }
+                    }}
                     contentEditable
                     suppressContentEditableWarning
                     onInput={(e) => {
                       handleSectionNameChange(sectionIdx, e.currentTarget.textContent);
                     }}
-                    onBlur={(e) => {
+                    onBlur={() => {
                       setEditingSectionIdx(null);
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); setEditingSectionIdx(null); } }}
                     style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box', outline: 'none' }}
-                  >
-                    {section.name}
-                  </div>
+                  />
                 ) : (
                   <div 
                     onClick={() => setEditingSectionIdx(sectionIdx)}
