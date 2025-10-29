@@ -650,8 +650,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                   <div 
                     contentEditable
                     suppressContentEditableWarning
-                    onBlur={(e) => {
+                    onInput={(e) => {
                       handleSectionNameChange(sectionIdx, e.currentTarget.textContent);
+                    }}
+                    onBlur={(e) => {
                       setEditingSectionIdx(null);
                     }}
                     onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); setEditingSectionIdx(null); } }}
