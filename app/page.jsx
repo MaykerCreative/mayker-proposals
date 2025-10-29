@@ -500,6 +500,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     status: proposal.status || 'Pending'
   });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
+  const [editingSectionIdx, setEditingSectionIdx] = useState(null);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -645,12 +646,24 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           {sections.map((section, sectionIdx) => (
             <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
-                <input 
-                  type="text" 
-                  value={section.name}
-                  onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)}
-                  style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '1px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box' }} 
-                />
+                {editingSectionIdx === sectionIdx ? (
+                  <input 
+                    autoFocus
+                    type="text" 
+                    value={section.name}
+                    onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)}
+                    onBlur={() => setEditingSectionIdx(null)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') setEditingSectionIdx(null); }}
+                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box' }} 
+                  />
+                ) : (
+                  <div 
+                    onClick={() => setEditingSectionIdx(sectionIdx)}
+                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', padding: '10px 12px', borderRadius: '6px', flex: 1, cursor: 'pointer', backgroundColor: '#f3f4f6', border: '1px dashed #d1d5db' }}
+                  >
+                    {section.name} <span style={{ fontSize: '12px', color: '#9ca3af' }}>(click to edit)</span>
+                  </div>
+                )}
                 {sections.length > 1 && (
                   <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
                     Remove Section
