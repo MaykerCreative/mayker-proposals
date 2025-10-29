@@ -479,9 +479,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     setSections(newSections);
   };
 
-  const handleRemoveProduct = (sectionIdx, productIdx) => {
+  const handleAddSection = () => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products.splice(productIdx, 1);
+    newSections.push({
+      name: 'New Section',
+      products: []
+    });
     setSections(newSections);
   };
 
@@ -576,7 +579,14 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           
           {sections.map((section, sectionIdx) => (
             <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
-              <h3 style={{ fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#111827' }}>{section.name}</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: 'none', backgroundColor: 'transparent', padding: '4px 0', width: '100%', marginRight: '12px' }} />
+                {sections.length > 1 && (
+                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '4px 8px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                    Remove Section
+                  </button>
+                )}
+              </div>
               
               {section.products.map((product, productIdx) => (
                 <div key={productIdx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
@@ -611,6 +621,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               </button>
             </div>
           ))}
+
+          <button onClick={handleAddSection} style={{ padding: '12px 24px', backgroundColor: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+            + Add New Section
+          </button>
         </div>
       </div>
     </div>
