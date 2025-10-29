@@ -649,9 +649,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 {editingSectionIdx === sectionIdx ? (
                   <div 
                     ref={(el) => {
-                      if (el && editingSectionIdx === sectionIdx) {
-                        el.focus();
+                      if (el && editingSectionIdx === sectionIdx && el.textContent !== section.name) {
                         el.textContent = section.name;
+                        el.focus();
                       }
                     }}
                     contentEditable
