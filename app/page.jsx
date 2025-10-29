@@ -647,19 +647,18 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
                 {editingSectionIdx === sectionIdx ? (
-                  <input 
+                  <textarea 
                     autoFocus
-                    type="text" 
                     value={section.name}
                     onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)}
                     onBlur={() => setEditingSectionIdx(null)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') setEditingSectionIdx(null); }}
-                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box' }} 
+                    onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); setEditingSectionIdx(null); } }}
+                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box', fontFamily: 'inherit', resize: 'none', height: '40px' }} 
                   />
                 ) : (
                   <div 
                     onClick={() => setEditingSectionIdx(sectionIdx)}
-                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', padding: '10px 12px', borderRadius: '6px', flex: 1, cursor: 'pointer', backgroundColor: '#f3f4f6', border: '1px dashed #d1d5db' }}
+                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', padding: '10px 12px', borderRadius: '6px', flex: 1, cursor: 'pointer', backgroundColor: '#f3f4f6', border: '1px dashed #d1d5db', userSelect: 'none' }}
                   >
                     {section.name} <span style={{ fontSize: '12px', color: '#9ca3af' }}>(click to edit)</span>
                   </div>
