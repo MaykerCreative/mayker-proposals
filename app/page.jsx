@@ -579,10 +579,18 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           
           {sections.map((section, sectionIdx) => (
             <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: 'none', backgroundColor: 'transparent', padding: '4px 0', width: '100%', marginRight: '12px' }} />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
+                <div style={{ flex: 1 }}>
+                  <input 
+                    type="text" 
+                    value={section.name} 
+                    onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', width: '100%', boxSizing: 'border-box' }} 
+                  />
+                </div>
                 {sections.length > 1 && (
-                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '4px 8px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
                     Remove Section
                   </button>
                 )}
