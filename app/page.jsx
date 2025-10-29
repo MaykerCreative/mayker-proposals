@@ -9,6 +9,12 @@ export default function ProposalApp() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [filters, setFilters] = useState({
+    clientName: '',
+    salesLead: '',
+    status: '',
+    location: ''
+  });
 
   useEffect(() => {
     fetchProposals();
@@ -64,15 +70,21 @@ export default function ProposalApp() {
   };
 
   const filteredProposals = proposals.filter(proposal => {
-    if (!searchTerm) return true;
     const searchLower = searchTerm.toLowerCase();
-    return (
+    const matchesSearch = !searchTerm || (
       proposal.clientName.toLowerCase().includes(searchLower) ||
       proposal.venueName.toLowerCase().includes(searchLower) ||
       proposal.city.toLowerCase().includes(searchLower) ||
       proposal.state.toLowerCase().includes(searchLower) ||
       `${proposal.venueName}, ${proposal.city}, ${proposal.state}`.toLowerCase().includes(searchLower)
     );
+
+    const matchesClientName = !filters.clientName || proposal.clientName.toLowerCase().includes(filters.clientName.toLowerCase());
+    const matchesSalesLead = !filters.salesLead || proposal.salesLead.toLowerCase().includes(filters.salesLead.toLowerCase());
+    const matchesStatus = !filters.status || proposal.status === filters.status;
+    const matchesLocation = !filters.location || `${proposal.venueName}, ${proposal.city}, ${proposal.state}`.toLowerCase().includes(filters.location.toLowerCase());
+
+    return matchesSearch && matchesClientName && matchesSalesLead && matchesStatus && matchesLocation;
   });
 
   if (loading) {
@@ -127,6 +139,36 @@ export default function ProposalApp() {
             </button>
           )}
         </div>
+
+        <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', backgroundColor: 'white', padding: '16px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#6b7280', textTransform: 'uppercase' }}>Client Name</label>
+            <input type="text" placeholder="Filter..." value={filters.clientName} onChange={(e) => setFilters({...filters, clientName: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#6b7280', textTransform: 'uppercase' }}>Sales Lead</label>
+            <input type="text" placeholder="Filter..." value={filters.salesLead} onChange={(e) => setFilters({...filters, salesLead: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }} />
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#6b7280', textTransform: 'uppercase' }}>Status</label>
+            <select value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }}>
+              <option value="">All Statuses</option>
+              <option value="Pending">Pending</option>
+              <option value="Approved">Approved</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '6px', color: '#6b7280', textTransform: 'uppercase' }}>Location</label>
+            <input type="text" placeholder="Filter..." value={filters.location} onChange={(e) => setFilters({...filters, location: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box' }} />
+          </div>
+        </div>
+
+        {(filters.clientName || filters.salesLead || filters.status || filters.location) && (
+          <button onClick={() => setFilters({clientName: '', salesLead: '', status: '', location: ''})} style={{ marginBottom: '16px', padding: '8px 16px', backgroundColor: '#f3f4f6', color: '#6b7280', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px' }}>
+            Clear All Filters
+          </button>
+        )}
 
         {filteredProposals.length === 0 && searchTerm && (
           <div style={{ padding: '48px', textAlign: 'center', backgroundColor: 'white', borderRadius: '8px', marginBottom: '24px' }}>
