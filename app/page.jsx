@@ -97,7 +97,40 @@ export default function ProposalApp() {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fafaf8', padding: '32px' }}>
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { font-family: 'Inter', sans-serif; }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
+  
+  @font-face {
+    font-family: 'Neue Haas Unica';
+    src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Neue Haas Unica';
+    src: url('/assets/Neue Haas Unica Medium-abce.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Domaine Text';
+    src: url('/assets/TestDomaineText-Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; } 
+  body { font-family: 'Inter', sans-serif; } 
+  @media print { 
+    .no-print { display: none !important; } 
+    .print-break-after { page-break-after: always; } 
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+    @page { size: letter; margin: 0; } 
+  }
+` }} />
+
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <img src="/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
