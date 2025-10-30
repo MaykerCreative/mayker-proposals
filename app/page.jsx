@@ -196,29 +196,6 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
     return <EditProposalView proposal={editData} catalog={catalog} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
   }
 
-  // If creating a new proposal, go straight to edit mode
-  if (proposal._isCreating) {
-    const newProposal = {
-      clientName: '',
-      venueName: '',
-      city: '',
-      state: '',
-      startDate: '',
-      endDate: '',
-      deliveryTime: '',
-      strikeTime: '',
-      deliveryFee: '',
-      discount: '',
-      discountName: '',
-      clientFolderURL: '',
-      salesLead: '',
-      status: 'Pending',
-      projectNumber: '',
-      sectionsJSON: JSON.stringify([{ name: '', products: [] }])
-    };
-    return <EditProposalView proposal={newProposal} catalog={catalog} onSave={handleSave} onCancel={() => onBack()} saving={saving} />;
-  }
-
   return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={() => setIsEditing(true)} />;
 }
 
