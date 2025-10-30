@@ -527,8 +527,12 @@ function parseDateTime(dateStr, timeStr) {
   const isPM = timeStr.includes('PM');
   
   let hour = parseInt(hours);
-  if (isPM && hour !== 12) hour += 12;
-  if (!isPM && hour === 12) hour = 0;
+  if (isPM && hour !== 12) {
+    hour += 12;
+  }
+  if (!isPM && hour === 12) {
+    hour = 0;
+  }
   
   return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
 }: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
