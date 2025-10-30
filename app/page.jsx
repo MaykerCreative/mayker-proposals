@@ -963,28 +963,35 @@ function calculateDetailedTotals(proposal) {
   const duration = getDuration(proposal);
   const rentalMultiplier = getRentalMultiplier(duration);
   
-  let productSubtotal = 0;
+  let baseProductTotal = 0;
   sections.forEach(section => {
     section.products.forEach(product => {
-      const extendedPrice = product.price * rentalMultiplier;
-      productSubtotal += extendedPrice * product.quantity;
+      baseProductTotal += product.price * product.quantity;
     });
   });
   
-  const discountPercent = parseFloat(proposal.discount) || 0;
-  const standardRateDiscount = productSubtotal * (discountPercent / 100);
-  const rentalTotal = productSubtotal - standardRateDiscount;
+  // Calculate extended product total (before discount)
+  const extendedProductTotal = baseProductTotal * rentalMultiplier;
   
-  const productCare = productSubtotal * 0.10;
-  const serviceFee = rentalTotal * 0.05;
+  // Apply discount to the extended total
+  const discountPercent = parseFloat(proposal.discount) || 0;
+  const standardRateDiscount = extendedProductTotal * (discountPercent / 100);
+  const rentalTotal = extendedProductTotal - standardRateDiscount;
+  
+  // Product Care: 10% of extended total (pre-discount)
+  const productCare = extendedProductTotal * 0.10;
+  
   const delivery = parseFloat(proposal.deliveryFee) || 0;
+  
+  // Service Fee: 5% of all fees combined (rental + product care + delivery)
+  const serviceFee = (rentalTotal + productCare + delivery) * 0.05;
   
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
   const tax = subtotal * 0.0975;
   const total = subtotal + tax;
   
   return {
-    productSubtotal,
+    productSubtotal: extendedProductTotal,
     standardRateDiscount,
     rentalTotal,
     productCare,
