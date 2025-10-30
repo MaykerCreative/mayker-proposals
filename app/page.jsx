@@ -413,7 +413,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     discountName: proposal.discountName || '',
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
-    status: proposal.status || 'Pending'
+    status: proposal.status || 'Pending',
+    projectNumber: proposal.projectNumber || ''
   });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
   const [editingSectionIdx, setEditingSectionIdx] = useState(null);
@@ -480,9 +481,22 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
 
   const handleSaveClick = () => {
     const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
+    
+    // Convert time format from HH:MM to h:MM AM/PM
+    const convertTimeFormat = (time24) => {
+      if (!time24) return '';
+      const [hours, minutes] = time24.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
+    };
+    
     const finalData = {
       ...formData,
       clientName: clientNameWithoutVersion,
+      deliveryTime: convertTimeFormat(formData.deliveryTime),
+      strikeTime: convertTimeFormat(formData.strikeTime),
       sectionsJSON: JSON.stringify(sections)
     };
     onSave(finalData);
@@ -539,11 +553,11 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Delivery Time</label>
-              <input type="text" name="deliveryTime" placeholder="e.g., 10:00 AM" value={formData.deliveryTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="time" name="deliveryTime" value={formData.deliveryTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Strike Time</label>
-              <input type="text" name="strikeTime" placeholder="e.g., 11:00 PM" value={formData.strikeTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="time" name="strikeTime" value={formData.strikeTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Delivery Fee</label>
@@ -560,6 +574,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
               <input type="text" name="clientFolderURL" value={formData.clientFolderURL} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Project Number (Read-only)</label>
+              <input type="text" value={formData.projectNumber} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Status</label>
