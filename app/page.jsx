@@ -116,6 +116,7 @@ export default function ProposalApp() {
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Location</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Event Date</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Sales Lead</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Project #</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Status</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Total</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
@@ -128,6 +129,7 @@ export default function ProposalApp() {
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}, {proposal.city}, {proposal.state}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.eventDate}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.salesLead || '-'}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.projectNumber || '-'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: proposal.status === 'Pending' ? '#f5f1e6' : proposal.status === 'Approved' ? '#e8f5e9' : '#ffebee', color: proposal.status === 'Pending' ? '#b8860b' : proposal.status === 'Approved' ? '#2e7d32' : '#c62828' }}>
                       {proposal.status || 'Pending'}
@@ -406,8 +408,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     state: proposal.state || '',
     startDate: proposal.startDate || '',
     endDate: proposal.endDate || '',
-    deliveryTime: proposal.deliveryTime || '',
-    strikeTime: proposal.strikeTime || '',
+    deliveryTime: convertTo24Hour(proposal.deliveryTime || ''),
+    strikeTime: convertTo24Hour(proposal.strikeTime || ''),
     deliveryFee: proposal.deliveryFee || '',
     discount: proposal.discount || '',
     discountName: proposal.discountName || '',
@@ -465,12 +467,16 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
     
     const convertTimeFormat = (time24) => {
-      if (!time24) return '';
-      const [hours, minutes] = time24.split(':');
-      const hour = parseInt(hours);
-      const ampm = hour >= 12 ? 'PM' : 'AM';
-      const displayHour = hour % 12 || 12;
-      return `${displayHour}:${minutes} ${ampm}`;
+      if (!time24 || time24.trim() === '') return '';
+      try {
+        const [hours, minutes] = time24.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        return `${displayHour}:${minutes} ${ampm}`;
+      } catch (e) {
+        return '';
+      }
     };
     
     const finalData = {
@@ -522,6 +528,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '6px', color: '#2C2C2C' }}>State</label>
               <input type="text" name="state" value={formData.state} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '6px', color: '#2C2C2C' }}>Project Number</label>
+              <input type="text" name="projectNumber" value={formData.projectNumber} onChange={handleInputChange} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box', backgroundColor: '#f0ede5' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', marginBottom: '6px', color: '#2C2C2C' }}>Start Date</label>
@@ -717,7 +727,7 @@ function getDuration(proposal) {
   const start = new Date(proposal.startDate);
   const end = new Date(proposal.endDate);
   const diffTime = Math.abs(end - start);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays;
 }
 
@@ -736,4 +746,25 @@ function parseDateTime(dateStr, timeStr) {
   }
   
   return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
+}
+
+function convertTo24Hour(timeStr) {
+  if (!timeStr || timeStr.trim() === '') return '';
+  try {
+    const [timePart, meridiem] = timeStr.split(' ');
+    if (!timePart || !meridiem) return '';
+    const [hours, minutes] = timePart.split(':');
+    let hour = parseInt(hours);
+    
+    if (meridiem === 'PM' && hour !== 12) {
+      hour += 12;
+    }
+    if (meridiem === 'AM' && hour === 12) {
+      hour = 0;
+    }
+    
+    return `${String(hour).padStart(2, '0')}:${minutes}`;
+  } catch (e) {
+    return '';
+  }
 }
