@@ -9,20 +9,21 @@ export default function ProposalApp() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [filters, setFilters] = useState({
     clientName: '',
     salesLead: '',
     status: '',
     location: ''
   });
-  const [isCreatePage, setIsCreatePage] = useState(false);
 
   useEffect(() => {
+    fetchProposals();
+    // Check URL params on load
     const params = new URLSearchParams(window.location.search);
     if (params.get('page') === 'create') {
-      setIsCreatePage(true);
+      setIsCreatingNew(true);
     }
-    fetchProposals();
   }, []);
 
   const fetchProposals = async () => {
@@ -63,12 +64,38 @@ export default function ProposalApp() {
     return matchesSearch && matchesClientName && matchesSalesLead && matchesStatus && matchesLocation;
   });
 
-  if (isCreatePage) {
-    return <CreateProposalForm catalog={catalog} onSave={() => { window.close(); }} onCancel={() => { window.close(); }} />;
-  }
-
   if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></div>;
   if (error) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#dc2626' }}>{error}</p></div>;
+  
+  // Show CreateProposalView if in create mode
+  if (isCreatingNew) {
+    return <CreateProposalView 
+      catalog={catalog} 
+      onSave={async (formData) => {
+        try {
+          await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+            method: 'POST',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(formData),
+            mode: 'no-cors'
+          });
+          alert('Proposal created successfully!');
+          setIsCreatingNew(false);
+          fetchProposals();
+        } catch (err) {
+          alert('Error creating proposal: ' + err.message);
+        }
+      }}
+      onCancel={() => {
+        setIsCreatingNew(false);
+        // Clear URL param if exists
+        if (window.location.search.includes('page=create')) {
+          window.history.pushState({}, '', window.location.pathname);
+        }
+      }}
+    />;
+  }
+  
   if (selectedProposal) return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={fetchProposals} />;
 
   return (
@@ -87,7 +114,7 @@ export default function ProposalApp() {
           <button onClick={fetchProposals} style={{ padding: '10px 20px', backgroundColor: '#2C2C2C', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
             ↻ Refresh
           </button>
-          <button onClick={() => window.open(window.location.href + '?page=create', '_blank', 'width=1200,height=1000')} style={{ padding: '10px 20px', backgroundColor: '#545142', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
+          <button onClick={() => setIsCreatingNew(true)} style={{ padding: '10px 20px', backgroundColor: '#545142', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
             + Create New Proposal
           </button>
           <div style={{ flex: 1, maxWidth: '400px' }}>
@@ -171,7 +198,8 @@ export default function ProposalApp() {
   );
 }
 
-function CreateProposalForm({ catalog, onSave, onCancel }) {
+function CreateProposalView({ catalog, onSave, onCancel }) {
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState({
     clientName: '',
     venueName: '',
@@ -181,19 +209,33 @@ function CreateProposalForm({ catalog, onSave, onCancel }) {
     endDate: '',
     deliveryTime: '',
     strikeTime: '',
-    deliveryFee: '',
-    discount: '',
+    deliveryFee: '0',
+    discount: '0',
     discountName: '',
     clientFolderURL: '',
     salesLead: '',
-    status: 'Pending'
+    status: 'Pending',
+    projectNumber: ''
   });
   const [sections, setSections] = useState([{ name: '', products: [] }]);
-  const [saving, setSaving] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddSection = () => {
+    setSections([...sections, { name: '', products: [] }]);
+  };
+
+  const handleRemoveSection = (idx) => {
+    setSections(sections.filter((_, i) => i !== idx));
+  };
+
+  const handleSectionNameChange = (idx, newName) => {
+    const newSections = [...sections];
+    newSections[idx].name = newName;
+    setSections(newSections);
   };
 
   const handleAddProduct = (sectionIdx) => {
@@ -204,7 +246,10 @@ function CreateProposalForm({ catalog, onSave, onCancel }) {
 
   const handleProductSelect = (sectionIdx, productIdx, selectedProduct) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products[productIdx] = { ...selectedProduct, quantity: newSections[sectionIdx].products[productIdx].quantity };
+    newSections[sectionIdx].products[productIdx] = { 
+      ...selectedProduct, 
+      quantity: newSections[sectionIdx].products[productIdx].quantity 
+    };
     setSections(newSections);
   };
 
@@ -220,335 +265,64 @@ function CreateProposalForm({ catalog, onSave, onCancel }) {
     setSections(newSections);
   };
 
-  const handleAddSection = () => {
-    setSections([...sections, { name: '', products: [] }]);
-  };
-
-  const handleRemoveSection = (idx) => {
-    if (sections.length > 1) {
-      setSections(sections.filter((_, i) => i !== idx));
-    }
-  };
-
-  const handleSectionNameChange = (idx, newName) => {
-    const newSections = [...sections];
-    newSections[idx].name = newName;
-    setSections(newSections);
-  };
-
   const handleSaveClick = async () => {
+    // Validation
     if (!formData.clientName.trim()) {
       alert('Client name is required');
       return;
     }
-    if (sections.every(s => s.products.length === 0)) {
-      alert('Add at least one product to create a proposal');
+    if (!formData.startDate || !formData.endDate) {
+      alert('Start and end dates are required');
       return;
     }
 
     setSaving(true);
+    
+    // Convert times from 24-hour to 12-hour format
+    const convertTimeFormat = (time24) => {
+      if (!time24) return '';
+      const [hours, minutes] = time24.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const displayHour = hour % 12 || 12;
+      return `${displayHour}:${minutes} ${ampm}`;
+    };
+
+    const finalData = {
+      ...formData,
+      deliveryTime: convertTimeFormat(formData.deliveryTime),
+      strikeTime: convertTimeFormat(formData.strikeTime),
+      sectionsJSON: JSON.stringify(sections)
+    };
+
     try {
-      const convertTimeFormat = (time24) => {
-        if (!time24) return '';
-        const [hours, minutes] = time24.split(':');
-        const hour = parseInt(hours);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour % 12 || 12;
-        return `${displayHour}:${minutes} ${ampm}`;
-      };
-
-      const finalData = {
-        ...formData,
-        deliveryTime: convertTimeFormat(formData.deliveryTime),
-        strikeTime: convertTimeFormat(formData.strikeTime),
-        sectionsJSON: JSON.stringify(sections)
-      };
-
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(finalData),
-        mode: 'no-cors'
-      });
-
-      alert('Proposal created successfully!');
-      onSave();
-    } catch (err) {
-      alert('Error creating proposal: ' + err.message);
+      await onSave(finalData);
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '80px 24px 24px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '32px 24px' }}>
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { font-family: 'Inter', sans-serif; }` }} />
+      
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827' }}>Edit Proposal</h1>
+          <div>
+            <h1 style={{ fontSize: '28px', fontWeight: '600', color: '#111827', margin: '0' }}>Create New Proposal</h1>
+            <p style={{ fontSize: '14px', color: '#6b7280', marginTop: '4px' }}>Fill in the details to create a new event proposal</p>
+          </div>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={onCancel} disabled={saving} style={{ padding: '10px 24px', backgroundColor: '#e5e7eb', color: '#111827', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
               Cancel
             </button>
             <button onClick={handleSaveClick} disabled={saving} style={{ padding: '10px 24px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', opacity: saving ? 0.7 : 1 }}>
-              {saving ? 'Saving...' : 'Save as New Version'}
+              {saving ? 'Creating...' : 'Create Proposal'}
             </button>
           </div>
         </div>
 
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', marginBottom: '24px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Proposal Details</h2>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Name (Read-only)</label>
-              <input type="text" value={formData.clientName} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Sales Lead</label>
-              <input type="text" name="salesLead" value={formData.salesLead} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Venue Name</label>
-              <input type="text" name="venueName" value={formData.venueName} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>City</label>
-                <input type="text" name="city" value={formData.city} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-              </div>
-              <div>
-                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>State</label>
-                <input type="text" name="state" value={formData.state} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-              </div>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Start Date</label>
-              <input type="date" name="startDate" value={formData.startDate} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>End Date</label>
-              <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Delivery Time</label>
-              <input type="time" name="deliveryTime" value={formData.deliveryTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Strike Time</label>
-              <input type="time" name="strikeTime" value={formData.strikeTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Delivery Fee</label>
-              <input type="number" name="deliveryFee" value={formData.deliveryFee} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount (%)</label>
-              <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount Name</label>
-              <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
-              <input type="text" name="clientFolderURL" value={formData.clientFolderURL} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Project Number (Read-only)</label>
-              <input type="text" value={formData.projectNumber} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Status</label>
-              <select name="status" value={formData.status} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Cancelled">Cancelled</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Products by Section</h2>
-          
-          {sections.map((section, sectionIdx) => (
-            <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Section Name</label>
-                  <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-                </div>
-                {sections.length > 1 && (
-                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', marginTop: '20px', whiteSpace: 'nowrap' }}>
-                    Remove Section
-                  </button>
-                )}
-              </div>
-              
-              {section.products.map((product, productIdx) => (
-                <div key={productIdx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Product</label>
-                    <select value={product.name} onChange={(e) => {
-                      const selected = catalog.find(p => p.name === e.target.value);
-                      if (selected) handleProductSelect(sectionIdx, productIdx, selected);
-                    }} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
-                      <option value="">{product.name || 'Select product...'}</option>
-                      {catalog.map((p, idx) => (
-                        <option key={idx} value={p.name}>{p.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Qty</label>
-                    <input type="number" min="1" value={product.quantity} onChange={(e) => handleProductQuantityChange(sectionIdx, productIdx, e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Price</label>
-                    <input type="number" value={product.price} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
-                  </div>
-                  <button onClick={() => handleRemoveProduct(sectionIdx, productIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
-                    Remove
-                  </button>
-                </div>
-              ))}
-              
-              <button onClick={() => handleAddProduct(sectionIdx)} style={{ marginTop: '8px', padding: '8px 16px', backgroundColor: '#dbeafe', color: '#2563eb', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
-                + Add Product
-              </button>
-            </div>
-          ))}
-
-          <button onClick={handleAddSection} style={{ padding: '12px 24px', backgroundColor: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
-            + Add Section
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function calculateTotal(proposal) {
-  const totals = calculateDetailedTotals(proposal);
-  return totals.total;
-}
-
-function calculateDetailedTotals(proposal) {
-  const sections = JSON.parse(proposal.sectionsJSON || '[]');
-  const duration = getDuration(proposal);
-  const rentalMultiplier = getRentalMultiplier(duration);
-  
-  let productSubtotal = 0;
-  sections.forEach(section => {
-    section.products.forEach(product => {
-      const extendedPrice = product.price * rentalMultiplier;
-      productSubtotal += extendedPrice * product.quantity;
-    });
-  });
-  
-  const discountPercent = parseFloat(proposal.discount) || 0;
-  const standardRateDiscount = productSubtotal * (discountPercent / 100);
-  const rentalTotal = productSubtotal - standardRateDiscount;
-  
-  const productCare = productSubtotal * 0.10;
-  const serviceFee = rentalTotal * 0.05;
-  const delivery = parseFloat(proposal.deliveryFee) || 0;
-  
-  const subtotal = rentalTotal + productCare + serviceFee + delivery;
-  const tax = subtotal * 0.0975;
-  const total = subtotal + tax;
-  
-  return {
-    productSubtotal,
-    standardRateDiscount,
-    rentalTotal,
-    productCare,
-    serviceFee,
-    delivery,
-    subtotal,
-    tax,
-    total,
-    rentalMultiplier
-  };
-}
-
-function getRentalMultiplier(duration) {
-  if (duration <= 1) return 1.0;
-  if (duration === 2) return 1.1;
-  if (duration === 3) return 1.2;
-  if (duration === 4) return 1.3;
-  if (duration === 5) return 1.4;
-  if (duration === 6) return 1.5;
-  if (duration >= 7 && duration <= 14) return 2.0;
-  if (duration >= 15 && duration <= 21) return 3.0;
-  if (duration >= 22 && duration <= 28) return 4.0;
-  return 4.0;
-}
-
-function formatDateRange(proposal) {
-  const start = new Date(proposal.startDate);
-  const end = new Date(proposal.endDate);
-  const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
-  const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
-  const startDay = start.getDate();
-  const endDay = end.getDate();
-  const year = start.getFullYear();
-  
-  if (startMonth === endMonth) {
-    return `${startMonth} ${startDay}-${endDay}, ${year}`;
-  } else {
-    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
-  }
-}
-
-function formatNumber(num) {
-  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function getDuration(proposal) {
-  if (proposal.deliveryTime && proposal.strikeTime) {
-    const deliveryDateTime = parseDateTime(proposal.startDate, proposal.deliveryTime);
-    const strikeDateTime = parseDateTime(proposal.endDate, proposal.strikeTime);
-    
-    const diffTime = strikeDateTime - deliveryDateTime;
-    const diffHours = diffTime / (1000 * 60 * 60);
-    
-    return Math.ceil(diffHours / 24);
-  }
-  
-  const start = new Date(proposal.startDate);
-  const end = new Date(proposal.endDate);
-  const diffTime = Math.abs(end - start);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return diffDays;
-}
-
-function parseDateTime(dateStr, timeStr) {
-  const [date] = new Date(dateStr).toISOString().split('T');
-  const [time] = timeStr.split(' ');
-  const [hours, minutes] = time.split(':');
-  const isPM = timeStr.includes('PM');
-  
-  let hour = parseInt(hours);
-  if (isPM && hour !== 12) hour += 12;
-  if (!isPM && hour === 12) hour = 0;
-  
-  return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
-} '80px 24px 24px' }}>
-      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827' }}>Create New Proposal</h1>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={onCancel} disabled={saving} style={{ padding: '10px 24px', backgroundColor: '#e5e7eb', color: '#111827', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
-              Cancel
-            </button>
-            <button onClick={handleSaveClick} disabled={saving} style={{ padding: '10px 24px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
-              {saving ? 'Saving...' : 'Create Proposal'}
-            </button>
-          </div>
-        </div>
-
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', marginBottom: '24px' }}>
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', marginBottom: '24px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Proposal Details</h2>
           
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
@@ -571,15 +345,15 @@ function parseDateTime(dateStr, timeStr) {
               </div>
               <div>
                 <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>State</label>
-                <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="State" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+                <input type="text" name="state" value={formData.state} onChange={handleInputChange} placeholder="TN" maxLength="2" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', textTransform: 'uppercase' }} />
               </div>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Start Date</label>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Start Date *</label>
               <input type="date" name="startDate" value={formData.startDate} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>End Date</label>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>End Date *</label>
               <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
@@ -591,20 +365,20 @@ function parseDateTime(dateStr, timeStr) {
               <input type="time" name="strikeTime" value={formData.strikeTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Delivery Fee</label>
-              <input type="number" name="deliveryFee" value={formData.deliveryFee} onChange={handleInputChange} placeholder="0.00" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Delivery Fee ($)</label>
+              <input type="number" name="deliveryFee" value={formData.deliveryFee} onChange={handleInputChange} placeholder="0" step="0.01" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount (%)</label>
-              <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} placeholder="0" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} placeholder="0" min="0" max="100" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount Name</label>
-              <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} placeholder="e.g., Early Bird" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} placeholder="e.g., Industry Discount" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
-              <input type="text" name="clientFolderURL" value={formData.clientFolderURL} onChange={handleInputChange} placeholder="Enter Google Drive URL" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              <input type="text" name="clientFolderURL" value={formData.clientFolderURL} onChange={handleInputChange} placeholder="Google Drive folder link" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Status</label>
@@ -617,18 +391,18 @@ function parseDateTime(dateStr, timeStr) {
           </div>
         </div>
 
-        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px' }}>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Products by Section *</h2>
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Products by Section</h2>
           
           {sections.map((section, sectionIdx) => (
             <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Section Name</label>
-                  <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+                  <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE, DINING" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
                 </div>
                 {sections.length > 1 && (
-                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', marginTop: '20px', whiteSpace: 'nowrap' }}>
+                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', marginTop: '20px' }}>
                     Remove Section
                   </button>
                 )}
@@ -642,7 +416,7 @@ function parseDateTime(dateStr, timeStr) {
                       const selected = catalog.find(p => p.name === e.target.value);
                       if (selected) handleProductSelect(sectionIdx, productIdx, selected);
                     }} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
-                      <option value="">{product.name || 'Select product...'}</option>
+                      <option value="">Select product...</option>
                       {catalog.map((p, idx) => (
                         <option key={idx} value={p.name}>{p.name}</option>
                       ))}
@@ -654,7 +428,7 @@ function parseDateTime(dateStr, timeStr) {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Price</label>
-                    <input type="number" value={product.price} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
+                    <input type="text" value={`$${product.price.toFixed(2)}`} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', color: '#6b7280' }} />
                   </div>
                   <button onClick={() => handleRemoveProduct(sectionIdx, productIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
                     Remove
@@ -940,6 +714,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
 
+  // Convert times from 12-hour to 24-hour format for input fields
   useEffect(() => {
     const convertTo24Hour = (time12hr) => {
       if (!time12hr) return '';
@@ -1010,6 +785,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   const handleSaveClick = () => {
     const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
     
+    // Convert times from 24-hour back to 12-hour format for storage
     const convertTimeFormat = (time24) => {
       if (!time24) return '';
       const [hours, minutes] = time24.split(':');
@@ -1030,4 +806,263 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding:
+    <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', padding: '80px 24px 24px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h1 style={{ fontSize: '28px', fontWeight: 'bold', color: '#111827' }}>Edit Proposal</h1>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={onCancel} disabled={saving} style={{ padding: '10px 24px', backgroundColor: '#e5e7eb', color: '#111827', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
+              Cancel
+            </button>
+            <button onClick={handleSaveClick} disabled={saving} style={{ padding: '10px 24px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', opacity: saving ? 0.7 : 1 }}>
+              {saving ? 'Saving...' : 'Save as New Version'}
+            </button>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', marginBottom: '24px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Proposal Details</h2>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Name (Read-only)</label>
+              <input type="text" value={formData.clientName} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Sales Lead</label>
+              <input type="text" name="salesLead" value={formData.salesLead} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Venue Name</label>
+              <input type="text" name="venueName" value={formData.venueName} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>City</label>
+                <input type="text" name="city" value={formData.city} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>State</label>
+                <input type="text" name="state" value={formData.state} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Start Date</label>
+              <input type="date" name="startDate" value={formData.startDate} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>End Date</label>
+              <input type="date" name="endDate" value={formData.endDate} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Delivery Time</label>
+              <input type="time" name="deliveryTime" value={formData.deliveryTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Strike Time</label>
+              <input type="time" name="strikeTime" value={formData.strikeTime} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Delivery Fee</label>
+              <input type="number" name="deliveryFee" value={formData.deliveryFee} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount (%)</label>
+              <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount Name</label>
+              <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
+              <input type="text" name="clientFolderURL" value={formData.clientFolderURL} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Project Number (Read-only)</label>
+              <input type="text" value={formData.projectNumber} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6', cursor: 'not-allowed' }} />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Status</label>
+              <select name="status" value={formData.status} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px' }}>
+          <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Products by Section</h2>
+          
+          {sections.map((section, sectionIdx) => (
+            <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Section Name</label>
+                  <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+                </div>
+                {sections.length > 1 && (
+                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', marginTop: '20px' }}>
+                    Remove
+                  </button>
+                )}
+              </div>
+              
+              {section.products.map((product, productIdx) => (
+                <div key={productIdx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Product</label>
+                    <select value={product.name} onChange={(e) => {
+                      const selected = catalog.find(p => p.name === e.target.value);
+                      if (selected) handleProductSelect(sectionIdx, productIdx, selected);
+                    }} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
+                      <option value="">{product.name || 'Select product...'}</option>
+                      {catalog.map((p, idx) => (
+                        <option key={idx} value={p.name}>{p.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Qty</label>
+                    <input type="number" min="1" value={product.quantity} onChange={(e) => handleProductQuantityChange(sectionIdx, productIdx, e.target.value)} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Price</label>
+                    <input type="number" value={product.price} disabled style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#f3f4f6' }} />
+                  </div>
+                  <button onClick={() => handleRemoveProduct(sectionIdx, productIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                    Remove
+                  </button>
+                </div>
+              ))}
+              
+              <button onClick={() => handleAddProduct(sectionIdx)} style={{ marginTop: '8px', padding: '8px 16px', backgroundColor: '#dbeafe', color: '#2563eb', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}>
+                + Add Product
+              </button>
+            </div>
+          ))}
+
+          <button onClick={handleAddSection} style={{ padding: '12px 24px', backgroundColor: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '14px', fontWeight: '600' }}>
+            + Add Section
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function calculateTotal(proposal) {
+  const totals = calculateDetailedTotals(proposal);
+  return totals.total;
+}
+
+function calculateDetailedTotals(proposal) {
+  const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  const duration = getDuration(proposal);
+  const rentalMultiplier = getRentalMultiplier(duration);
+  
+  let productSubtotal = 0;
+  sections.forEach(section => {
+    section.products.forEach(product => {
+      const extendedPrice = product.price * rentalMultiplier;
+      productSubtotal += extendedPrice * product.quantity;
+    });
+  });
+  
+  const discountPercent = parseFloat(proposal.discount) || 0;
+  const standardRateDiscount = productSubtotal * (discountPercent / 100);
+  const rentalTotal = productSubtotal - standardRateDiscount;
+  
+  const productCare = productSubtotal * 0.10;
+  const serviceFee = rentalTotal * 0.05;
+  const delivery = parseFloat(proposal.deliveryFee) || 0;
+  
+  const subtotal = rentalTotal + productCare + serviceFee + delivery;
+  const tax = subtotal * 0.0975;
+  const total = subtotal + tax;
+  
+  return {
+    productSubtotal,
+    standardRateDiscount,
+    rentalTotal,
+    productCare,
+    serviceFee,
+    delivery,
+    subtotal,
+    tax,
+    total,
+    rentalMultiplier
+  };
+}
+
+function getRentalMultiplier(duration) {
+  // 1 day or less = standard rate (1.0x)
+  if (duration <= 1) return 1.0;
+  // 2-6 days: add 10% per day
+  if (duration === 2) return 1.1;
+  if (duration === 3) return 1.2;
+  if (duration === 4) return 1.3;
+  if (duration === 5) return 1.4;
+  if (duration === 6) return 1.5;
+  // 7-14 days: flat 2x rate
+  if (duration >= 7 && duration <= 14) return 2.0;
+  // 15-21 days: flat 3x rate
+  if (duration >= 15 && duration <= 21) return 3.0;
+  // 22-28 days: flat 4x rate
+  if (duration >= 22 && duration <= 28) return 4.0;
+  // 28+ days: 4x rate (maximum)
+  return 4.0;
+}
+
+function formatDateRange(proposal) {
+  const start = new Date(proposal.startDate);
+  const end = new Date(proposal.endDate);
+  const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+  const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const year = start.getFullYear();
+  
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay}-${endDay}, ${year}`;
+  } else {
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+  }
+}
+
+function formatNumber(num) {
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function getDuration(proposal) {
+  if (proposal.deliveryTime && proposal.strikeTime) {
+    const deliveryDateTime = parseDateTime(proposal.startDate, proposal.deliveryTime);
+    const strikeDateTime = parseDateTime(proposal.endDate, proposal.strikeTime);
+    
+    const diffTime = strikeDateTime - deliveryDateTime;
+    const diffHours = diffTime / (1000 * 60 * 60);
+    
+    return Math.ceil(diffHours / 24);
+  }
+  
+  const start = new Date(proposal.startDate);
+  const end = new Date(proposal.endDate);
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  return diffDays;
+}
+
+function parseDateTime(dateStr, timeStr) {
+  const [date] = new Date(dateStr).toISOString().split('T');
+  const [time] = timeStr.split(' ');
+  const [hours, minutes] = time.split(':');
+  const isPM = timeStr.includes('PM');
+  
+  let hour = parseInt(hours);
+  if (isPM && hour !== 12) hour += 12;
+  if (!isPM && hour === 12) hour = 0;
+  
+  return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
+}
