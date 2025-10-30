@@ -501,7 +501,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
   const [editingSectionIdx, setEditingSectionIdx] = useState(null);
-  const [editingText, setEditingText] = useState('');
+  const [tempSectionName, setTempSectionName] = useState('');
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -648,18 +648,28 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '12px' }}>
                 {editingSectionIdx === sectionIdx ? (
-                  <input 
-                    autoFocus
-                    type="text"
-                    value={editingText}
-                    onChange={(e) => setEditingText(e.target.value)}
-                    onBlur={() => saveEditingSection()}
-                    onKeyDown={(e) => { if (e.key === 'Enter') { saveEditingSection(); } }}
-                    style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box' }} 
-                  />
+                  <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                    <input 
+                      autoFocus
+                      type="text"
+                      value={tempSectionName}
+                      onChange={(e) => setTempSectionName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveEdit();
+                        if (e.key === 'Escape') handleCancelEdit();
+                      }}
+                      style={{ fontSize: '14px', fontWeight: '600', color: '#111827', border: '2px solid #3b82f6', backgroundColor: 'white', padding: '10px 12px', borderRadius: '6px', flex: 1, boxSizing: 'border-box' }} 
+                    />
+                    <button onClick={handleSaveEdit} style={{ padding: '8px 12px', backgroundColor: '#dcfce7', color: '#15803d', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                      Save
+                    </button>
+                    <button onClick={handleCancelEdit} style={{ padding: '8px 12px', backgroundColor: '#f3f4f6', color: '#6b7280', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', whiteSpace: 'nowrap' }}>
+                      Cancel
+                    </button>
+                  </div>
                 ) : (
                   <div 
-                    onClick={() => startEditingSection(sectionIdx)}
+                    onClick={() => handleStartEdit(sectionIdx)}
                     style={{ fontSize: '14px', fontWeight: '600', color: '#111827', padding: '10px 12px', borderRadius: '6px', flex: 1, cursor: 'pointer', backgroundColor: '#f3f4f6', border: '1px dashed #d1d5db', userSelect: 'none' }}
                   >
                     {section.name} <span style={{ fontSize: '12px', color: '#9ca3af' }}>(click to edit)</span>
