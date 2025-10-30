@@ -19,7 +19,6 @@ export default function ProposalApp() {
 
   useEffect(() => {
     fetchProposals();
-    // Check URL params on load
     const params = new URLSearchParams(window.location.search);
     if (params.get('page') === 'create') {
       setIsCreatingNew(true);
@@ -67,7 +66,6 @@ export default function ProposalApp() {
   if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></div>;
   if (error) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#dc2626' }}>{error}</p></div>;
   
-  // Show CreateProposalView if in create mode
   if (isCreatingNew) {
     return <CreateProposalView 
       catalog={catalog} 
@@ -88,7 +86,6 @@ export default function ProposalApp() {
       }}
       onCancel={() => {
         setIsCreatingNew(false);
-        // Clear URL param if exists
         if (window.location.search.includes('page=create')) {
           window.history.pushState({}, '', window.location.pathname);
         }
@@ -266,7 +263,6 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   };
 
   const handleSaveClick = async () => {
-    // Validation
     if (!formData.clientName.trim()) {
       alert('Client name is required');
       return;
@@ -278,7 +274,6 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
 
     setSaving(true);
     
-    // Convert times from 24-hour to 12-hour format
     const convertTimeFormat = (time24) => {
       if (!time24) return '';
       const [hours, minutes] = time24.split(':');
@@ -690,6 +685,39 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{sections.length + 2}</div>
       </div>
+
+      {/* PROJECT DETAILS PAGE */}
+      <div className="print-break-after" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
+        <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+              <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div>{proposal.clientName}</div>
+                <div>{formatDateRange(proposal)}</div>
+                <div>{proposal.venueName}</div>
+              </div>
+              <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+            </div>
+          </div>
+        </div>
+        
+        <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif" }}>Project Details</h2>
+        
+        <p style={{ marginBottom: '24px', fontSize: '13px', lineHeight: '1.6', color: '#444' }}>
+          The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
+        </p>
+        
+        <ul style={{ fontSize: '13px', lineHeight: '1.8', marginBottom: '20px', color: '#222', listStyle: 'none', padding: 0 }}>
+          <li style={{ marginBottom: '8px' }}><strong>Project Location:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
+          <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {new Date(proposal.startDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</li>
+          <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
+          <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {new Date(proposal.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</li>
+          <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
+        </ul>
+        
+        <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{sections.length + 3}</div>
+      </div>
     </div>
   );
 }
@@ -714,7 +742,6 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
 
-  // Convert times from 12-hour to 24-hour format for input fields
   useEffect(() => {
     const convertTo24Hour = (time12hr) => {
       if (!time12hr) return '';
@@ -785,7 +812,6 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   const handleSaveClick = () => {
     const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
     
-    // Convert times from 24-hour back to 12-hour format for storage
     const convertTimeFormat = (time24) => {
       if (!time24) return '';
       const [hours, minutes] = time24.split(':');
@@ -970,20 +996,16 @@ function calculateDetailedTotals(proposal) {
     });
   });
   
-  // Calculate extended product total (before discount)
   const extendedProductTotal = baseProductTotal * rentalMultiplier;
   
-  // Apply discount to the extended total
   const discountPercent = parseFloat(proposal.discount) || 0;
   const standardRateDiscount = extendedProductTotal * (discountPercent / 100);
   const rentalTotal = extendedProductTotal - standardRateDiscount;
   
-  // Product Care: 10% of extended total (pre-discount)
   const productCare = extendedProductTotal * 0.10;
   
   const delivery = parseFloat(proposal.deliveryFee) || 0;
   
-  // Service Fee: 5% of all fees combined (rental + product care + delivery)
   const serviceFee = (rentalTotal + productCare + delivery) * 0.05;
   
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
@@ -1005,21 +1027,15 @@ function calculateDetailedTotals(proposal) {
 }
 
 function getRentalMultiplier(duration) {
-  // 1 day or less = standard rate (1.0x)
   if (duration <= 1) return 1.0;
-  // 2-6 days: add 10% per day
   if (duration === 2) return 1.1;
   if (duration === 3) return 1.2;
   if (duration === 4) return 1.3;
   if (duration === 5) return 1.4;
   if (duration === 6) return 1.5;
-  // 7-14 days: flat 2x rate
   if (duration >= 7 && duration <= 14) return 2.0;
-  // 15-21 days: flat 3x rate
   if (duration >= 15 && duration <= 21) return 3.0;
-  // 22-28 days: flat 4x rate
   if (duration >= 22 && duration <= 28) return 4.0;
-  // 28+ days: 4x rate (maximum)
   return 4.0;
 }
 
