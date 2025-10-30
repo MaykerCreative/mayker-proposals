@@ -110,7 +110,10 @@ export default function ProposalApp() {
                   <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Client</th>
                   <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Location</th>
                   <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Event Date</th>
+                  <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Sales Lead</th>
+                  <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Project #</th>
                   <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Status</th>
+                  <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Last Edited</th>
                   <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Total</th>
                   <th style={{ padding: '12px 24px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6b7280', textTransform: 'uppercase' }}>Actions</th>
                 </tr>
@@ -121,14 +124,21 @@ export default function ProposalApp() {
                     <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>{proposal.clientName}</td>
                     <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>{proposal.venueName}, {proposal.city}, {proposal.state}</td>
                     <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>{proposal.eventDate}</td>
+                    <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>{proposal.salesLead || '-'}</td>
+                    <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>{proposal.projectNumber || '-'}</td>
                     <td style={{ padding: '16px 24px', fontSize: '14px' }}>
                       <span style={{ display: 'inline-block', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '500', backgroundColor: proposal.status === 'Pending' ? '#fef3c7' : proposal.status === 'Approved' ? '#d1fae5' : '#fee2e2', color: proposal.status === 'Pending' ? '#b45309' : proposal.status === 'Approved' ? '#065f46' : '#7f1d1d' }}>
                         {proposal.status || 'Pending'}
                       </span>
                     </td>
+                    <td style={{ padding: '16px 24px', fontSize: '14px', color: '#6b7280' }}>{proposal.lastUpdated || '-'}</td>
                     <td style={{ padding: '16px 24px', fontSize: '14px', color: '#111827' }}>${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                     <td style={{ padding: '16px 24px', fontSize: '14px' }}>
-                      <button onClick={() => setSelectedProposal(proposal)} style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>View</button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={() => setSelectedProposal(proposal)} style={{ color: '#2563eb', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>View</button>
+                        <span style={{ color: '#d1d5db' }}>|</span>
+                        <button onClick={() => setSelectedProposal(proposal)} style={{ color: '#059669', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>Edit</button>
+                      </div>
                     </td>
                   </tr>
                 ))}
