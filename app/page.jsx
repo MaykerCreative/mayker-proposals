@@ -140,7 +140,7 @@ export default function ProposalApp() {
                         View
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
-                      <button onClick={() => setSelectedProposal(proposal)} style={{ color: '#059669', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }} data-edit-trigger>
+                      <button onClick={() => setSelectedProposal({ ...proposal, _isEditing: true })} style={{ color: '#059669', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px' }}>
                         Edit
                       </button>
                     </div>
@@ -156,7 +156,7 @@ export default function ProposalApp() {
 }
 
 function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(proposal._isEditing || false);
   const [editData, setEditData] = useState(null);
   const [saving, setSaving] = useState(false);
 
