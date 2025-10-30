@@ -414,10 +414,12 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      <div style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } }` }} />
+
+      <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
           <button onClick={onBack} style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
-            ← Back
+            ← Back to Dashboard
           </button>
           <button onClick={onPrint} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
             Print / Export as PDF
@@ -425,75 +427,181 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
         </div>
       </div>
 
-      <div style={{ paddingTop: '80px' }}>
-        <h1 style={{ padding: '40px', textAlign: 'center', fontSize: '24px', fontWeight: '600' }}>{proposal.clientName}</h1>
-        <div style={{ padding: '40px', maxWidth: '1000px', margin: '0 auto' }}>
-          <p><strong>Venue:</strong> {proposal.venueName}</p>
-          <p><strong>Location:</strong> {proposal.city}, {proposal.state}</p>
-          <p><strong>Event Date:</strong> {proposal.eventDate}</p>
-          <p><strong>Rental Period:</strong> {proposal.startDate} to {proposal.endDate}</p>
-          
-          {sections.map((section, idx) => (
-            <div key={idx} style={{ marginTop: '30px' }}>
-              <h2 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '15px' }}>{section.name}</h2>
-              <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '20px' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid #ddd' }}>
-                    <th style={{ padding: '10px', textAlign: 'left', fontWeight: '600' }}>Product</th>
-                    <th style={{ padding: '10px', textAlign: 'center', fontWeight: '600' }}>Qty</th>
-                    <th style={{ padding: '10px', textAlign: 'right', fontWeight: '600' }}>Price</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {section.products.map((product, pIdx) => (
-                    <tr key={pIdx} style={{ borderBottom: '1px solid #eee' }}>
-                      <td style={{ padding: '10px' }}>{product.name}</td>
-                      <td style={{ padding: '10px', textAlign: 'center' }}>{product.quantity}</td>
-                      <td style={{ padding: '10px', textAlign: 'right' }}>${(product.price * totals.rentalMultiplier * product.quantity).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ))}
+      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
+            <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
+            <div style={{ width: '60px', height: '0.5px', backgroundColor: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}></div>
+            <p style={{ fontSize: '14px', color: 'white', letterSpacing: '0.2em', marginBottom: '16px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textTransform: 'uppercase' }}>Product Selections</p>
+            <p style={{ fontSize: '18px', color: 'white', marginBottom: '6px', fontWeight: '300', fontFamily: "'Domaine Text', serif" }}>{proposal.clientName.replace(/\s*\(V\d+\)\s*$/, '')}{proposal.status === 'Approved' ? ' (Final)' : ''}</p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{proposal.venueName}</p>
+            <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{formatDateRange(proposal)}</p>
+          </div>
+          <img src="/mayker_icon-whisper.svg" alt="Mayker Events" style={{ width: '60px', height: '60px', marginTop: '40px' }} />
+        </div>
+      </div>
 
-          <div style={{ marginTop: '40px', paddingTop: '20px', borderTop: '2px solid #ddd', textAlign: 'right', maxWidth: '400px', marginLeft: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span>Subtotal:</span>
-              <span>${totals.productSubtotal.toFixed(2)}</span>
-            </div>
-            {totals.standardRateDiscount > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', color: '#059669' }}>
-                <span>Discount:</span>
-                <span>-${totals.standardRateDiscount.toFixed(2)}</span>
+      {sections.map((section, sectionIndex) => {
+        const pageNum = sectionIndex + 2;
+        return (
+          <div key={sectionIndex} className="print-break-after" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
+            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                  <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div>{proposal.clientName}</div>
+                    <div>{formatDateRange(proposal)}</div>
+                    <div>{proposal.venueName}</div>
+                  </div>
+                  <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+                </div>
               </div>
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px', fontWeight: '600' }}>
-              <span>Rental Total:</span>
-              <span>${totals.rentalTotal.toFixed(2)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span>Product Care (10%):</span>
-              <span>${totals.productCare.toFixed(2)}</span>
+            
+            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif" }}>
+              {section.name}
+            </h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+              {section.products.map((product, productIndex) => (
+                <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px' }}>
+                  <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    ) : (
+                      '[Product Image]'
+                    )}
+                  </div>
+                  <h3 style={{ fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    {product.name}
+                  </h3>
+                  <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Quantity: {product.quantity}</p>
+                  {product.dimensions && (
+                    <p style={{ fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
+                  )}
+                </div>
+              ))}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span>Service Fee (5%):</span>
-              <span>${totals.serviceFee.toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span>Delivery:</span>
-              <span>${totals.delivery.toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span>Tax (9.75%):</span>
-              <span>${totals.tax.toFixed(2)}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '15px', paddingTop: '15px', borderTop: '2px solid #ddd', fontSize: '18px', fontWeight: '700' }}>
-              <span>TOTAL:</span>
-              <span>${totals.total.toFixed(2)}</span>
+            
+            <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{pageNum}</div>
+          </div>
+        );
+      })}
+
+      <div style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
+        <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+              <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div>{proposal.clientName}</div>
+                <div>{formatDateRange(proposal)}</div>
+                <div>{proposal.venueName}</div>
+              </div>
+              <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
             </div>
           </div>
         </div>
+        
+        <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', textAlign: 'center', fontFamily: "'Domaine Text', serif" }}>Invoice</h2>
+        
+        <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 200px)' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
+                <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Section</th>
+                <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Product</th>
+                <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Qty</th>
+                <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Unit Price</th>
+                <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sections.map((section, sectionIndex) => (
+                section.products.map((product, productIndex) => {
+                  const extendedPrice = product.price * totals.rentalMultiplier;
+                  const lineTotal = extendedPrice * product.quantity;
+                  
+                  return (
+                    <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
+                      <td style={{ padding: '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        {productIndex === 0 ? section.name : ''}
+                      </td>
+                      <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        {product.name}
+                      </td>
+                      <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        {product.quantity}
+                      </td>
+                      <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        ${formatNumber(extendedPrice)}
+                      </td>
+                      <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        ${formatNumber(lineTotal)}
+                      </td>
+                    </tr>
+                  );
+                })
+              ))}
+            </tbody>
+          </table>
+          
+          <div style={{ marginTop: 'auto', paddingTop: '30px' }}>
+            <div style={{ marginLeft: 'auto', width: '30%' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+                <tbody>
+                  <tr>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right', width: '50%' }}>Product Subtotal</td>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '50%' }}>
+                      ${formatNumber(totals.productSubtotal)}
+                    </td>
+                  </tr>
+                  {totals.standardRateDiscount > 0 && (
+                    <tr>
+                      <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                        Discount ({proposal.discount}% off)
+                      </td>
+                      <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        -${formatNumber(totals.standardRateDiscount)}
+                      </td>
+                    </tr>
+                  )}
+                  <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Rental Total</td>
+                    <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.rentalTotal)}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Product Care (10%)</td>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.productCare)}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Service Fee (5%)</td>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.serviceFee)}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Delivery</td>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
+                  </tr>
+                  <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Subtotal</td>
+                    <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.subtotal)}</td>
+                  </tr>
+                  <tr>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Tax (9.75%)</td>
+                    <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.tax)}</td>
+                  </tr>
+                  <tr style={{ borderTop: '2px solid ' + brandCharcoal }}>
+                    <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>TOTAL</td>
+                    <td style={{ padding: '14px 0', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.total)}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+        
+        <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{sections.length + 2}</div>
       </div>
     </div>
   );
