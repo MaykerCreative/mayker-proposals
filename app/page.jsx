@@ -760,4 +760,14 @@ function getDuration(proposal) {
 }
 
 function parseDateTime(dateStr, timeStr) {
-  const [date] = new Date(dateStr).
+  const [date] = new Date(dateStr).toISOString().split('T');
+  const [time] = timeStr.split(' ');
+  const [hours, minutes] = time.split(':');
+  const isPM = timeStr.includes('PM');
+  
+  let hour = parseInt(hours);
+  if (isPM && hour !== 12) hour += 12;
+  if (!isPM && hour === 12) hour = 0;
+  
+  return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
+}
