@@ -78,7 +78,7 @@ export default function ProposalApp() {
           <button onClick={fetchProposals} style={{ padding: '10px 20px', backgroundColor: '#2C2C2C', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
             ↻ Refresh
           </button>
-          <button onClick={() => setSelectedProposal({ _isCreating: true })} style={{ padding: '10px 20px', backgroundColor: '#545142', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
+          <button onClick={() => window.open(window.location.origin + window.location.pathname + '?page=create', '_blank', 'width=1000,height=1200')} style={{ padding: '10px 20px', backgroundColor: '#545142', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
             + Create New Proposal
           </button>
           <div style={{ flex: 1, maxWidth: '400px' }}>
@@ -191,29 +191,6 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
       setSaving(false);
     }
   };
-
-  // Handle creating a new proposal
-  if (proposal._isCreating) {
-    const blankProposal = {
-      clientName: '',
-      venueName: '',
-      city: '',
-      state: '',
-      startDate: '',
-      endDate: '',
-      deliveryTime: '',
-      strikeTime: '',
-      deliveryFee: '',
-      discount: '',
-      discountName: '',
-      clientFolderURL: '',
-      salesLead: '',
-      status: 'Pending',
-      projectNumber: '',
-      sectionsJSON: JSON.stringify([{ name: '', products: [] }])
-    };
-    return <EditProposalView proposal={blankProposal} catalog={catalog} onSave={handleSave} onCancel={() => onBack()} saving={saving} />;
-  }
 
   if (isEditing && editData) {
     return <EditProposalView proposal={editData} catalog={catalog} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
