@@ -689,41 +689,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
         
         <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{sections.length + 2}</div>
-        <div className="print-break-after" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
-        <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
-            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-              <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                <div>{proposal.clientName}</div>
-                <div>{formatDateRange(proposal)}</div>
-                <div>{proposal.venueName}</div>
-              </div>
-              <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
-            </div>
-          </div>
-        </div>
-        
-        <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif" }}>Project Details</h2>
-        
-        <p style={{ marginBottom: '24px', fontSize: '13px', lineHeight: '1.6', color: '#444' }}>
-          The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
-        </p>
-        
-        <ul style={{ fontSize: '13px', lineHeight: '1.8', marginBottom: '20px', color: '#222', listStyle: 'none', padding: 0 }}>
-          <li style={{ marginBottom: '8px' }}><strong>Project Location:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
-          <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {new Date(proposal.startDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</li>
-          <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
-          <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {new Date(proposal.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</li>
-          <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
-        </ul>
-        
-        <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{sections.length + 3}</div>
-      </div>
-
-    </div>
-  );
-}
       </div>
     </div>
   );
