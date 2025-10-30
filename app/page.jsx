@@ -151,6 +151,88 @@ export default function ProposalApp() {
   );
 }
 
+function calculateTotal(proposal) {
+  const totals = calculateDetailedTotals(proposal);
+  return totals.total;
+}
+
+function calculateDetailedTotals(proposal) {
+  const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  const duration = getDuration(proposal);
+  const rentalMultiplier = getRentalMultiplier(duration);
+  
+  let productSubtotal = 0;
+  sections.forEach(section => {
+    section.products.forEach(product => {
+      const extendedPrice = product.price * rentalMultiplier;
+      productSubtotal += extendedPrice * product.quantity;
+    });
+  });
+  
+  const discountPercent = parseFloat(proposal.discount) || 0;
+  const standardRateDiscount = productSubtotal * (discountPercent / 100);
+  const rentalTotal = productSubtotal - standardRateDiscount;
+  
+  const productCare = productSubtotal * 0.10;
+  const serviceFee = rentalTotal * 0.05;
+  const delivery = parseFloat(proposal.deliveryFee) || 0;
+  
+  const subtotal = rentalTotal + productCare + serviceFee + delivery;
+  const tax = subtotal * 0.0975;
+  const total = subtotal + tax;
+  
+  return { productSubtotal, standardRateDiscount, rentalTotal, productCare, serviceFee, delivery, subtotal, tax, total, rentalMultiplier };
+}
+
+function getRentalMultiplier(duration) {
+  if (duration <= 1) return 1.0;
+  if (duration === 2) return 1.1;
+  if (duration === 3) return 1.2;
+  if (duration === 4) return 1.3;
+  if (duration === 5) return 1.4;
+  if (duration === 6) return 1.5;
+  if (duration >= 7 && duration <= 14) return 2.0;
+  if (duration >= 15 && duration <= 21) return 3.0;
+  if (duration >= 22 && duration <= 28) return 4.0;
+  return 4.0;
+}
+
+function formatDateRange(proposal) {
+  const start = new Date(proposal.startDate);
+  const end = new Date(proposal.endDate);
+  const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+  const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+  const startDay = start.getDate();
+  const endDay = end.getDate();
+  const year = start.getFullYear();
+  
+  if (startMonth === endMonth) {
+    return `${startMonth} ${startDay}-${endDay}, ${year}`;
+  } else {
+    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+  }
+}
+
+function formatNumber(num) {
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function getDuration(proposal) {
+  if (proposal.deliveryTime && proposal.strikeTime) {
+    const start = new Date(proposal.startDate);
+    const end = new Date(proposal.endDate);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return diffDays;
+  }
+  
+  const start = new Date(proposal.startDate);
+  const end = new Date(proposal.endDate);
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  return diffDays;
+}
+
 function CreateProposalForm({ catalog, onCancel, onSuccess }) {
   const [formData, setFormData] = useState({
     clientName: '',
@@ -406,7 +488,7 @@ function CreateProposalForm({ catalog, onCancel, onSuccess }) {
   );
 }
 
-function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
+const ProposalView = ({ proposal, catalog, onBack, onPrint, onRefresh }) => {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
   const totals = calculateDetailedTotals(proposal);
   const brandTaupe = '#545142';
@@ -605,66 +687,4 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
       </div>
     </div>
   );
-}
-
-function calculateTotal(proposal) {
-  const totals = calculateDetailedTotals(proposal);
-  return totals.total;
-}
-
-function calculateDetailedTotals(proposal) {
-  const sections = JSON.parse(proposal.sectionsJSON || '[]');
-  const duration = getDuration(proposal);
-  const rentalMultiplier = getRentalMultiplier(duration);
-  
-  let productSubtotal = 0;
-  sections.forEach(section => {
-    section.products.forEach(product => {
-      const extendedPrice = product.price * rentalMultiplier;
-      productSubtotal += extendedPrice * product.quantity;
-    });
-  });
-  
-  const discountPercent = parseFloat(proposal.discount) || 0;
-  const standardRateDiscount = productSubtotal * (discountPercent / 100);
-  const rentalTotal = productSubtotal - standardRateDiscount;
-  
-  const productCare = productSubtotal * 0.10;
-  const serviceFee = rentalTotal * 0.05;
-  const delivery = parseFloat(proposal.deliveryFee) || 0;
-  
-  const subtotal = rentalTotal + productCare + serviceFee + delivery;
-  const tax = subtotal * 0.0975;
-  const total = subtotal + tax;
-  
-  return { productSubtotal, standardRateDiscount, rentalTotal, productCare, serviceFee, delivery, subtotal, tax, total, rentalMultiplier };
-}
-
-function getRentalMultiplier(duration) {
-  if (duration <= 1) return 1.0;
-  if (duration === 2) return 1.1;
-  if (duration === 3) return 1.2;
-  if (duration === 4) return 1.3;
-  if (duration === 5) return 1.4;
-  if (duration === 6) return 1.5;
-  if (duration >= 7 && duration <= 14) return 2.0;
-  if (duration >= 15 && duration <= 21) return 3.0;
-  if (duration >= 22 && duration <= 28) return 4.0;
-  return 4.0;
-}
-
-function getDuration(proposal) {
-  if (proposal.deliveryTime && proposal.strikeTime) {
-    const start = new Date(proposal.startDate);
-    const end = new Date(proposal.endDate);
-    const diffTime = Math.abs(end - start);
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    return diffDays;
-  }
-  
-  const start = new Date(proposal.startDate);
-  const end = new Date(proposal.endDate);
-  const diffTime = Math.abs(end - start);
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
-  return diffDays;
-}
+};
