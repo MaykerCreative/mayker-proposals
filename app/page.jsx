@@ -425,6 +425,31 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
 
+  // Convert times from 12-hour to 24-hour format for input fields
+  useEffect(() => {
+    const convertTo24Hour = (time12hr) => {
+      if (!time12hr) return '';
+      
+      const timeMatch = time12hr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+      if (!timeMatch) return '';
+      
+      let hours = parseInt(timeMatch[1]);
+      const minutes = timeMatch[2];
+      const meridiem = timeMatch[3]?.toUpperCase() || 'AM';
+      
+      if (meridiem === 'PM' && hours !== 12) hours += 12;
+      if (meridiem === 'AM' && hours === 12) hours = 0;
+      
+      return `${String(hours).padStart(2, '0')}:${minutes}`;
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      deliveryTime: convertTo24Hour(prev.deliveryTime),
+      strikeTime: convertTo24Hour(prev.strikeTime)
+    }));
+  }, []);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -471,6 +496,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   const handleSaveClick = () => {
     const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
     
+    // Convert times from 24-hour back to 12-hour format for storage
     const convertTimeFormat = (time24) => {
       if (!time24) return '';
       const [hours, minutes] = time24.split(':');
@@ -734,14 +760,4 @@ function getDuration(proposal) {
 }
 
 function parseDateTime(dateStr, timeStr) {
-  const [date] = new Date(dateStr).toISOString().split('T');
-  const [time] = timeStr.split(' ');
-  const [hours, minutes] = time.split(':');
-  const isPM = timeStr.includes('PM');
-  
-  let hour = parseInt(hours);
-  if (isPM && hour !== 12) hour += 12;
-  if (!isPM && hour === 12) hour = 0;
-  
-  return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
-}
+  const [date] = new Date(dateStr).
