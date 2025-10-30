@@ -192,6 +192,29 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
     }
   };
 
+  // Handle creating a new proposal
+  if (proposal._isCreating) {
+    const blankProposal = {
+      clientName: '',
+      venueName: '',
+      city: '',
+      state: '',
+      startDate: '',
+      endDate: '',
+      deliveryTime: '',
+      strikeTime: '',
+      deliveryFee: '',
+      discount: '',
+      discountName: '',
+      clientFolderURL: '',
+      salesLead: '',
+      status: 'Pending',
+      projectNumber: '',
+      sectionsJSON: JSON.stringify([{ name: '', products: [] }])
+    };
+    return <EditProposalView proposal={blankProposal} catalog={catalog} onSave={handleSave} onCancel={() => onBack()} saving={saving} />;
+  }
+
   if (isEditing && editData) {
     return <EditProposalView proposal={editData} catalog={catalog} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
   }
