@@ -709,15 +709,21 @@ function calculateDetailedTotals(proposal) {
 }
 
 function getRentalMultiplier(duration) {
+  // 1 day or less = standard rate (1.0x)
   if (duration <= 1) return 1.0;
+  // 2-6 days: add 10% per day
   if (duration === 2) return 1.1;
   if (duration === 3) return 1.2;
   if (duration === 4) return 1.3;
   if (duration === 5) return 1.4;
   if (duration === 6) return 1.5;
+  // 7-14 days: flat 2x rate
   if (duration >= 7 && duration <= 14) return 2.0;
+  // 15-21 days: flat 3x rate
   if (duration >= 15 && duration <= 21) return 3.0;
+  // 22-28 days: flat 4x rate
   if (duration >= 22 && duration <= 28) return 4.0;
+  // 28+ days: 4x rate (maximum)
   return 4.0;
 }
 
