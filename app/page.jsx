@@ -394,66 +394,19 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
         <div style={{ backgroundColor: 'white', padding: '24px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
           <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '16px', color: '#111827' }}>Products by Section</h2>
           
-          {sections.flatMap((section, sectionIndex) => {
-  const PRODUCTS_PER_PAGE = 9;
-  const productChunks = [];
-  
-  // Split products into chunks of 9
-  for (let i = 0; i < section.products.length; i += PRODUCTS_PER_PAGE) {
-    productChunks.push(section.products.slice(i, i + PRODUCTS_PER_PAGE));
-  }
-  
-  // Create a page for each chunk
-  return productChunks.map((chunk, chunkIndex) => {
-    const isFirstChunk = chunkIndex === 0;
-    const pageNum = sectionIndex + 2 + chunkIndex;
-    
-    return (
-      <div key={`${sectionIndex}-${chunkIndex}`} className="print-break-after" style={{minHeight: '100vh', padding: '30px 60px 40px', position: 'relative'}}>
-        {/* Header - appears on EVERY page */}
-        <div style={{marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb'}}>
-          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
-            <img src="maykerwordmark-events-black.svg" alt="Mayker Events" style={{height: '22px', marginTop: '4px'}} />
-            <div style={{textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px'}}>
-              <div style={{fontSize: '9px', color: '#666', fontFamily: 'Neue Haas Unica, Inter, sans-serif', lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em'}}>
-                <div>{proposal.clientName}</div>
-                <div>{formatDateRange(proposal)}</div>
-                <div>{proposal.venueName}</div>
+          {sections.map((section, sectionIdx) => (
+            <div key={sectionIdx} style={{ marginBottom: '24px', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
+                <div style={{ flex: 1 }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Section Name</label>
+                  <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+                </div>
+                {sections.length > 1 && (
+                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', marginTop: '20px' }}>
+                    Remove
+                  </button>
+                )}
               </div>
-              <img src="maykericon-black.svg" alt="M" style={{height: '38px'}} />
-            </div>
-          </div>
-        </div>
-        
-        {/* Section title - show on first page or with "(continued)" on subsequent pages */}
-        <h2 style={{fontSize: '18px', fontWeight: 400, color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: 'Domaine Text, serif'}}>
-          {section.name}{!isFirstChunk ? ' (continued)' : ''}
-        </h2>
-        
-        {/* Products grid for this chunk */}
-        <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
-          {chunk.map((product, productIndex) => (
-            <div key={productIndex} style={{backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px'}}>
-              <div style={{aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px'}}>
-                {product.imageUrl ? (
-                  <img src={product.imageUrl} alt={product.name} style={{width: '100%', height: '100%', objectFit: 'cover'}} onError={(e) => {e.target.style.display = 'none'}} />
-                ) : 'Product Image'}
-              </div>
-              <h3 style={{fontSize: '11px', fontWeight: 500, color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: 'Neue Haas Unica, Inter, sans-serif'}}>{product.name}</h3>
-              <p style={{fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: 'Neue Haas Unica, Inter, sans-serif'}}>Quantity: {product.quantity}</p>
-              {product.dimensions && (
-                <p style={{fontSize: '10px', color: '#666', fontFamily: 'Neue Haas Unica, Inter, sans-serif'}}>{product.dimensions}</p>
-              )}
-            </div>
-          ))}
-        </div>
-        
-        {/* Page number */}
-        <div style={{position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: 'Neue Haas Unica, Inter, sans-serif'}}>{pageNum}</div>
-      </div>
-    );
-  });
-})}
               
               {section.products.map((product, productIdx) => (
                 <div key={productIdx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
@@ -575,52 +528,67 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
       </div>
 
-      {sections.map((section, sectionIndex) => {
-        const pageNum = sectionIndex + 2;
-        return (
-          <div key={sectionIndex} className="print-break-after" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
-            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
-                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                  <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                    <div>{proposal.clientName}</div>
-                    <div>{formatDateRange(proposal)}</div>
-                    <div>{proposal.venueName}</div>
+      {sections.flatMap((section, sectionIndex) => {
+        const PRODUCTS_PER_PAGE = 9;
+        const productChunks = [];
+        
+        // Split products into chunks of 9
+        for (let i = 0; i < section.products.length; i += PRODUCTS_PER_PAGE) {
+          productChunks.push(section.products.slice(i, i + PRODUCTS_PER_PAGE));
+        }
+        
+        // Create a page for each chunk
+        return productChunks.map((chunk, chunkIndex) => {
+          const isFirstChunk = chunkIndex === 0;
+          const pageNum = sectionIndex + 2 + chunkIndex;
+          
+          return (
+            <div key={`${sectionIndex}-${chunkIndex}`} className="print-break-after" style={{minHeight: '100vh', padding: '30px 60px 40px', position: 'relative'}}>
+              {/* Header - appears on EVERY page */}
+              <div style={{marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb'}}>
+                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
+                  <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{height: '22px', marginTop: '4px'}} />
+                  <div style={{textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px'}}>
+                    <div style={{fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em'}}>
+                      <div>{proposal.clientName}</div>
+                      <div>{formatDateRange(proposal)}</div>
+                      <div>{proposal.venueName}</div>
+                    </div>
+                    <img src="/mayker_icon-black.svg" alt="M" style={{height: '38px'}} />
                   </div>
-                  <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
                 </div>
               </div>
-            </div>
-            
-            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif" }}>
-              {section.name}
-            </h2>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
-              {section.products.map((product, productIndex) => (
-                <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px' }}>
-                  <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
-                    {product.imageUrl ? (
-                      <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
-                    ) : (
-                      '[Product Image]'
+              
+              {/* Section title - show on first page or with "(continued)" on subsequent pages */}
+              <h2 style={{fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif"}}>
+                {section.name}{!isFirstChunk ? ' (continued)' : ''}
+              </h2>
+              
+              {/* Products grid for this chunk */}
+              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
+                {chunk.map((product, productIndex) => (
+                  <div key={productIndex} style={{backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px'}}>
+                    <div style={{aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px'}}>
+                      {product.imageUrl ? (
+                        <img src={product.imageUrl} alt={product.name} style={{width: '100%', height: '100%', objectFit: 'cover'}} onError={(e) => {e.target.style.display = 'none'}} />
+                      ) : '[Product Image]'}
+                    </div>
+                    <h3 style={{fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>
+                      {product.name}
+                    </h3>
+                    <p style={{fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>Quantity: {product.quantity}</p>
+                    {product.dimensions && (
+                      <p style={{fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>{product.dimensions}</p>
                     )}
                   </div>
-                  <h3 style={{ fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    {product.name}
-                  </h3>
-                  <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Quantity: {product.quantity}</p>
-                  {product.dimensions && (
-                    <p style={{ fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
+              
+              {/* Page number */}
+              <div style={{position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>{pageNum}</div>
             </div>
-            
-            <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{pageNum}</div>
-          </div>
-        );
+          );
+        });
       })}
 
       <div style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
@@ -1113,4 +1081,3 @@ function parseDateTime(dateStr, timeStr) {
   
   return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
 }
-
