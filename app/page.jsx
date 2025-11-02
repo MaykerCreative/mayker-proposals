@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 
 export default function ProposalApp() {
+  // ✅ First, declare all your useState hooks
   const [proposals, setProposals] = useState([]);
   const [catalog, setCatalog] = useState([]);
   const [selectedProposal, setSelectedProposal] = useState(null);
@@ -17,6 +18,15 @@ export default function ProposalApp() {
     location: ''
   });
 
+  // ✅ NOW add the html2pdf script loader HERE
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.async = true;
+    document.head.appendChild(script);
+  }, []);
+
+  // ✅ Then your existing useEffect
   useEffect(() => {
     fetchProposals();
     const params = new URLSearchParams(window.location.search);
