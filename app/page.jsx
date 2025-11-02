@@ -549,7 +549,22 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-      const pdfBase64 = await generateProposalPdf();
+      let pdfBase64 = null;
+      
+      // Only generate PDF if we have a clientFolderURL
+      if (finalData.clientFolderURL) {
+        // Temporarily exit edit mode to render the proposal content
+        setIsEditing(false);
+        
+        // Wait a moment for React to re-render the ViewProposalView
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        try {
+          pdfBase64 = await generateProposalPdf();
+        } catch (pdfErr) {
+          console.log('PDF generation failed, continuing without PDF: ' + pdfErr.message);
+        }
+      }
       
       const saveData = {
         ...finalData,
@@ -563,10 +578,10 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
         mode: 'no-cors'
       });
       alert('Proposal saved and PDF uploaded to Drive!');
-      setIsEditing(false);
       onRefresh();
     } catch (err) {
       alert('Error saving proposal: ' + err.message);
+      setIsEditing(true);
     } finally {
       setSaving(false);
     }
