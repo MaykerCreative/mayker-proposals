@@ -27,7 +27,7 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec');
+      const response = await fetch('https://script.google.com/macros/s/AKfycbz7y_HeCwjaGrOSexyOd6sQr9IxZft1_VyRru1EOcMwXsRStsTwHwoGLTlOQazhyls/exec');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
