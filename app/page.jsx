@@ -55,6 +55,100 @@ export default function ProposalApp() {
       setLoading(false);
     }
   };
+  // Helper to extract folder ID from Google Drive URL
+  const extractFolderId = (url) => {
+    if (!url || url.trim() === '') return null;
+    const folderIdMatch = url.match(/folders\/([a-zA-Z0-9_-]+)/);
+    const idMatch = url.match(/id=([a-zA-Z0-9_-]+)/);
+    if (folderIdMatch) return folderIdMatch[1];
+    if (idMatch) return idMatch[1];
+    if (url.match(/^[a-zA-Z0-9_-]+$/)) return url;
+    return null;
+  };
+
+  // Helper to format date range for filename
+  const formatDateRangeForFilename = (startDate, endDate) => {
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const startMonth = monthNames[start.getMonth()];
+    const endMonth = monthNames[end.getMonth()];
+    const startDay = start.getDate();
+    const endDay = end.getDate();
+    const year = start.getFullYear();
+    if (startMonth === endMonth) {
+      return `${startMonth} ${startDay}-${endDay}, ${year}`;
+    } else {
+      return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+    }
+  };
+
+  // Main PDF generation and save function
+  const generateAndSavePDF = async (proposalData, versionedClientName) => {
+    try {
+      if (!window.html2pdf) {
+        console.log('html2pdf not loaded yet, skipping PDF generation');
+        return;
+      }
+      const versionMatch = versionedClientName.match(/\(V(\d+)\)/);
+      const version = versionMatch ? versionMatch[1] : '1';
+      const baseClientName = versionedClientName.replace(/\s*\(V\d+\)\s*$/, '').trim();
+      const dateRange = formatDateRangeForFilename(proposalData.startDate, proposalData.endDate);
+      const fileName = `(V${version}) ${baseClientName} - ${proposalData.venueName} - ${dateRange} - Mayker Events Proposal`;
+      const folderId = extractFolderId(proposalData.clientFolderURL);
+      if (!folderId) {
+        console.log('No valid folder ID, skipping PDF save');
+        return;
+      }
+      const element = document.body;
+      const opt = {
+        margin: 0,
+        filename: fileName,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false, letterRendering: true },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
+      };
+      console.log('Generating PDF...');
+      const pdfBlob = await window.html2pdf().set(opt).from(element).output('blob');
+      const reader = new FileReader();
+      reader.readAsDataURL(pdfBlob);
+      return new Promise((resolve, reject) => {
+        reader.onloadend = async () => {
+          try {
+            const base64data = reader.result.split(',')[1];
+            console.log('Sending PDF to Google Drive...');
+            const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                action: 'savePDF',
+                pdfData: base64data,
+                fileName: fileName,
+                folderId: folderId
+              })
+            });
+            const result = await response.json();
+            if (result.success) {
+              console.log('PDF saved to Drive:', result.fileUrl);
+              resolve(result);
+            } else {
+              console.error('Failed to save PDF:', result.error);
+              reject(result.error);
+            }
+          } catch (error) {
+            console.error('Error sending PDF to Drive:', error);
+            reject(error);
+          }
+        };
+        reader.onerror = reject;
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      throw error;
+    }
+  };
 
   const filteredProposals = proposals.filter(proposal => {
     const searchLower = searchTerm.toLowerCase();
@@ -81,15 +175,33 @@ export default function ProposalApp() {
       catalog={catalog} 
       onSave={async (formData) => {
         try {
-          await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+          const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
             method: 'POST',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(formData),
-            mode: 'no-cors'
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
           });
-          alert('Proposal created successfully!');
-          setIsCreatingNew(false);
-          fetchProposals();
+
+          const result = await response.json();
+
+          if (result.success) {
+            alert(`Proposal saved successfully!\nClient: ${result.clientName}\nProject #: ${result.projectNumber}`);
+
+            // Generate and save PDF after successful save
+            if (formData.clientFolderURL) {
+              try {
+                console.log('Generating PDF...');
+                await generateAndSavePDF(formData, result.clientName);
+                console.log('PDF saved successfully!');
+              } catch (pdfError) {
+                console.error('PDF generation failed:', pdfError);
+              }
+            }
+
+            setIsCreatingNew(false);
+            fetchProposals();
+          } else {
+            alert('Error saving proposal: ' + result.error);
+          }
         } catch (err) {
           alert('Error creating proposal: ' + err.message);
         }
@@ -103,7 +215,7 @@ export default function ProposalApp() {
     />;
   }
   
-  if (selectedProposal) return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={fetchProposals} />;
+  if (selectedProposal) return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={fetchProposals} generateAndSavePDF={generateAndSavePDF} />;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fafaf8', padding: '32px' }}>
@@ -489,7 +601,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   );
 }
 
-function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
+function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, generateAndSavePDF }) {
   const [isEditing, setIsEditing] = useState(proposal._isEditing || false);
   const [editData, setEditData] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -503,15 +615,33 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-      await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
         method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(finalData),
-        mode: 'no-cors'
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(finalData)
       });
-      alert('Proposal saved successfully');
-      setIsEditing(false);
-      onRefresh();
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(`Proposal saved successfully!\nClient: ${result.clientName}\nProject #: ${result.projectNumber}`);
+
+        // Generate and save PDF after successful save
+        if (finalData.clientFolderURL) {
+          try {
+            console.log('Generating PDF...');
+            await generateAndSavePDF(finalData, result.clientName);
+            console.log('PDF saved successfully!');
+          } catch (pdfError) {
+            console.error('PDF generation failed:', pdfError);
+          }
+        }
+
+        setIsEditing(false);
+        onRefresh();
+      } else {
+        alert('Error saving proposal: ' + result.error);
+      }
     } catch (err) {
       alert('Error saving proposal: ' + err.message);
     } finally {
