@@ -73,6 +73,7 @@ export default function ProposalApp() {
       catalog={catalog} 
       onSave={async (formData) => {
         try {
+          formData.isNewProposal = true;  // Flag for new proposals
           await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
@@ -465,6 +466,8 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
+      finalData.projectNumber = proposal.projectNumber;
+      finalData.isNewProposal = false;
       await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
