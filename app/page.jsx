@@ -531,7 +531,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
             <div style={{ width: '60px', height: '0.5px', backgroundColor: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}></div>
             <p style={{ fontSize: '14px', color: 'white', letterSpacing: '0.2em', marginBottom: '16px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textTransform: 'uppercase' }}>Product Selections</p>
-            <p style={{ fontSize: '18px', color: 'white', marginBottom: '6px', fontWeight: '300', fontFamily: "'Domaine Text', serif" }}>{proposal.clientName}{proposal.status === 'Approved' ? ' (Final)' : ''}</p>
+            <p style={{ fontSize: '18px', color: 'white', marginBottom: '6px', fontWeight: '300', fontFamily: "'Domaine Text', serif" }}>{proposal.clientName} ({proposal.status === 'Approved' ? 'Final' : 'V' + (proposal.version || '1')})</p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{proposal.venueName}</p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{formatDateRange(proposal)}</p>
           </div>
@@ -721,8 +721,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
 }
 
 function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
+  // Clean any version suffix from client name
+  const cleanClientName = (proposal.clientName || '').replace(/\s*\(V\d+\)\s*$/g, '').trim();
+  
   const [formData, setFormData] = useState({
-    clientName: proposal.clientName || '',
+    clientName: cleanClientName,
     venueName: proposal.venueName || '',
     city: proposal.city || '',
     state: proposal.state || '',
