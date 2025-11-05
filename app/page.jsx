@@ -531,7 +531,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
             <div style={{ width: '60px', height: '0.5px', backgroundColor: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}></div>
             <p style={{ fontSize: '14px', color: 'white', letterSpacing: '0.2em', marginBottom: '16px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textTransform: 'uppercase' }}>Product Selections</p>
-            <p style={{ fontSize: '18px', color: 'white', marginBottom: '6px', fontWeight: '300', fontFamily: "'Domaine Text', serif" }}>{proposal.clientName} - V{proposal.version || '1'}{proposal.status === 'Approved' ? ' (Final)' : ''}</p>
+            <p style={{ fontSize: '18px', color: 'white', marginBottom: '6px', fontWeight: '300', fontFamily: "'Domaine Text', serif" }}>{proposal.clientName}</p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{proposal.venueName}</p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{formatDateRange(proposal)}</p>
           </div>
@@ -543,19 +543,16 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         const PRODUCTS_PER_PAGE = 9;
         const productChunks = [];
         
-        // Split products into chunks of 9
         for (let i = 0; i < section.products.length; i += PRODUCTS_PER_PAGE) {
           productChunks.push(section.products.slice(i, i + PRODUCTS_PER_PAGE));
         }
         
-        // Create a page for each chunk
         return productChunks.map((chunk, chunkIndex) => {
           const isFirstChunk = chunkIndex === 0;
           const pageNum = sectionIndex + 2 + chunkIndex;
           
           return (
             <div key={`${sectionIndex}-${chunkIndex}`} className="print-break-after" style={{minHeight: '100vh', padding: '30px 60px 40px', position: 'relative'}}>
-              {/* Header - appears on EVERY page */}
               <div style={{marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb'}}>
                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
                   <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{height: '22px', marginTop: '4px'}} />
@@ -570,12 +567,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 </div>
               </div>
               
-              {/* Section title - show on first page or with "(continued)" on subsequent pages */}
               <h2 style={{fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif"}}>
                 {section.name}{!isFirstChunk ? ' (continued)' : ''}
               </h2>
               
-              {/* Products grid for this chunk */}
               <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
                 {chunk.map((product, productIndex) => (
                   <div key={productIndex} style={{backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px'}}>
@@ -595,7 +590,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 ))}
               </div>
               
-              {/* Page number */}
               <div style={{position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>{pageNum}</div>
             </div>
           );
@@ -1021,21 +1015,15 @@ function calculateDetailedTotals(proposal) {
 }
 
 function getRentalMultiplier(duration) {
-  // 1 day or less = standard rate (1.0x)
   if (duration <= 1) return 1.0;
-  // 2-6 days: add 10% per day
   if (duration === 2) return 1.1;
   if (duration === 3) return 1.2;
   if (duration === 4) return 1.3;
   if (duration === 5) return 1.4;
   if (duration === 6) return 1.5;
-  // 7-14 days: flat 2x rate
   if (duration >= 7 && duration <= 14) return 2.0;
-  // 15-21 days: flat 3x rate
   if (duration >= 15 && duration <= 21) return 3.0;
-  // 22-28 days: flat 4x rate
   if (duration >= 22 && duration <= 28) return 4.0;
-  // 28+ days: 4x rate (maximum)
   return 4.0;
 }
 
@@ -1048,7 +1036,6 @@ function formatDateRange(proposal) {
   const endDay = end.getDate();
   const year = start.getFullYear();
   
-  // Check if it's a single day event
   if (start.getTime() === end.getTime()) {
     return `${startMonth} ${startDay}, ${year}`;
   }
