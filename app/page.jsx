@@ -67,25 +67,25 @@ export default function ProposalApp() {
   if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></div>;
   if (error) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#dc2626' }}>{error}</p></div>;
   
-    // Show CreateProposalView if in create mode
+  // Show CreateProposalView if in create mode
   if (isCreatingNew) {
     return <CreateProposalView 
       catalog={catalog} 
       onSave={async (formData) => {
-        try {
-          const dataToSend = {
-            ...formData,
-            isNewProposal: true,
-            projectNumber: null
-          };
-              await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+  try {
+    const dataToSend = {
+      ...formData,
+      isNewProposal: true  // ✅ FIXED: Add flag to object being sent
+    };
+    await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(dataToSend),
       mode: 'no-cors'
     });
-    alert('Proposal saved successfully');
-    setIsEditing(false);
+
+          alert('Proposal created successfully!');
+          setIsCreatingNew(false);
           fetchProposals();
         } catch (err) {
           alert('Error creating proposal: ' + err.message);
@@ -162,7 +162,7 @@ export default function ProposalApp() {
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Event Date</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Sales Lead</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Project #</th>
-                
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Version</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Status</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Last Edited</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Total</th>
@@ -178,7 +178,11 @@ export default function ProposalApp() {
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.eventDate}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.salesLead || '-'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.projectNumber || '-'}</td>
-                  
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>
+                    <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#6b7280' }}>
+                      V{proposal.version || '1'}
+                    </span>
+                  </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: proposal.status === 'Pending' ? '#f5f1e6' : proposal.status === 'Approved' ? '#e8f5e9' : '#ffebee', color: proposal.status === 'Pending' ? '#b8860b' : proposal.status === 'Approved' ? '#2e7d32' : '#c62828' }}>
                       {proposal.status || 'Pending'}
@@ -476,8 +480,8 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   try {
     const dataToSend = {
       ...finalData,
-      projectNumber: proposal.projectNumber,
-      isNewProposal: false
+      projectNumber: proposal.projectNumber,  // ✅ Keep same project number
+      isNewProposal: false  // ✅ Flag as edit, not new
     };
     await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
       method: 'POST',
@@ -485,15 +489,16 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
       body: JSON.stringify(dataToSend),
       mode: 'no-cors'
     });
-    alert('Proposal saved successfully');
-    setIsEditing(false);
-    onRefresh();
-  } catch (err) {
-    alert('Error saving proposal: ' + err.message);
-  } finally {
-    setSaving(false);
-  }
-};
+
+      alert('Proposal saved successfully');
+      setIsEditing(false);
+      onRefresh();
+    } catch (err) {
+      alert('Error saving proposal: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (isEditing && editData) {
     return <EditProposalView proposal={editData} catalog={catalog} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
