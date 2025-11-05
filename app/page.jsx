@@ -27,7 +27,7 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbz7y_HeCwjaGrOSexyOd6sQr9IxZft1_VyRru1EOcMwXsRStsTwHwoGLTlOQazhyls/exec');
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
@@ -71,7 +71,7 @@ export default function ProposalApp() {
       catalog={catalog} 
       onSave={async (formData) => {
         try {
-          await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+          await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(formData),
@@ -493,7 +493,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-      await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(finalData),
