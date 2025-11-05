@@ -27,7 +27,7 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec');
+      const response = await fetch('https://script.google.com/macros/s/AKfycbz7y_HeCwjaGrOSexyOd6sQr9IxZft1_VyRru1EOcMwXsRStsTwHwoGLTlOQazhyls/exec');
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
@@ -71,18 +71,12 @@ export default function ProposalApp() {
       catalog={catalog} 
       onSave={async (formData) => {
         try {
-          const dataToSend = {
-            ...formData,
-            isNewProposal: true
-          };
-          
-          await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+          await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify(dataToSend),
+            body: JSON.stringify(formData),
             mode: 'no-cors'
           });
-          
           alert('Proposal created successfully!');
           setIsCreatingNew(false);
           fetchProposals();
@@ -99,19 +93,44 @@ export default function ProposalApp() {
     />;
   }
   
-  if (selectedProposal) {
-    return <ProposalView 
-      proposal={selectedProposal} 
-      catalog={catalog} 
-      onBack={() => setSelectedProposal(null)} 
-      onPrint={() => window.print()} 
-      onRefresh={fetchProposals} 
-    />;
-  }
+  if (selectedProposal) return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={fetchProposals} />;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fafaf8', padding: '32px' }}>
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { font-family: 'Inter', sans-serif; }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
+  
+  @font-face {
+    font-family: 'Neue Haas Unica';
+    src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Neue Haas Unica';
+    src: url('/assets/Neue Haas Unica Medium-abce.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+  }
+  
+  @font-face {
+    font-family: 'Domaine Text';
+    src: url('/assets/TestDomaineText-Light.otf') format('opentype');
+    font-weight: 300;
+    font-style: normal;
+  }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; } 
+  body { font-family: 'Inter', sans-serif; } 
+  @media print { 
+    .no-print { display: none !important; } 
+    .print-break-after { page-break-after: always; } 
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+    @page { size: letter; margin: 0; } 
+  }
+` }} />
+
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
           <img src="/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
@@ -153,7 +172,7 @@ export default function ProposalApp() {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Venue/City/State</label>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location</label>
             <input type="text" placeholder="Filter..." value={filters.location} onChange={(e) => setFilters({...filters, location: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }} />
           </div>
         </div>
@@ -163,12 +182,10 @@ export default function ProposalApp() {
             <thead style={{ backgroundColor: '#f8f7f4' }}>
               <tr>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Client</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Venue</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>City/State</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Location</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Event Date</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Sales Lead</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Project #</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Version</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Status</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Last Edited</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Total</th>
@@ -179,16 +196,10 @@ export default function ProposalApp() {
               {filteredProposals.map((proposal, index) => (
                 <tr key={index} style={{ borderBottom: '1px solid #f0ede5', backgroundColor: index % 2 === 0 ? 'white' : '#fafaf8' }}>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.clientName}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.city}, {proposal.state}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}, {proposal.city}, {proposal.state}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.eventDate}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.salesLead || '-'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.projectNumber || '-'}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>
-                    <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: '#f3f4f6', color: '#6b7280' }}>
-                      V{proposal.version || '1'}
-                    </span>
-                  </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: proposal.status === 'Pending' ? '#f5f1e6' : proposal.status === 'Approved' ? '#e8f5e9' : '#ffebee', color: proposal.status === 'Pending' ? '#b8860b' : proposal.status === 'Approved' ? '#2e7d32' : '#c62828' }}>
                       {proposal.status || 'Pending'}
@@ -233,7 +244,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     discountName: '',
     clientFolderURL: '',
     salesLead: '',
-    status: 'Pending'
+    status: 'Pending',
+    projectNumber: ''
   });
   const [sections, setSections] = useState([{ name: '', products: [] }]);
 
@@ -415,11 +427,11 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
               <div style={{ display: 'flex', gap: '12px', marginBottom: '12px', alignItems: 'center' }}>
                 <div style={{ flex: 1 }}>
                   <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Section Name</label>
-                  <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+                  <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE, DINING" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
                 </div>
                 {sections.length > 1 && (
                   <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '8px 12px', backgroundColor: '#fee2e2', color: '#dc2626', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontWeight: '500', marginTop: '20px' }}>
-                    Remove
+                    Remove Section
                   </button>
                 )}
               </div>
@@ -481,19 +493,12 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-      const dataToSend = {
-        ...finalData,
-        projectNumber: proposal.projectNumber,
-        isNewProposal: false
-      };
-      
-      await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+      await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(dataToSend),
+        body: JSON.stringify(finalData),
         mode: 'no-cors'
       });
-      
       alert('Proposal saved successfully');
       setIsEditing(false);
       onRefresh();
@@ -543,7 +548,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
             <div style={{ width: '60px', height: '0.5px', backgroundColor: 'rgba(255,255,255,0.4)', marginBottom: '24px' }}></div>
             <p style={{ fontSize: '14px', color: 'white', letterSpacing: '0.2em', marginBottom: '16px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textTransform: 'uppercase' }}>Product Selections</p>
-            <p style={{ fontSize: '18px', color: 'white', marginBottom: '6px', fontWeight: '300', fontFamily: "'Domaine Text', serif" }}>{proposal.clientName}</p>
+            <p style={{ fontSize: '18px', color: 'white', marginBottom: '6px', fontWeight: '300', fontFamily: "'Domaine Text', serif" }}>{proposal.clientName.replace(/\s*\(V\d+\)\s*$/, '')}{proposal.status === 'Approved' ? ' (Final)' : ''}</p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{proposal.venueName}</p>
             <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.9)', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{formatDateRange(proposal)}</p>
           </div>
@@ -551,61 +556,52 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
       </div>
 
-      {sections.flatMap((section, sectionIndex) => {
-        const PRODUCTS_PER_PAGE = 9;
-        const productChunks = [];
-        
-        for (let i = 0; i < section.products.length; i += PRODUCTS_PER_PAGE) {
-          productChunks.push(section.products.slice(i, i + PRODUCTS_PER_PAGE));
-        }
-        
-        return productChunks.map((chunk, chunkIndex) => {
-          const isFirstChunk = chunkIndex === 0;
-          const pageNum = sectionIndex + 2 + chunkIndex;
-          
-          return (
-            <div key={`${sectionIndex}-${chunkIndex}`} className="print-break-after" style={{minHeight: '100vh', padding: '30px 60px 40px', position: 'relative'}}>
-              <div style={{marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'}}>
-                  <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{height: '22px', marginTop: '4px'}} />
-                  <div style={{textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px'}}>
-                    <div style={{fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em'}}>
-                      <div>{proposal.clientName}</div>
-                      <div>{formatDateRange(proposal)}</div>
-                      <div>{proposal.venueName}</div>
-                    </div>
-                    <img src="/mayker_icon-black.svg" alt="M" style={{height: '38px'}} />
+      {sections.map((section, sectionIndex) => {
+        const pageNum = sectionIndex + 2;
+        return (
+          <div key={sectionIndex} className="print-break-after" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
+            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                  <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    <div>{proposal.clientName}</div>
+                    <div>{formatDateRange(proposal)}</div>
+                    <div>{proposal.venueName}</div>
                   </div>
+                  <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
                 </div>
               </div>
-              
-              <h2 style={{fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif"}}>
-                {section.name}{!isFirstChunk ? ' (continued)' : ''}
-              </h2>
-              
-              <div style={{display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px'}}>
-                {chunk.map((product, productIndex) => (
-                  <div key={productIndex} style={{backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px'}}>
-                    <div style={{aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px'}}>
-                      {product.imageUrl ? (
-                        <img src={product.imageUrl} alt={product.name} style={{width: '100%', height: '100%', objectFit: 'cover'}} onError={(e) => {e.target.style.display = 'none'}} />
-                      ) : '[Product Image]'}
-                    </div>
-                    <h3 style={{fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>
-                      {product.name}
-                    </h3>
-                    <p style={{fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>Quantity: {product.quantity}</p>
-                    {product.dimensions && (
-                      <p style={{fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>{product.dimensions}</p>
+            </div>
+            
+            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif" }}>
+              {section.name}
+            </h2>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+              {section.products.map((product, productIndex) => (
+                <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px' }}>
+                  <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
+                    {product.imageUrl ? (
+                      <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                    ) : (
+                      '[Product Image]'
                     )}
                   </div>
-                ))}
-              </div>
-              
-              <div style={{position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"}}>{pageNum}</div>
+                  <h3 style={{ fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    {product.name}
+                  </h3>
+                  <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Quantity: {product.quantity}</p>
+                  {product.dimensions && (
+                    <p style={{ fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
+                  )}
+                </div>
+              ))}
             </div>
-          );
-        });
+            
+            <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{pageNum}</div>
+          </div>
+        );
       })}
 
       <div style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
@@ -722,6 +718,39 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{sections.length + 2}</div>
       </div>
+
+      {/* PROJECT DETAILS PAGE */}
+      <div className="print-break-after" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
+        <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+              <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <div>{proposal.clientName}</div>
+                <div>{formatDateRange(proposal)}</div>
+                <div>{proposal.venueName}</div>
+              </div>
+              <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+            </div>
+          </div>
+        </div>
+        
+        <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.1em', fontFamily: "'Domaine Text', serif" }}>Project Details</h2>
+        
+        <p style={{ marginBottom: '24px', fontSize: '13px', lineHeight: '1.6', color: '#444' }}>
+          The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
+        </p>
+        
+        <ul style={{ fontSize: '13px', lineHeight: '1.8', marginBottom: '20px', color: '#222', listStyle: 'none', padding: 0 }}>
+          <li style={{ marginBottom: '8px' }}><strong>Project Location:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
+          <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {new Date(proposal.startDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</li>
+          <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
+          <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {new Date(proposal.endDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</li>
+          <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
+        </ul>
+        
+        <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{sections.length + 3}</div>
+      </div>
     </div>
   );
 }
@@ -814,6 +843,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   };
 
   const handleSaveClick = () => {
+    const clientNameWithoutVersion = formData.clientName.replace(/\s*\(V\d+\)\s*$/, '');
+    
     const convertTimeFormat = (time24) => {
       if (!time24) return '';
       const [hours, minutes] = time24.split(':');
@@ -825,6 +856,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     
     const finalData = {
       ...formData,
+      clientName: clientNameWithoutVersion,
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
       sectionsJSON: JSON.stringify(sections)
@@ -990,28 +1022,31 @@ function calculateDetailedTotals(proposal) {
   const duration = getDuration(proposal);
   const rentalMultiplier = getRentalMultiplier(duration);
   
-  let productSubtotal = 0;
+  let baseProductTotal = 0;
   sections.forEach(section => {
     section.products.forEach(product => {
-      const extendedPrice = product.price * rentalMultiplier;
-      productSubtotal += extendedPrice * product.quantity;
+      baseProductTotal += product.price * product.quantity;
     });
   });
   
-  const discountPercent = parseFloat(proposal.discount) || 0;
-  const standardRateDiscount = productSubtotal * (discountPercent / 100);
-  const rentalTotal = productSubtotal - standardRateDiscount;
+  const extendedProductTotal = baseProductTotal * rentalMultiplier;
   
-  const productCare = productSubtotal * 0.10;
-  const serviceFee = rentalTotal * 0.05;
+  const discountPercent = parseFloat(proposal.discount) || 0;
+  const standardRateDiscount = extendedProductTotal * (discountPercent / 100);
+  const rentalTotal = extendedProductTotal - standardRateDiscount;
+  
+  const productCare = extendedProductTotal * 0.10;
+  
   const delivery = parseFloat(proposal.deliveryFee) || 0;
+  
+  const serviceFee = (rentalTotal + productCare + delivery) * 0.05;
   
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
   const tax = subtotal * 0.0975;
   const total = subtotal + tax;
   
   return {
-    productSubtotal,
+    productSubtotal: extendedProductTotal,
     standardRateDiscount,
     rentalTotal,
     productCare,
@@ -1045,10 +1080,6 @@ function formatDateRange(proposal) {
   const startDay = start.getDate();
   const endDay = end.getDate();
   const year = start.getFullYear();
-  
-  if (start.getTime() === end.getTime()) {
-    return `${startMonth} ${startDay}, ${year}`;
-  }
   
   if (startMonth === endMonth) {
     return `${startMonth} ${startDay}-${endDay}, ${year}`;
