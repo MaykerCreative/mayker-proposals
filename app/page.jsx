@@ -72,17 +72,18 @@ export default function ProposalApp() {
     return <CreateProposalView 
       catalog={catalog} 
       onSave={async (formData) => {
+  onSave={async (formData) => {
   try {
     const dataToSend = {
       ...formData,
-      isNewProposal: true  // ✅ FIXED: Add flag to object being sent
+      isNewProposal: true,
+      projectNumber: null
     };
     await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(dataToSend),
-      mode: 'no-cors'
-    });
+
 
           alert('Proposal created successfully!');
           setIsCreatingNew(false);
@@ -480,15 +481,14 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   try {
     const dataToSend = {
       ...finalData,
-      projectNumber: proposal.projectNumber,  // ✅ Keep same project number
-      isNewProposal: false  // ✅ Flag as edit, not new
+      projectNumber: proposal.projectNumber,
+      isNewProposal: false
     };
     await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(dataToSend),
-      mode: 'no-cors'
-    });
+
 
       alert('Proposal saved successfully');
       setIsEditing(false);
