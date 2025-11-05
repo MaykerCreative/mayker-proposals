@@ -223,8 +223,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     discountName: '',
     clientFolderURL: '',
     salesLead: '',
-    status: 'Pending',
-    projectNumber: ''
+    status: 'Pending'
+    // NOTE: projectNumber is NOT included - new proposals should not have one
   });
   const [sections, setSections] = useState([{ name: '', products: [] }]);
 
