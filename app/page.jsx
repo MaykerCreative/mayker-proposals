@@ -84,7 +84,6 @@ export default function ProposalApp() {
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(dataToSend),
 
-
           alert('Proposal created successfully!');
           setIsCreatingNew(false);
           fetchProposals();
@@ -488,7 +487,6 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
       method: 'POST',
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(dataToSend),
-
 
       alert('Proposal saved successfully');
       setIsEditing(false);
