@@ -19,7 +19,6 @@ export default function ProposalApp() {
 
   useEffect(() => {
     fetchProposals();
-    // Check URL params on load
     const params = new URLSearchParams(window.location.search);
     if (params.get('page') === 'create') {
       setIsCreatingNew(true);
@@ -67,7 +66,6 @@ export default function ProposalApp() {
   if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></div>;
   if (error) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#dc2626' }}>{error}</p></div>;
   
-    // Show CreateProposalView if in create mode
   if (isCreatingNew) {
     return <CreateProposalView 
       catalog={catalog} 
@@ -75,15 +73,16 @@ export default function ProposalApp() {
         try {
           const dataToSend = {
             ...formData,
-            isNewProposal: true,
-            projectNumber: null
+            isNewProposal: true
           };
+          
           await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(dataToSend),
             mode: 'no-cors'
           });
+          
           alert('Proposal created successfully!');
           setIsCreatingNew(false);
           fetchProposals();
@@ -93,7 +92,6 @@ export default function ProposalApp() {
       }}
       onCancel={() => {
         setIsCreatingNew(false);
-        // Clear URL param if exists
         if (window.location.search.includes('page=create')) {
           window.history.pushState({}, '', window.location.pathname);
         }
@@ -101,7 +99,15 @@ export default function ProposalApp() {
     />;
   }
   
-  if (selectedProposal) return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={fetchProposals} />;
+  if (selectedProposal) {
+    return <ProposalView 
+      proposal={selectedProposal} 
+      catalog={catalog} 
+      onBack={() => setSelectedProposal(null)} 
+      onPrint={() => window.print()} 
+      onRefresh={fetchProposals} 
+    />;
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fafaf8', padding: '32px' }}>
@@ -228,7 +234,6 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     clientFolderURL: '',
     salesLead: '',
     status: 'Pending'
-    // NOTE: projectNumber is NOT included - new proposals should not have one
   });
   const [sections, setSections] = useState([{ name: '', products: [] }]);
 
@@ -279,7 +284,6 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   };
 
   const handleSaveClick = async () => {
-    // Validation
     if (!formData.clientName.trim()) {
       alert('Client name is required');
       return;
@@ -291,7 +295,6 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
 
     setSaving(true);
     
-    // Convert times from 24-hour to 12-hour format
     const convertTimeFormat = (time24) => {
       if (!time24) return '';
       const [hours, minutes] = time24.split(':');
@@ -476,18 +479,21 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   }, [isEditing, proposal]);
 
   const handleSave = async (finalData) => {
-  setSaving(true);
-  try {
-    const dataToSend = {
-      ...finalData,
-      projectNumber: proposal.projectNumber,
-      isNewProposal: false
-    };
-    await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify(dataToSend),
-
+    setSaving(true);
+    try {
+      const dataToSend = {
+        ...finalData,
+        projectNumber: proposal.projectNumber,
+        isNewProposal: false
+      };
+      
+      await fetch('https://script.google.com/macros/s/AKfycbzTkntgiCvga488oNIYN-h5tTKPhv7VH4v2RDG0fsqx2WBPEPAkFJ6laJ92wXzV_ejr/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(dataToSend),
+        mode: 'no-cors'
+      });
+      
       alert('Proposal saved successfully');
       setIsEditing(false);
       onRefresh();
@@ -740,7 +746,6 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
 
-  // Convert times from 12-hour to 24-hour format for input fields
   useEffect(() => {
     const convertTo24Hour = (time12hr) => {
       if (!time12hr) return '';
@@ -809,7 +814,6 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   };
 
   const handleSaveClick = () => {
-    // Convert times from 24-hour back to 12-hour format for storage
     const convertTimeFormat = (time24) => {
       if (!time24) return '';
       const [hours, minutes] = time24.split(':');
@@ -1087,4 +1091,3 @@ function parseDateTime(dateStr, timeStr) {
   
   return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
 }
-
