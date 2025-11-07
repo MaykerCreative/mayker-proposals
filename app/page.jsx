@@ -626,9 +626,10 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
       iframe.style.left = '-9999px';
       iframe.style.top = '0';
       iframe.style.width = '816px';
-      iframe.style.height = '1056px';
+      iframe.style.height = '2000px'; // Tall enough for multiple pages
       iframe.style.backgroundColor = 'white';
       iframe.style.border = 'none';
+      iframe.style.overflow = 'hidden';
       document.body.appendChild(iframe);
       
       iframe.onload = () => {
@@ -637,6 +638,21 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
           try {
             const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
             const iframeBody = iframeDoc.body;
+            const iframeHtml = iframeDoc.documentElement;
+            
+            // Set explicit dimensions on html and body
+            iframeHtml.style.width = '816px';
+            iframeHtml.style.margin = '0';
+            iframeHtml.style.padding = '0';
+            iframeBody.style.width = '816px';
+            iframeBody.style.margin = '0';
+            iframeBody.style.padding = '0';
+            iframeBody.style.overflow = 'visible';
+            
+            // Calculate total height needed
+            const totalHeight = iframeBody.scrollHeight;
+            console.log('Total document height:', totalHeight);
+            iframe.style.height = Math.max(totalHeight + 100, 2000) + 'px';
             
             // Wait for images to load
             const images = iframeBody.querySelectorAll('img');
@@ -650,7 +666,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
                 // Give it a moment for final rendering
                 setTimeout(() => {
                   captureElementAsPDF(iframeBody, resolve, reject);
-                }, 300);
+                }, 500);
               }
             };
             
@@ -658,7 +674,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
               console.log('No images, generating PDF immediately');
               setTimeout(() => {
                 captureElementAsPDF(iframeBody, resolve, reject);
-              }, 300);
+              }, 500);
             } else {
               images.forEach((img, idx) => {
                 if (img.complete) {
@@ -719,8 +735,10 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
             allowTaint: true,
             backgroundColor: '#ffffff',
             windowWidth: 816,
-            windowHeight: 1056,
-            scale: 2
+            windowHeight: element.scrollHeight || 1056,
+            scale: 1.5,
+            scrollX: 0,
+            scrollY: 0
           },
           jsPDF: { 
             unit: 'in', 
@@ -809,7 +827,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
         const currentPageNum = pageCounter++;
         
         sectionsHTML += `
-          <div style="width: 100%; min-height: 100vh; height: 100vh; padding: 30px 60px; page-break-after: always; position: relative; box-sizing: border-box; background: white;">
+          <div style="width: 816px; min-height: 1056px; height: 1056px; padding: 30px 60px; page-break-after: always; position: relative; box-sizing: border-box; background: white; margin: 0;">
             <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
               <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                 <div style="font-size: 14px; font-weight: 600; color: ${brandCharcoal}; font-family: 'Inter', sans-serif;">MAYKER EVENTS</div>
@@ -823,12 +841,12 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
             <h2 style="font-size: 18px; font-weight: 400; color: ${brandCharcoal}; margin-bottom: 20px; margin-top: 0; text-transform: uppercase; letter-spacing: 0.05em; font-family: 'Inter', sans-serif;">
               ${section.name || 'Section'}
             </h2>
-            <div style="display: flex; flex-wrap: wrap; gap: 20px; width: 100%;">
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; width: 696px; max-width: 696px;">
         `;
         
         pageProducts.forEach(product => {
           sectionsHTML += `
-            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; width: calc(33.333% - 14px); min-width: 200px; max-width: calc(33.333% - 14px); box-sizing: border-box; flex-shrink: 0;">
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; width: 212px; min-width: 212px; max-width: 212px; box-sizing: border-box; flex-shrink: 0;">
               <div style="width: 100%; padding-bottom: 100%; position: relative; background-color: #e5e5e5; margin-bottom: 12px; border-radius: 2px; overflow: hidden;">
                 <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #999; background: #e5e5e5;">
                   ${product.imageUrl ? `<img src="${product.imageUrl}" alt="${product.name || ''}" style="width: 100%; height: 100%; object-fit: cover; display: block;" onerror="this.style.display='none'; this.parentElement.innerHTML='[Product Image]';" />` : '<span>[Product Image]</span>'}
@@ -870,17 +888,18 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; 
             margin: 0; 
             padding: 0; 
-            width: 100%;
-            height: 100%;
+            width: 816px;
+            background: white;
           }
           body {
             background: white;
+            overflow: visible;
           }
         </style>
       </head>
       <body>
         <!-- Cover Page -->
-        <div style="width: 100%; height: 100vh; min-height: 100vh; background-color: ${brandTaupe}; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px 48px; position: relative; page-break-after: always; box-sizing: border-box;">
+        <div style="width: 816px; height: 1056px; min-height: 1056px; background-color: ${brandTaupe}; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px 48px; position: relative; page-break-after: always; box-sizing: border-box; margin: 0;">
           <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 80px;">
             <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
               <p style="font-size: 14px; color: white; letter-spacing: 0.1em; margin-bottom: 16px; text-transform: uppercase; font-weight: 400;">Product Selections</p>
