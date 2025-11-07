@@ -619,61 +619,83 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
     } else {
       console.log('Proposal view not found, generating HTML fallback');
       // Fallback: The view isn't rendered, so we need to generate HTML
-      // This won't be an exact match but will be close
-      const tempContainer = document.createElement('div');
-      tempContainer.setAttribute('data-proposal-view', 'true');
-      tempContainer.style.position = 'absolute';
-      tempContainer.style.left = '-9999px';
-      tempContainer.style.width = '816px';
-      tempContainer.style.backgroundColor = 'white';
-      document.body.appendChild(tempContainer);
+      // Use an iframe to properly render the full HTML document
+      const iframe = document.createElement('iframe');
+      iframe.setAttribute('data-proposal-view', 'true');
+      iframe.style.position = 'absolute';
+      iframe.style.left = '-9999px';
+      iframe.style.top = '0';
+      iframe.style.width = '816px';
+      iframe.style.height = '1056px';
+      iframe.style.border = 'none';
+      document.body.appendChild(iframe);
       
-      setTimeout(() => {
-        try {
-          const htmlContent = generateProposalHTMLForPDF(proposalData);
-          console.log('Generated HTML content, length:', htmlContent.length);
-          tempContainer.innerHTML = htmlContent;
-          
-          // Wait for images to load
-          const images = tempContainer.querySelectorAll('img');
-          let imagesLoaded = 0;
-          const totalImages = images.length;
-          console.log('Waiting for', totalImages, 'images to load');
-          
-          const checkComplete = () => {
-            if (imagesLoaded === totalImages) {
-              console.log('All images loaded, generating PDF');
-              setTimeout(() => captureElementAsPDF(tempContainer, resolve, reject), 200);
-            }
-          };
-          
-          if (totalImages === 0) {
-            console.log('No images, generating PDF immediately');
-            setTimeout(() => captureElementAsPDF(tempContainer, resolve, reject), 200);
-          } else {
-            images.forEach((img, idx) => {
-              if (img.complete) {
-                imagesLoaded++;
-                checkComplete();
-              } else {
-                img.onload = () => {
-                  imagesLoaded++;
-                  console.log(`Image ${idx + 1} loaded (${imagesLoaded}/${totalImages})`);
-                  checkComplete();
-                };
-                img.onerror = () => {
-                  imagesLoaded++;
-                  console.log(`Image ${idx + 1} failed to load (${imagesLoaded}/${totalImages})`);
-                  checkComplete();
-                };
+      iframe.onload = () => {
+        console.log('Iframe loaded, waiting for content to render...');
+        setTimeout(() => {
+          try {
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const iframeBody = iframeDoc.body;
+            
+            // Wait for images to load
+            const images = iframeBody.querySelectorAll('img');
+            let imagesLoaded = 0;
+            const totalImages = images.length;
+            console.log('Waiting for', totalImages, 'images to load in iframe');
+            
+            const checkComplete = () => {
+              if (imagesLoaded === totalImages) {
+                console.log('All images loaded, generating PDF from iframe');
+                // Give it a moment for final rendering
+                setTimeout(() => {
+                  captureElementAsPDF(iframeBody, resolve, reject);
+                }, 300);
               }
-            });
+            };
+            
+            if (totalImages === 0) {
+              console.log('No images, generating PDF immediately');
+              setTimeout(() => {
+                captureElementAsPDF(iframeBody, resolve, reject);
+              }, 300);
+            } else {
+              images.forEach((img, idx) => {
+                if (img.complete) {
+                  imagesLoaded++;
+                  checkComplete();
+                } else {
+                  img.onload = () => {
+                    imagesLoaded++;
+                    console.log(`Image ${idx + 1} loaded (${imagesLoaded}/${totalImages})`);
+                    checkComplete();
+                  };
+                  img.onerror = () => {
+                    imagesLoaded++;
+                    console.log(`Image ${idx + 1} failed to load (${imagesLoaded}/${totalImages})`);
+                    checkComplete();
+                  };
+                }
+              });
+            }
+          } catch (iframeError) {
+            console.error('Error accessing iframe content:', iframeError);
+            reject(iframeError);
           }
-        } catch (htmlError) {
-          console.error('Error generating HTML:', htmlError);
-          reject(htmlError);
-        }
-      }, 100);
+        }, 500);
+      };
+      
+      // Write the HTML content to the iframe
+      try {
+        const htmlContent = generateProposalHTMLForPDF(proposalData);
+        console.log('Generated HTML content, length:', htmlContent.length);
+        iframe.contentDocument.open();
+        iframe.contentDocument.write(htmlContent);
+        iframe.contentDocument.close();
+      } catch (htmlError) {
+        console.error('Error generating HTML:', htmlError);
+        document.body.removeChild(iframe);
+        reject(htmlError);
+      }
     }
   };
   
@@ -691,10 +713,12 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
           html2canvas: { 
             scale: 2, 
             useCORS: true,
-            logging: false,
+            logging: true,
             letterRendering: true,
-            windowWidth: element.scrollWidth,
-            windowHeight: element.scrollHeight
+            allowTaint: true,
+            backgroundColor: '#ffffff',
+            windowWidth: element.scrollWidth || 816,
+            windowHeight: element.scrollHeight || 1056
           },
           jsPDF: { 
             unit: 'in', 
@@ -717,7 +741,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
           // Clean up temporary elements
           const tempElements = document.querySelectorAll('[data-proposal-view]');
           tempElements.forEach(el => {
-            if (el.style.position === 'absolute' && el.style.left === '-9999px') {
+            if (el.style.position === 'absolute' && (el.style.left === '-9999px' || el.tagName === 'IFRAME')) {
               document.body.removeChild(el);
             }
           });
@@ -797,14 +821,16 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
             <h2 style="font-size: 18px; font-weight: 400; color: ${brandCharcoal}; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.05em;">
               ${section.name}
             </h2>
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 20px;">
         `;
         
         pageProducts.forEach(product => {
           sectionsHTML += `
-            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px;">
-              <div style="aspect-ratio: 1; background-color: #e5e5e5; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #999; overflow: hidden; border-radius: 2px;">
-                ${product.imageUrl ? `<img src="${product.imageUrl}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;" />` : '[Product Image]'}
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px; width: calc(33.333% - 14px); min-width: 200px; box-sizing: border-box;">
+              <div style="width: 100%; padding-bottom: 100%; position: relative; background-color: #e5e5e5; margin-bottom: 12px; border-radius: 2px; overflow: hidden;">
+                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #999;">
+                  ${product.imageUrl ? `<img src="${product.imageUrl}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;" />` : '[Product Image]'}
+                </div>
               </div>
               <h3 style="font-size: 11px; font-weight: 500; color: ${brandCharcoal}; text-transform: uppercase; margin-bottom: 4px;">
                 ${product.name}
