@@ -328,6 +328,11 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       strikeTime: convertTimeFormat(formData.strikeTime),
       sectionsJSON: JSON.stringify(sections)
     };
+    
+    // Remove projectNumber if empty (new proposals shouldn't have a project number)
+    if (!finalData.projectNumber || finalData.projectNumber.trim() === '') {
+      delete finalData.projectNumber;
+    }
 
     try {
       await onSave(finalData);
