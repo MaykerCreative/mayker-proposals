@@ -1084,19 +1084,4 @@ function formatDateRange(proposal) {
   const endDay = end.getDate();
   const year = start.getFullYear();
   
-  // Fix single day formatting
-  if (startMonth === endMonth && startDay === endDay) {
-    return `${startMonth} ${startDay}, ${year}`;
-  } else if (startMonth === endMonth) {
-    return `${startMonth} ${startDay}-${endDay}, ${year}`;
-  } else {
-    return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
-  }
-}
-
-function formatNumber(num) {
-  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-function getDuration(proposal) {
-  if (proposal.deliver
+  // Fix single day for
