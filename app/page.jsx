@@ -1086,7 +1086,4 @@ function formatDateRange(proposal) {
   
   if (startMonth === endMonth && startDay === endDay) {
     return `${startMonth} ${startDay}, ${year}`;
-  } else if (startMonth === endMonth) {
-    return `${startMonth} ${startDay}-${endDay}, ${year}`;
-  } else {
-    return `${startMonth} ${startDay} - ${endMonth} ${e
+  } el
