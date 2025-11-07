@@ -1084,4 +1084,9 @@ function formatDateRange(proposal) {
   const endDay = end.getDate();
   const year = start.getFullYear();
   
-  // Fix single day for
+  if (startMonth === endMonth && startDay === endDay) {
+    return `${startMonth} ${startDay}, ${year}`;
+  } else if (startMonth === endMonth) {
+    return `${startMonth} ${startDay}-${endDay}, ${year}`;
+  } else {
+    return `${startMonth} ${startDay} - ${endMonth} ${e
