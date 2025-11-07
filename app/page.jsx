@@ -1092,3 +1092,35 @@ function formatDateRange(proposal) {
     return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
   }
 }
+function getDuration(proposal) {
+  if (proposal.deliveryTime && proposal.strikeTime) {
+    const deliveryDateTime = parseDateTime(proposal.startDate, proposal.deliveryTime);
+    const strikeDateTime = parseDateTime(proposal.endDate, proposal.strikeTime);
+    
+    const diffTime = strikeDateTime - deliveryDateTime;
+    const diffHours = diffTime / (1000 * 60 * 60);
+    
+    return Math.ceil(diffHours / 24);
+  }
+  
+  const start = new Date(proposal.startDate);
+  const end = new Date(proposal.endDate);
+  const diffTime = Math.abs(end - start);
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  return diffDays;
+}
+
+function parseDateTime(dateStr, timeStr) {
+  const [date] = new Date(dateStr).toISOString().split('T');
+  const [time] = timeStr.split(' ');
+  const [hours, minutes] = time.split(':');
+  const isPM = timeStr.includes('PM');
+  let hour = parseInt(hours);
+  if (isPM && hour !== 12) hour += 12;
+  if (!isPM && hour === 12) hour = 0;
+  return new Date(`${date}T${String(hour).padStart(2, '0')}:${minutes}:00Z`);
+}
+
+function formatNumber(num) {
+  return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
