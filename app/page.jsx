@@ -494,16 +494,82 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
     }
   }, [isEditing, proposal]);
 
+  const generatePDFFromProposal = async (proposalData) => {
+    // Create a temporary hidden container with the proposal view
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    tempContainer.style.top = '0';
+    tempContainer.style.width = '816px'; // 8.5 inches
+    document.body.appendChild(tempContainer);
+    
+    // Render the proposal view temporarily
+    const React = require('react');
+    const ReactDOM = require('react-dom');
+    
+    // We'll use html2pdf.js to convert the rendered view
+    // For now, return null and we'll handle it differently
+    return null;
+  };
+
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
+      // Generate PDF if clientFolderURL is provided
+      let pdfBase64 = null;
+      if (finalData.clientFolderURL && finalData.clientFolderURL.trim() !== '') {
+        try {
+          console.log('Starting PDF generation...');
+          // Create a temporary proposal object for PDF generation
+          const tempProposal = {
+            ...proposal,
+            ...finalData,
+            sectionsJSON: finalData.sectionsJSON
+          };
+          
+          // Use html2pdf.js to generate PDF from the proposal view
+          // We'll need to temporarily show the proposal view and capture it
+          pdfBase64 = await generatePDFBlob(tempProposal);
+          console.log('PDF generated successfully, length:', pdfBase64 ? pdfBase64.length : 0);
+        } catch (pdfError) {
+          console.error('PDF generation error:', pdfError);
+          alert('PDF generation failed: ' + pdfError.message + '. Proposal will still be saved.');
+          // Continue with save even if PDF generation fails
+        }
+      } else {
+        console.log('No client folder URL provided, skipping PDF generation');
+      }
+      
+      const payload = {
+        ...finalData,
+        generatePDF: !!finalData.clientFolderURL,
+        pdfBase64: pdfBase64
+      };
+      
+      // Log payload info (without the full base64 to avoid console spam)
+      console.log('Sending payload to Apps Script:');
+      console.log('- generatePDF:', payload.generatePDF);
+      console.log('- clientFolderURL:', payload.clientFolderURL ? 'provided' : 'missing');
+      console.log('- pdfBase64:', pdfBase64 ? `Yes (${pdfBase64.length} chars)` : 'No');
+      console.log('- Payload size:', JSON.stringify(payload).length, 'bytes');
+      
+      // Check if payload is too large (Google Apps Script has limits)
+      const payloadSize = JSON.stringify(payload).length;
+      if (payloadSize > 10000000) { // 10MB limit
+        console.warn('WARNING: Payload is very large (' + payloadSize + ' bytes). PDF might be too big.');
+        alert('Warning: PDF is very large. Upload may fail. Consider reducing image sizes.');
+      }
+      
       await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(finalData),
+        body: JSON.stringify(payload),
         mode: 'no-cors'
       });
-      alert('Proposal saved successfully');
+      
+      const successMsg = 'Proposal saved successfully' + (pdfBase64 ? ' and PDF uploaded to Drive' : '');
+      console.log(successMsg);
+      alert(successMsg);
       setIsEditing(false);
       onRefresh();
     } catch (err) {
@@ -511,6 +577,308 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
     } finally {
       setSaving(false);
     }
+  };
+  
+  const generatePDFBlob = async (proposalData) => {
+    return new Promise((resolve, reject) => {
+      // Check if html2pdf is already loaded
+      if (window.html2pdf) {
+        generatePDFFromRenderedView(proposalData, resolve, reject);
+      } else {
+        // Dynamically load html2pdf.js
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.onload = () => {
+          generatePDFFromRenderedView(proposalData, resolve, reject);
+        };
+        script.onerror = reject;
+        document.head.appendChild(script);
+      }
+    });
+  };
+  
+  const generatePDFFromRenderedView = (proposalData, resolve, reject) => {
+    console.log('generatePDFFromRenderedView called');
+    // Find the proposal view container in the DOM
+    // The ViewProposalView should be rendered when editing
+    const proposalContainer = document.querySelector('[data-proposal-view]');
+    
+    if (proposalContainer && proposalContainer.offsetParent !== null) {
+      console.log('Found rendered proposal view, using it for PDF');
+      // Use the actual rendered view - this will be an exact match!
+      // Hide the no-print elements temporarily
+      const noPrintElements = proposalContainer.querySelectorAll('.no-print');
+      noPrintElements.forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Wait a moment for any animations/transitions
+      setTimeout(() => {
+        captureElementAsPDF(proposalContainer, resolve, reject, noPrintElements);
+      }, 500);
+    } else {
+      console.log('Proposal view not found, generating HTML fallback');
+      // Fallback: The view isn't rendered, so we need to generate HTML
+      // This won't be an exact match but will be close
+      const tempContainer = document.createElement('div');
+      tempContainer.setAttribute('data-proposal-view', 'true');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      tempContainer.style.width = '816px';
+      tempContainer.style.backgroundColor = 'white';
+      document.body.appendChild(tempContainer);
+      
+      setTimeout(() => {
+        try {
+          const htmlContent = generateProposalHTMLForPDF(proposalData);
+          console.log('Generated HTML content, length:', htmlContent.length);
+          tempContainer.innerHTML = htmlContent;
+          
+          // Wait for images to load
+          const images = tempContainer.querySelectorAll('img');
+          let imagesLoaded = 0;
+          const totalImages = images.length;
+          console.log('Waiting for', totalImages, 'images to load');
+          
+          const checkComplete = () => {
+            if (imagesLoaded === totalImages) {
+              console.log('All images loaded, generating PDF');
+              setTimeout(() => captureElementAsPDF(tempContainer, resolve, reject), 200);
+            }
+          };
+          
+          if (totalImages === 0) {
+            console.log('No images, generating PDF immediately');
+            setTimeout(() => captureElementAsPDF(tempContainer, resolve, reject), 200);
+          } else {
+            images.forEach((img, idx) => {
+              if (img.complete) {
+                imagesLoaded++;
+                checkComplete();
+              } else {
+                img.onload = () => {
+                  imagesLoaded++;
+                  console.log(`Image ${idx + 1} loaded (${imagesLoaded}/${totalImages})`);
+                  checkComplete();
+                };
+                img.onerror = () => {
+                  imagesLoaded++;
+                  console.log(`Image ${idx + 1} failed to load (${imagesLoaded}/${totalImages})`);
+                  checkComplete();
+                };
+              }
+            });
+          }
+        } catch (htmlError) {
+          console.error('Error generating HTML:', htmlError);
+          reject(htmlError);
+        }
+      }, 100);
+    }
+  };
+  
+  const captureElementAsPDF = (element, resolve, reject, noPrintElements = []) => {
+    try {
+      console.log('Starting PDF capture from element');
+      if (!window.html2pdf) {
+        throw new Error('html2pdf library not loaded');
+      }
+      
+      window.html2pdf()
+        .set({
+          margin: 0,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: true,
+            logging: false,
+            letterRendering: true,
+            windowWidth: element.scrollWidth,
+            windowHeight: element.scrollHeight
+          },
+          jsPDF: { 
+            unit: 'in', 
+            format: 'letter', 
+            orientation: 'portrait'
+          }
+        })
+        .from(element)
+        .outputPdf('datauristring')
+        .then((pdfDataUri) => {
+          console.log('PDF generated, extracting base64');
+          const base64 = pdfDataUri.split(',')[1];
+          console.log('Base64 length:', base64 ? base64.length : 0);
+          
+          // Restore no-print elements
+          noPrintElements.forEach(el => {
+            el.style.display = '';
+          });
+          
+          // Clean up temporary elements
+          const tempElements = document.querySelectorAll('[data-proposal-view]');
+          tempElements.forEach(el => {
+            if (el.style.position === 'absolute' && el.style.left === '-9999px') {
+              document.body.removeChild(el);
+            }
+          });
+          
+          resolve(base64);
+        })
+        .catch((pdfError) => {
+          console.error('PDF generation error:', pdfError);
+          // Restore no-print elements on error
+          noPrintElements.forEach(el => {
+            el.style.display = '';
+          });
+          reject(pdfError);
+        });
+    } catch (error) {
+      console.error('Error in captureElementAsPDF:', error);
+      // Restore no-print elements on error
+      noPrintElements.forEach(el => {
+        el.style.display = '';
+      });
+      reject(error);
+    }
+  };
+  
+  const generateProposalHTMLForPDF = (proposalData) => {
+    // Generate HTML that matches the ViewProposalView structure
+    const sections = JSON.parse(proposalData.sectionsJSON || '[]');
+    const brandTaupe = '#545142';
+    const brandCharcoal = '#2C2C2C';
+    
+    // Format event date
+    const formatDateRange = (proposal) => {
+      if (!proposal.startDate || !proposal.endDate) return '';
+      const start = new Date(proposal.startDate);
+      const end = new Date(proposal.endDate);
+      const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+      const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+      const startDay = start.getDate();
+      const endDay = end.getDate();
+      const year = start.getFullYear();
+      
+      if (startMonth === endMonth && startDay === endDay) {
+        return `${startMonth} ${startDay}, ${year}`;
+      } else if (startMonth === endMonth) {
+        return `${startMonth} ${startDay}-${endDay}, ${year}`;
+      } else {
+        return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+      }
+    };
+    
+    // Generate section pages HTML
+    let sectionsHTML = '';
+    const productsPerPage = 9;
+    let pageCounter = 2; // Start at 2 (after cover page)
+    
+    sections.forEach((section, sectionIndex) => {
+      const totalPages = Math.ceil(section.products.length / productsPerPage);
+      
+      for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
+        const startIndex = pageIndex * productsPerPage;
+        const endIndex = startIndex + productsPerPage;
+        const pageProducts = section.products.slice(startIndex, endIndex);
+        const currentPageNum = pageCounter++;
+        
+        sectionsHTML += `
+          <div style="min-height: 100vh; padding: 30px 60px; page-break-after: always; position: relative;">
+            <div style="margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid #e5e7eb;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                <div style="font-size: 14px; font-weight: 600; color: ${brandCharcoal};">MAYKER EVENTS</div>
+                <div style="text-align: right; font-size: 9px; color: #666; text-transform: uppercase;">
+                  <div>${proposalData.clientName}</div>
+                  <div>${formatDateRange(proposalData)}</div>
+                  <div>${proposalData.venueName}</div>
+                </div>
+              </div>
+            </div>
+            <h2 style="font-size: 18px; font-weight: 400; color: ${brandCharcoal}; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 0.05em;">
+              ${section.name}
+            </h2>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        `;
+        
+        pageProducts.forEach(product => {
+          sectionsHTML += `
+            <div style="background-color: #f9f9f9; padding: 15px; border-radius: 4px;">
+              <div style="aspect-ratio: 1; background-color: #e5e5e5; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 11px; color: #999; overflow: hidden; border-radius: 2px;">
+                ${product.imageUrl ? `<img src="${product.imageUrl}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;" />` : '[Product Image]'}
+              </div>
+              <h3 style="font-size: 11px; font-weight: 500; color: ${brandCharcoal}; text-transform: uppercase; margin-bottom: 4px;">
+                ${product.name}
+              </h3>
+              <p style="font-size: 10px; color: #666; margin-bottom: 4px;">Quantity: ${product.quantity}</p>
+              ${product.dimensions ? `<p style="font-size: 10px; color: #666;">${product.dimensions}</p>` : ''}
+            </div>
+          `;
+        });
+        
+        sectionsHTML += `
+            </div>
+            <div style="position: absolute; bottom: 30px; right: 60px; font-size: 10px; color: #999;">${currentPageNum}</div>
+          </div>
+        `;
+      }
+    });
+    
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          @page { size: letter; margin: 0; }
+          body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
+          * { box-sizing: border-box; }
+        </style>
+      </head>
+      <body>
+        <!-- Cover Page -->
+        <div style="background-color: ${brandTaupe}; height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 60px 48px; page-break-after: always;">
+          <div style="display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 80px;">
+            <div style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+              <p style="font-size: 14px; color: white; letter-spacing: 0.1em; margin-bottom: 16px; text-transform: uppercase;">Product Selections</p>
+              <p style="font-size: 18px; color: white; margin-bottom: 6px; font-weight: 300;">${proposalData.clientName}</p>
+              <p style="font-size: 13px; color: rgba(255,255,255,0.9); margin-bottom: 4px;">${proposalData.venueName}</p>
+              <p style="font-size: 13px; color: rgba(255,255,255,0.9);">${formatDateRange(proposalData)}</p>
+            </div>
+          </div>
+        </div>
+        
+        ${sectionsHTML}
+      </body>
+      </html>
+    `;
+  };
+  
+  const generatePDFFilename = (proposalData) => {
+    const clientName = String(proposalData.clientName || '').trim();
+    const venueName = String(proposalData.venueName || '').trim();
+    const version = proposalData.version || 1;
+    
+    // Format event date
+    let eventDate = '';
+    if (proposalData.startDate && proposalData.endDate) {
+      const start = new Date(proposalData.startDate);
+      const end = new Date(proposalData.endDate);
+      const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+      const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+      const startDay = start.getDate();
+      const endDay = end.getDate();
+      const year = start.getFullYear();
+      
+      if (startMonth === endMonth && startDay === endDay) {
+        eventDate = `${startMonth} ${startDay}, ${year}`;
+      } else if (startMonth === endMonth) {
+        eventDate = `${startMonth} ${startDay}-${endDay}, ${year}`;
+      } else {
+        eventDate = `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+      }
+    }
+    
+    return `(V${version}) ${clientName} - ${venueName} - ${eventDate} - Mayker Events Rental Proposal`;
   };
 
   if (isEditing && editData) {
@@ -537,7 +905,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   const projectDetailsPageNum = invoicePageNum + 1;
   
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'white' }}>
+    <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
       <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } }` }} />
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
@@ -902,7 +1270,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       clientName: clientNameWithoutVersion,
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
-      sectionsJSON: JSON.stringify(sections)
+      sectionsJSON: JSON.stringify(sections),
+      generatePDF: true // Flag to trigger PDF generation
     };
     onSave(finalData);
   };
