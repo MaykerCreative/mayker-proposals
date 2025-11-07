@@ -612,10 +612,101 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
         el.style.display = 'none';
       });
       
-      // Wait a moment for any layout adjustments
-      setTimeout(() => {
-        captureElementAsPDF(existingView, resolve, reject, noPrintElements);
-      }, 500);
+      // Convert all images to base64 to avoid CORS/tainted canvas issues
+      const images = existingView.querySelectorAll('img');
+      const totalImages = images.length;
+      console.log('Found', totalImages, 'images, converting to base64 to avoid tainted canvas...');
+      
+      const convertImageToBase64 = (img) => {
+        return new Promise((imgResolve) => {
+          // If already base64, skip
+          if (img.src && img.src.startsWith('data:')) {
+            imgResolve();
+            return;
+          }
+          
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const newImg = new Image();
+          
+          // Use CORS proxy
+          const originalSrc = img.src;
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalSrc)}`;
+          
+          newImg.crossOrigin = 'anonymous';
+          
+          newImg.onload = () => {
+            try {
+              canvas.width = newImg.width;
+              canvas.height = newImg.height;
+              ctx.drawImage(newImg, 0, 0);
+              const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+              img.src = dataURL;
+              console.log('Image converted to base64');
+              imgResolve();
+            } catch (err) {
+              console.log('Could not convert image, using placeholder:', err);
+              // Use placeholder
+              img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9kdWN0IEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+              imgResolve();
+            }
+          };
+          
+          newImg.onerror = () => {
+            console.log('Image failed to load, using placeholder');
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9kdWN0IEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+            imgResolve();
+          };
+          
+          newImg.src = proxyUrl;
+          
+          // Timeout fallback
+          setTimeout(() => {
+            if (!newImg.complete) {
+              img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9kdWN0IEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+              imgResolve();
+            }
+          }, 3000);
+        });
+      };
+      
+      const convertAllImages = async () => {
+        try {
+          if (totalImages === 0) {
+            console.log('No images, capturing PDF immediately');
+            setTimeout(() => {
+              captureElementAsPDF(existingView, resolve, reject, noPrintElements);
+            }, 300);
+            return;
+          }
+          
+          console.log('Converting', totalImages, 'images to base64...');
+          const conversionPromises = Array.from(images).map((img, idx) => {
+            if (img.src && !img.src.startsWith('data:')) {
+              console.log(`Converting image ${idx + 1}/${totalImages}...`);
+              return convertImageToBase64(img);
+            } else {
+              return Promise.resolve();
+            }
+          });
+          
+          await Promise.all(conversionPromises);
+          console.log('All images converted, capturing PDF...');
+          
+          // Wait a moment for final rendering
+          setTimeout(() => {
+            captureElementAsPDF(existingView, resolve, reject, noPrintElements);
+          }, 500);
+        } catch (conversionError) {
+          console.error('Error converting images:', conversionError);
+          // Continue anyway - html2canvas will handle it
+          setTimeout(() => {
+            captureElementAsPDF(existingView, resolve, reject, noPrintElements);
+          }, 500);
+        }
+      };
+      
+      convertAllImages();
       return;
     }
     
@@ -838,13 +929,17 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
             useCORS: false,
             logging: false,
             letterRendering: true,
-            allowTaint: true,
+            allowTaint: false, // Changed to false - images should be base64 by now
             backgroundColor: '#ffffff',
             windowWidth: 816,
             windowHeight: element.scrollHeight || 1056,
             scrollX: 0,
             scrollY: 0,
-            removeContainer: false
+            removeContainer: false,
+            ignoreElements: (element) => {
+              // Ignore elements that might cause issues
+              return element.classList && element.classList.contains('no-print');
+            }
           },
           jsPDF: { 
             unit: 'in', 
