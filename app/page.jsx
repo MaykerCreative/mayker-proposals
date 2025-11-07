@@ -487,6 +487,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const [isEditing, setIsEditing] = useState(proposal._isEditing || false);
   const [editData, setEditData] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [isCapturingPDF, setIsCapturingPDF] = useState(false);
 
   useEffect(() => {
     if (isEditing) {
@@ -519,7 +520,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
       let pdfBase64 = null;
       if (finalData.clientFolderURL && finalData.clientFolderURL.trim() !== '') {
         try {
-          console.log('Starting PDF generation...');
+          console.log('Starting PDF generation - temporarily showing view to capture...');
           // Create a temporary proposal object for PDF generation
           const tempProposal = {
             ...proposal,
@@ -527,9 +528,9 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
             sectionsJSON: finalData.sectionsJSON
           };
           
-          // Use html2pdf.js to generate PDF from the proposal view
-          // We'll need to temporarily show the proposal view and capture it
-          pdfBase64 = await generatePDFBlob(tempProposal);
+          // Use the actual rendered ViewProposalView component (the one that prints perfectly)
+          // We'll find it in the DOM and capture it directly
+          pdfBase64 = await generatePDFFromRenderedComponent(tempProposal);
           console.log('PDF generated successfully, length:', pdfBase64 ? pdfBase64.length : 0);
         } catch (pdfError) {
           console.error('PDF generation error:', pdfError);
@@ -579,22 +580,78 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
     }
   };
   
-  const generatePDFBlob = async (proposalData) => {
+  const generatePDFFromRenderedComponent = async (proposalData) => {
     return new Promise((resolve, reject) => {
       // Check if html2pdf is already loaded
       if (window.html2pdf) {
-        generatePDFFromRenderedView(proposalData, resolve, reject);
+        captureRenderedProposalView(proposalData, resolve, reject);
       } else {
         // Dynamically load html2pdf.js
         const script = document.createElement('script');
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
         script.onload = () => {
-          generatePDFFromRenderedView(proposalData, resolve, reject);
+          captureRenderedProposalView(proposalData, resolve, reject);
         };
         script.onerror = reject;
         document.head.appendChild(script);
       }
     });
+  };
+  
+  const captureRenderedProposalView = (proposalData, resolve, reject) => {
+    console.log('Capturing rendered proposal view (same as print view)...');
+    
+    // Find the ViewProposalView component - it should be rendered (even if hidden)
+    const existingView = document.querySelector('[data-proposal-view]');
+    
+    if (existingView) {
+      // Perfect! The view is rendered - use it directly (same as print view)
+      console.log('Found rendered ViewProposalView - capturing it (this is the same component that prints perfectly)');
+      const noPrintElements = existingView.querySelectorAll('.no-print');
+      noPrintElements.forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      // Wait a moment for any layout adjustments
+      setTimeout(() => {
+        captureElementAsPDF(existingView, resolve, reject, noPrintElements);
+      }, 500);
+      return;
+    }
+    
+    // View not found - fallback to HTML generation
+    console.log('ViewProposalView not found in DOM, using HTML generation fallback');
+    generatePDFFromRenderedView(proposalData, resolve, reject);
+  };
+  
+  const renderProposalViewToContainer = (container, proposalData, resolve, reject) => {
+    // Check if we're in the ProposalView component context
+    // If so, we can temporarily show the ViewProposalView
+    const existingView = document.querySelector('[data-proposal-view]');
+    
+    if (existingView && existingView.offsetParent !== null) {
+      // The view is already rendered and visible - use it!
+      console.log('Using existing rendered proposal view');
+      const noPrintElements = existingView.querySelectorAll('.no-print');
+      noPrintElements.forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      setTimeout(() => {
+        captureElementAsPDF(existingView, resolve, reject, noPrintElements);
+      }, 500);
+    } else {
+      // The view isn't rendered - we need to trigger a temporary view
+      // Best approach: Use the browser's print functionality programmatically
+      // But since we can't capture from print(), we'll use the HTML fallback
+      console.log('View not rendered, using HTML generation (will match print view)');
+      generatePDFFromRenderedView(proposalData, resolve, reject);
+    }
+  };
+  
+  const generatePDFBlob = async (proposalData) => {
+    // Legacy function name - redirect to new function
+    return generatePDFFromRenderedComponent(proposalData);
   };
   
   const generatePDFFromRenderedView = (proposalData, resolve, reject) => {
@@ -994,7 +1051,20 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   };
 
   if (isEditing && editData) {
-    return <EditProposalView proposal={editData} catalog={catalog} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />;
+    return (
+      <>
+        <EditProposalView proposal={editData} catalog={catalog} onSave={handleSave} onCancel={() => setIsEditing(false)} saving={saving} />
+        {/* Hidden ViewProposalView for PDF capture - this is the same component that prints perfectly! */}
+        <div style={{ position: 'fixed', left: '-9999px', top: 0, width: '816px', zIndex: -1, pointerEvents: 'none' }}>
+          <ViewProposalView 
+            proposal={{ ...proposal, ...editData }} 
+            onBack={() => {}} 
+            onPrint={() => {}} 
+            onEdit={() => {}} 
+          />
+        </div>
+      </>
+    );
   }
 
   return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={() => setIsEditing(true)} />;
