@@ -93,7 +93,85 @@ export default function ProposalApp() {
     />;
   }
   
-  if (selectedProposal) return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={fetchProposals} />;
+  if (selectedProposal) {
+    // Create a print handler that downloads with correct filename
+    const handlePrintWithFilename = async () => {
+      const viewElement = document.querySelector('[data-proposal-view]');
+      if (!viewElement) {
+        window.print();
+        return;
+      }
+      
+      const noPrintElements = viewElement.querySelectorAll('.no-print');
+      noPrintElements.forEach(el => {
+        el.style.display = 'none';
+      });
+      
+      try {
+        if (!window.html2pdf) {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+          await new Promise((resolve, reject) => {
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+          });
+        }
+        
+        // Generate filename
+        const clientName = String(selectedProposal.clientName || '').trim();
+        const venueName = String(selectedProposal.venueName || '').trim();
+        const version = selectedProposal.version || 1;
+        let eventDate = '';
+        if (selectedProposal.startDate && selectedProposal.endDate) {
+          const start = new Date(selectedProposal.startDate);
+          const end = new Date(selectedProposal.endDate);
+          const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+          const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+          const startDay = start.getDate();
+          const endDay = end.getDate();
+          const year = start.getFullYear();
+          if (startMonth === endMonth && startDay === endDay) {
+            eventDate = `${startMonth} ${startDay}, ${year}`;
+          } else if (startMonth === endMonth) {
+            eventDate = `${startMonth} ${startDay}-${endDay}, ${year}`;
+          } else {
+            eventDate = `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+          }
+        }
+        const filename = `(V${version}) ${clientName} - ${venueName} - ${eventDate} - Mayker Events Rental Proposal`;
+        
+        await window.html2pdf()
+          .set({
+            margin: 0,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { 
+              scale: 2, 
+              useCORS: false,
+              allowTaint: true,
+              backgroundColor: '#ffffff',
+              windowWidth: 816,
+              windowHeight: viewElement.scrollHeight || 1056
+            },
+            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+          })
+          .from(viewElement)
+          .save(filename);
+        
+        noPrintElements.forEach(el => {
+          el.style.display = '';
+        });
+      } catch (error) {
+        console.error('PDF download error:', error);
+        noPrintElements.forEach(el => {
+          el.style.display = '';
+        });
+        window.print();
+      }
+    };
+    
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={handlePrintWithFilename} onRefresh={fetchProposals} />;
+  }
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fafaf8', padding: '32px' }}>
@@ -516,35 +594,33 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const handleSave = async (finalData) => {
     setSaving(true);
     try {
-      // Generate PDF if clientFolderURL is provided
+      // PDF generation disabled for now - the programmatic approach isn't working reliably
+      // Users can manually download the PDF using the Print/Export button which works perfectly
       let pdfBase64 = null;
+      
+      // Uncomment below to re-enable automatic PDF generation (when working):
+      /*
       if (finalData.clientFolderURL && finalData.clientFolderURL.trim() !== '') {
         try {
           console.log('Starting PDF generation - temporarily showing view to capture...');
-          // Create a temporary proposal object for PDF generation
           const tempProposal = {
             ...proposal,
             ...finalData,
             sectionsJSON: finalData.sectionsJSON
           };
-          
-          // Use the actual rendered ViewProposalView component (the one that prints perfectly)
-          // We'll find it in the DOM and capture it directly
           pdfBase64 = await generatePDFFromRenderedComponent(tempProposal);
           console.log('PDF generated successfully, length:', pdfBase64 ? pdfBase64.length : 0);
         } catch (pdfError) {
           console.error('PDF generation error:', pdfError);
           alert('PDF generation failed: ' + pdfError.message + '. Proposal will still be saved.');
-          // Continue with save even if PDF generation fails
         }
-      } else {
-        console.log('No client folder URL provided, skipping PDF generation');
       }
+      */
       
       const payload = {
         ...finalData,
-        generatePDF: !!finalData.clientFolderURL,
-        pdfBase64: pdfBase64
+        generatePDF: false, // Disabled - automatic PDF generation not working reliably
+        pdfBase64: null
       };
       
       // Log payload info (without the full base64 to avoid console spam)
@@ -568,7 +644,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
         mode: 'no-cors'
       });
       
-      const successMsg = 'Proposal saved successfully' + (pdfBase64 ? ' and PDF uploaded to Drive' : '');
+      const successMsg = 'Proposal saved successfully. Use the "Print / Export as PDF" button to download the PDF.';
       console.log(successMsg);
       alert(successMsg);
       setIsEditing(false);
@@ -1181,6 +1257,107 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   const invoicePageNum = 1 + totalSectionPages + 1;
   const projectDetailsPageNum = invoicePageNum + 1;
   
+  // Generate PDF filename
+  const generatePDFFilename = () => {
+    const clientName = String(proposal.clientName || '').trim();
+    const venueName = String(proposal.venueName || '').trim();
+    const version = proposal.version || 1;
+    
+    // Format event date
+    let eventDate = '';
+    if (proposal.startDate && proposal.endDate) {
+      const start = new Date(proposal.startDate);
+      const end = new Date(proposal.endDate);
+      const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+      const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+      const startDay = start.getDate();
+      const endDay = end.getDate();
+      const year = start.getFullYear();
+      
+      if (startMonth === endMonth && startDay === endDay) {
+        eventDate = `${startMonth} ${startDay}, ${year}`;
+      } else if (startMonth === endMonth) {
+        eventDate = `${startMonth} ${startDay}-${endDay}, ${year}`;
+      } else {
+        eventDate = `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+      }
+    }
+    
+    return `(V${version}) ${clientName} - ${venueName} - ${eventDate} - Mayker Events Rental Proposal`;
+  };
+  
+  // Handle print/download with correct filename
+  const handlePrintDownload = async () => {
+    // First, try to download with correct filename using html2pdf
+    // This uses the exact same rendered component
+    const viewElement = document.querySelector('[data-proposal-view]');
+    if (!viewElement) {
+      // Fallback to browser print
+      window.print();
+      return;
+    }
+    
+    // Hide no-print elements
+    const noPrintElements = viewElement.querySelectorAll('.no-print');
+    noPrintElements.forEach(el => {
+      el.style.display = 'none';
+    });
+    
+    try {
+      // Load html2pdf if not already loaded
+      if (!window.html2pdf) {
+        const script = document.createElement('script');
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        await new Promise((resolve, reject) => {
+          script.onload = resolve;
+          script.onerror = reject;
+          document.head.appendChild(script);
+        });
+      }
+      
+      const filename = generatePDFFilename();
+      
+      // Generate and download PDF
+      await window.html2pdf()
+        .set({
+          margin: 0,
+          image: { type: 'jpeg', quality: 0.98 },
+          html2canvas: { 
+            scale: 2, 
+            useCORS: false,
+            logging: false,
+            letterRendering: true,
+            allowTaint: true, // Allow tainted canvas for download
+            backgroundColor: '#ffffff',
+            windowWidth: 816,
+            windowHeight: viewElement.scrollHeight || 1056
+          },
+          jsPDF: { 
+            unit: 'in', 
+            format: 'letter', 
+            orientation: 'portrait'
+          }
+        })
+        .from(viewElement)
+        .save(filename);
+      
+      // Restore no-print elements
+      noPrintElements.forEach(el => {
+        el.style.display = '';
+      });
+      
+    } catch (error) {
+      console.error('PDF download error:', error);
+      // Restore no-print elements
+      noPrintElements.forEach(el => {
+        el.style.display = '';
+      });
+      // Fallback to browser print
+      alert('PDF download failed. Opening print dialog instead.');
+      window.print();
+    }
+  };
+  
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
       <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } }` }} />
@@ -1194,7 +1371,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Edit
             </button>
-            <button onClick={onPrint} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+            <button onClick={handlePrintDownload} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Print / Export as PDF
             </button>
           </div>
