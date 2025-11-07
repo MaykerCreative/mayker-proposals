@@ -654,46 +654,95 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
             console.log('Total document height:', totalHeight);
             iframe.style.height = Math.max(totalHeight + 100, 2000) + 'px';
             
-            // Wait for images to load
+            // Convert images to base64 to avoid CORS issues
             const images = iframeBody.querySelectorAll('img');
-            let imagesLoaded = 0;
             const totalImages = images.length;
-            console.log('Waiting for', totalImages, 'images to load in iframe');
+            console.log('Found', totalImages, 'images, converting to base64 to avoid CORS...');
             
-            const checkComplete = () => {
-              if (imagesLoaded === totalImages) {
-                console.log('All images loaded, generating PDF from iframe');
+            const convertImageToBase64 = (img) => {
+              return new Promise((imgResolve) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Create a new image
+                const newImg = new Image();
+                
+                // Use a CORS proxy to fetch the image
+                const originalSrc = img.src;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalSrc)}`;
+                
+                newImg.onload = () => {
+                  try {
+                    canvas.width = newImg.width;
+                    canvas.height = newImg.height;
+                    ctx.drawImage(newImg, 0, 0);
+                    const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+                    img.src = dataURL;
+                    console.log('Image converted to base64 successfully');
+                    imgResolve();
+                  } catch (err) {
+                    console.log('Could not convert image (CORS issue), using placeholder:', err);
+                    // Use placeholder if conversion fails
+                    img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9kdWN0IEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                    imgResolve();
+                  }
+                };
+                
+                newImg.onerror = () => {
+                  console.log('Image failed to load via proxy, using placeholder');
+                  img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9kdWN0IEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+                  imgResolve();
+                };
+                
+                // Try loading through CORS proxy first, fallback to direct
+                newImg.crossOrigin = 'anonymous';
+                newImg.src = proxyUrl;
+                
+                // Fallback: if proxy fails, try direct (will likely fail but we have error handler)
+                setTimeout(() => {
+                  if (!newImg.complete) {
+                    newImg.src = originalSrc;
+                  }
+                }, 2000);
+              });
+            };
+            
+            const convertAllImages = async () => {
+              try {
+                if (totalImages === 0) {
+                  console.log('No images, generating PDF immediately');
+                  setTimeout(() => {
+                    captureElementAsPDF(iframeBody, resolve, reject);
+                  }, 500);
+                  return;
+                }
+                
+                const conversionPromises = Array.from(images).map((img, idx) => {
+                  if (img.src && !img.src.startsWith('data:')) {
+                    console.log(`Converting image ${idx + 1}/${totalImages}...`);
+                    return convertImageToBase64(img);
+                  } else {
+                    return Promise.resolve();
+                  }
+                });
+                
+                await Promise.all(conversionPromises);
+                console.log('All images converted, generating PDF...');
+                
                 // Give it a moment for final rendering
+                setTimeout(() => {
+                  captureElementAsPDF(iframeBody, resolve, reject);
+                }, 500);
+              } catch (conversionError) {
+                console.error('Error converting images:', conversionError);
+                // Continue anyway - html2canvas will handle missing images
                 setTimeout(() => {
                   captureElementAsPDF(iframeBody, resolve, reject);
                 }, 500);
               }
             };
             
-            if (totalImages === 0) {
-              console.log('No images, generating PDF immediately');
-              setTimeout(() => {
-                captureElementAsPDF(iframeBody, resolve, reject);
-              }, 500);
-            } else {
-              images.forEach((img, idx) => {
-                if (img.complete) {
-                  imagesLoaded++;
-                  checkComplete();
-                } else {
-                  img.onload = () => {
-                    imagesLoaded++;
-                    console.log(`Image ${idx + 1} loaded (${imagesLoaded}/${totalImages})`);
-                    checkComplete();
-                  };
-                  img.onerror = () => {
-                    imagesLoaded++;
-                    console.log(`Image ${idx + 1} failed to load (${imagesLoaded}/${totalImages})`);
-                    checkComplete();
-                  };
-                }
-              });
-            }
+            convertAllImages();
           } catch (iframeError) {
             console.error('Error accessing iframe content:', iframeError);
             reject(iframeError);
@@ -728,17 +777,17 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
           margin: 0,
           image: { type: 'jpeg', quality: 0.98 },
           html2canvas: { 
-            scale: 2, 
-            useCORS: true,
-            logging: true,
+            scale: 1.5, 
+            useCORS: false,
+            logging: false,
             letterRendering: true,
             allowTaint: true,
             backgroundColor: '#ffffff',
             windowWidth: 816,
             windowHeight: element.scrollHeight || 1056,
-            scale: 1.5,
             scrollX: 0,
-            scrollY: 0
+            scrollY: 0,
+            removeContainer: false
           },
           jsPDF: { 
             unit: 'in', 
