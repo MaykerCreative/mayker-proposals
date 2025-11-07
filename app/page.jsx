@@ -94,83 +94,8 @@ export default function ProposalApp() {
   }
   
   if (selectedProposal) {
-    // Create a print handler that downloads with correct filename
-    const handlePrintWithFilename = async () => {
-      const viewElement = document.querySelector('[data-proposal-view]');
-      if (!viewElement) {
-        window.print();
-        return;
-      }
-      
-      const noPrintElements = viewElement.querySelectorAll('.no-print');
-      noPrintElements.forEach(el => {
-        el.style.display = 'none';
-      });
-      
-      try {
-        if (!window.html2pdf) {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-          await new Promise((resolve, reject) => {
-            script.onload = resolve;
-            script.onerror = reject;
-            document.head.appendChild(script);
-          });
-        }
-        
-        // Generate filename
-        const clientName = String(selectedProposal.clientName || '').trim();
-        const venueName = String(selectedProposal.venueName || '').trim();
-        const version = selectedProposal.version || 1;
-        let eventDate = '';
-        if (selectedProposal.startDate && selectedProposal.endDate) {
-          const start = new Date(selectedProposal.startDate);
-          const end = new Date(selectedProposal.endDate);
-          const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
-          const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
-          const startDay = start.getDate();
-          const endDay = end.getDate();
-          const year = start.getFullYear();
-          if (startMonth === endMonth && startDay === endDay) {
-            eventDate = `${startMonth} ${startDay}, ${year}`;
-          } else if (startMonth === endMonth) {
-            eventDate = `${startMonth} ${startDay}-${endDay}, ${year}`;
-          } else {
-            eventDate = `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
-          }
-        }
-        const filename = `(V${version}) ${clientName} - ${venueName} - ${eventDate} - Mayker Events Rental Proposal`;
-        
-        await window.html2pdf()
-          .set({
-            margin: 0,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { 
-              scale: 2, 
-              useCORS: false,
-              allowTaint: true,
-              backgroundColor: '#ffffff',
-              windowWidth: 816,
-              windowHeight: viewElement.scrollHeight || 1056
-            },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
-          })
-          .from(viewElement)
-          .save(filename);
-        
-        noPrintElements.forEach(el => {
-          el.style.display = '';
-        });
-      } catch (error) {
-        console.error('PDF download error:', error);
-        noPrintElements.forEach(el => {
-          el.style.display = '';
-        });
-        window.print();
-      }
-    };
-    
-    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={handlePrintWithFilename} onRefresh={fetchProposals} />;
+    // Simple print handler - the ViewProposalView component handles the download with filename
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => {}} onRefresh={fetchProposals} />;
   }
 
   return (
@@ -1288,11 +1213,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   // Handle print/download with correct filename
   const handlePrintDownload = async () => {
-    // First, try to download with correct filename using html2pdf
-    // This uses the exact same rendered component
     const viewElement = document.querySelector('[data-proposal-view]');
     if (!viewElement) {
-      // Fallback to browser print
       window.print();
       return;
     }
@@ -1315,6 +1237,73 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         });
       }
       
+      // Convert all images to base64 to avoid CORS issues
+      const images = viewElement.querySelectorAll('img');
+      console.log('Found', images.length, 'images, converting to base64...');
+      
+      const convertImageToBase64 = (img) => {
+        return new Promise((imgResolve) => {
+          if (img.src && img.src.startsWith('data:')) {
+            imgResolve();
+            return;
+          }
+          
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const newImg = new Image();
+          const originalSrc = img.src;
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(originalSrc)}`;
+          
+          newImg.crossOrigin = 'anonymous';
+          newImg.onload = () => {
+            try {
+              canvas.width = newImg.width;
+              canvas.height = newImg.height;
+              ctx.drawImage(newImg, 0, 0);
+              const dataURL = canvas.toDataURL('image/jpeg', 0.8);
+              img.src = dataURL;
+              console.log('Image converted to base64');
+              imgResolve();
+            } catch (err) {
+              console.log('Could not convert image, using placeholder:', err);
+              img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9kdWN0IEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+              imgResolve();
+            }
+          };
+          
+          newImg.onerror = () => {
+            console.log('Image failed to load, using placeholder');
+            img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9kdWN0IEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+            imgResolve();
+          };
+          
+          newImg.src = proxyUrl;
+          
+          setTimeout(() => {
+            if (!newImg.complete) {
+              img.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgZmlsbD0iI2U1ZTVlNSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5Qcm9kdWN0IEltYWdlPC90ZXh0Pjwvc3ZnPg==';
+              imgResolve();
+            }
+          }, 3000);
+        });
+      };
+      
+      // Convert all images
+      if (images.length > 0) {
+        const conversionPromises = Array.from(images).map((img, idx) => {
+          if (img.src && !img.src.startsWith('data:')) {
+            console.log(`Converting image ${idx + 1}/${images.length}...`);
+            return convertImageToBase64(img);
+          } else {
+            return Promise.resolve();
+          }
+        });
+        await Promise.all(conversionPromises);
+        console.log('All images converted, generating PDF...');
+        // Wait a bit for images to render
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+      
       const filename = generatePDFFilename();
       
       // Generate and download PDF
@@ -1327,10 +1316,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             useCORS: false,
             logging: false,
             letterRendering: true,
-            allowTaint: true, // Allow tainted canvas for download
+            allowTaint: false, // Set to false since images are now base64
             backgroundColor: '#ffffff',
             windowWidth: 816,
-            windowHeight: viewElement.scrollHeight || 1056
+            windowHeight: viewElement.scrollHeight || 1056,
+            scrollX: 0,
+            scrollY: 0
           },
           jsPDF: { 
             unit: 'in', 
@@ -1353,7 +1344,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         el.style.display = '';
       });
       // Fallback to browser print
-      alert('PDF download failed. Opening print dialog instead.');
+      alert('PDF download failed: ' + error.message + '. Opening print dialog instead. Please save the PDF manually with the filename: ' + generatePDFFilename());
       window.print();
     }
   };
