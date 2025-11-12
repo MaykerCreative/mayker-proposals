@@ -430,7 +430,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     status: 'Pending',
     projectNumber: ''
   });
-  const [sections, setSections] = useState([{ name: '', products: [] }]);
+  const [sections, setSections] = useState([{ name: '', products: [], type: 'products' }]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -438,7 +438,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   };
 
   const handleAddSection = () => {
-    setSections([...sections, { name: '', products: [] }]);
+    setSections([...sections, { name: '', products: [], type: 'products' }]);
   };
 
   const handleRemoveSection = (idx) => {
@@ -821,6 +821,45 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         const sectionPages = [];
         
         sections.forEach((section, sectionIndex) => {
+          // Check if this is an image page
+          if (section.type === 'image' && section.imageData) {
+            const currentPageNum = pageCounter++;
+            sectionPages.push(
+              <div 
+                key={`image-${sectionIndex}`} 
+                style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: sectionIndex === 0 ? 'auto' : 'auto' }}
+              >
+                <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginBottom: '8px' }} />
+                    </div>
+                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                      <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                        <div>{proposal.clientName}</div>
+                        <div>{formatDateRange(proposal)}</div>
+                        <div>{proposal.venueName}</div>
+                      </div>
+                      <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+                    </div>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 200px)' }}>
+                  <img 
+                    src={section.imageData} 
+                    alt="Floor plan or collage" 
+                    style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 200px)', objectFit: 'contain' }}
+                  />
+                </div>
+                
+                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
+              </div>
+            );
+            return; // Skip product rendering for image pages
+          }
+          
+          // Regular product section
           const totalPages = Math.ceil(section.products.length / productsPerPage);
           
           for (let pageIndex = 0; pageIndex < totalPages; pageIndex++) {
@@ -889,9 +928,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       })()}
 
       {(() => {
-        // Collect all products
+        // Collect all products (excluding image pages)
         const allProducts = [];
         sections.forEach((section, sectionIndex) => {
+          // Skip image pages
+          if (section.type === 'image') return;
+          
           section.products.forEach((product, productIndex) => {
             allProducts.push({ section, sectionIndex, product, productIndex });
           });
@@ -1192,7 +1234,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   };
 
   const handleAddSection = () => {
-    setSections([...sections, { name: '', products: [] }]);
+    setSections([...sections, { name: '', products: [], type: 'products' }]);
   };
 
   const handleSectionNameChange = (idx, newName) => {
@@ -1408,40 +1450,84 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         <div style={{ backgroundColor: 'white', padding: '32px', borderRadius: '4px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', border: '1px solid #e5e7eb' }}>
           <h2 style={{ fontSize: '12px', fontWeight: '600', marginBottom: '24px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Products by Section</h2>
           
-          {sections.map((section, sectionIdx) => (
-            <div 
-              key={sectionIdx} 
-              draggable
-              onDragStart={(e) => handleSectionDragStart(e, sectionIdx)}
-              onDragOver={handleSectionDragOver}
-              onDrop={(e) => handleSectionDrop(e, sectionIdx)}
-              onDragEnd={handleSectionDragEnd}
-              style={{ 
-                marginBottom: '32px', 
-                paddingBottom: '32px', 
-                borderBottom: '1px solid #f0ede5',
-                cursor: 'move',
-                opacity: draggedSection === sectionIdx ? 0.5 : 1,
-                transition: 'opacity 0.2s'
-              }}
-            >
-              <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'flex-end' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-                  <span 
-                    style={{ fontSize: '18px', color: '#999', cursor: 'grab', userSelect: 'none' }}
-                    onMouseDown={(e) => e.stopPropagation()}
-                  >☰</span>
-                  <div style={{ flex: 1 }}>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Section Name</label>
-                    <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", textTransform: 'uppercase', transition: 'border-color 0.2s' }} />
+          {sections.map((section, sectionIdx) => {
+            const isImagePage = section.type === 'image';
+            
+            return (
+              <div 
+                key={sectionIdx} 
+                draggable
+                onDragStart={(e) => handleSectionDragStart(e, sectionIdx)}
+                onDragOver={handleSectionDragOver}
+                onDrop={(e) => handleSectionDrop(e, sectionIdx)}
+                onDragEnd={handleSectionDragEnd}
+                style={{ 
+                  marginBottom: '32px', 
+                  paddingBottom: '32px', 
+                  borderBottom: '1px solid #f0ede5',
+                  cursor: 'move',
+                  opacity: draggedSection === sectionIdx ? 0.5 : 1,
+                  transition: 'opacity 0.2s'
+                }}
+              >
+                {isImagePage ? (
+                  // Image Page Section
+                  <div>
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'flex-end' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                        <span 
+                          style={{ fontSize: '18px', color: '#999', cursor: 'grab', userSelect: 'none' }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >☰</span>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Image Page</label>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '12px' }}>Upload a floor plan, collage, or other image</div>
+                        </div>
+                      </div>
+                      <button onClick={() => handleRemoveImagePage(sectionIdx)} style={{ padding: '12px 20px', backgroundColor: '#fafaf8', color: brandCharcoal, border: '1px solid #e5e7eb', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
+                        Remove Page
+                      </button>
+                    </div>
+                    
+                    <div style={{ marginBottom: '16px' }}>
+                      <input 
+                        type="file" 
+                        accept="image/jpeg,image/jpg,image/png" 
+                        onChange={(e) => handleImageUpload(sectionIdx, e)}
+                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }}
+                      />
+                    </div>
+                    
+                    {section.imageData && (
+                      <div style={{ marginTop: '16px', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '16px', backgroundColor: '#fafaf8' }}>
+                        <img 
+                          src={section.imageData} 
+                          alt="Uploaded image" 
+                          style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px' }}
+                        />
+                      </div>
+                    )}
                   </div>
-                </div>
-                {sections.length > 1 && (
-                  <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '12px 20px', backgroundColor: '#fafaf8', color: brandCharcoal, border: '1px solid #e5e7eb', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
-                    Remove Section
-                  </button>
-                )}
-              </div>
+                ) : (
+                  // Product Section
+                  <>
+                    <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'flex-end' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                        <span 
+                          style={{ fontSize: '18px', color: '#999', cursor: 'grab', userSelect: 'none' }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                        >☰</span>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Section Name</label>
+                          <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", textTransform: 'uppercase', transition: 'border-color 0.2s' }} />
+                        </div>
+                      </div>
+                      {sections.length > 1 && (
+                        <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '12px 20px', backgroundColor: '#fafaf8', color: brandCharcoal, border: '1px solid #e5e7eb', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
+                          Remove Section
+                        </button>
+                      )}
+                    </div>
               
               {section.products.map((product, productIdx) => (
                 <div 
@@ -1513,12 +1599,20 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               <button onClick={() => handleAddProduct(sectionIdx)} style={{ marginTop: '12px', padding: '10px 20px', backgroundColor: '#fafaf8', color: brandCharcoal, border: '1px solid #e5e7eb', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
                 + Add Product
               </button>
-            </div>
-          ))}
+                  </>
+                )}
+              </div>
+            );
+          })}
 
-          <button onClick={handleAddSection} style={{ padding: '14px 28px', backgroundColor: brandTaupe, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
-            + Add Section
-          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={handleAddSection} style={{ padding: '14px 28px', backgroundColor: brandTaupe, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
+              + Add Section
+            </button>
+            <button onClick={handleAddImagePage} style={{ padding: '14px 28px', backgroundColor: '#666', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '600', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
+              + Add Image Page
+            </button>
+          </div>
         </div>
       </div>
     </div>
