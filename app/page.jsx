@@ -805,7 +805,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     <div>
                       <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '4px' }}>MAYKER EVENTS</div>
                       {isFirstPageOfSection && (
-                        <div style={{ fontSize: '12px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Inter', sans-serif", textTransform: 'uppercase' }}>{section.name}</div>
+                        <div style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginTop: '8px', fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.05em' }}>{section.name}</div>
                       )}
                     </div>
                     <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
@@ -925,14 +925,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 minHeight: '100vh', 
                 padding: '30px 60px 40px', 
                 position: 'relative',
-                pageBreakBefore: pageIndex > 0 ? 'always' : 'always',
-                display: 'flex',
-                flexDirection: 'column'
+                pageBreakBefore: pageIndex > 0 ? 'always' : 'always'
               }}
             >
               <InvoiceHeader pageNum={currentPageNum} />
               
-              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0, flex: 1 }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
                 <colgroup>
                   <col style={{ width: '15%' }} />
                   <col style={{ width: '45%' }} />
@@ -975,9 +973,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               </table>
               
               {isLastPage && (
-                <div style={{ marginTop: 'auto', paddingTop: '30px' }}>
+                <div style={{ marginTop: '40px', paddingTop: '20px' }}>
                   <div style={{ marginLeft: 'auto', width: '30%' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '20px' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
                         <tr>
                           <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right', width: '50%' }}>Product Subtotal</td>
