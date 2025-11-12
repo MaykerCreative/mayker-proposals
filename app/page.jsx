@@ -745,7 +745,45 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } @page:first { margin: 0; } div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } thead { display: table-header-group !important; } thead tr { page-break-inside: avoid; } thead td, thead th { background-color: white !important; } tbody tr[style*="page-break-before"] { page-break-before: always !important; break-before: page !important; } }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        
+        @font-face {
+          font-family: 'Neue Haas Unica';
+          src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
+          font-weight: 400;
+          font-style: normal;
+        }
+        
+        @font-face {
+          font-family: 'Neue Haas Unica';
+          src: url('/assets/Neue Haas Unica Medium-abce.ttf') format('truetype');
+          font-weight: 500;
+          font-style: normal;
+        }
+        
+        @font-face {
+          font-family: 'Domaine Text';
+          src: url('/assets/TestDomaineText-Light.otf') format('opentype');
+          font-weight: 300;
+          font-style: normal;
+        }
+        
+        * { box-sizing: border-box; margin: 0; padding: 0; } 
+        body { font-family: 'Inter', sans-serif; } 
+        @media print { 
+          .no-print { display: none !important; } 
+          .print-break-after { page-break-after: always; } 
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+          @page { size: letter; margin: 0; } 
+          @page:first { margin: 0; } 
+          div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } 
+          thead { display: table-header-group !important; } 
+          thead tr { page-break-inside: avoid; } 
+          thead td, thead th { background-color: white !important; } 
+          tbody tr[style*="page-break-before"] { page-break-before: always !important; break-before: page !important; } 
+        }
+      ` }} />
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
