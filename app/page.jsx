@@ -742,7 +742,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } @page:first { margin: 0; } div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } @page:first { margin: 0; } div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } thead { display: table-header-group; } .invoice-header-repeat { display: table-row !important; page-break-before: always; page-break-after: avoid; page-break-inside: avoid; } .invoice-header-repeat td { background-color: white !important; } }` }} />
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
@@ -848,6 +848,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       })()}
 
       <div style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always' }}>
+        {/* First page header */}
         <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <div>
@@ -885,12 +886,54 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               </tr>
             </thead>
             <tbody>
-              {sections.map((section, sectionIndex) => (
-                section.products.map((product, productIndex) => {
+              {(() => {
+                const allProducts = [];
+                sections.forEach((section, sectionIndex) => {
+                  section.products.forEach((product, productIndex) => {
+                    allProducts.push({ section, sectionIndex, product, productIndex });
+                  });
+                });
+                
+                return allProducts.flatMap((item, globalIndex) => {
+                  const { section, sectionIndex, product, productIndex } = item;
                   const extendedPrice = product.price * totals.rentalMultiplier;
                   const lineTotal = extendedPrice * product.quantity;
+                  const rows = [];
                   
-                  return (
+                  // Insert repeating header every 20 rows (after row 0, 20, 40, etc.)
+                  if (globalIndex > 0 && globalIndex % 20 === 0) {
+                    rows.push(
+                      <tr key={`header-${globalIndex}`} className="invoice-header-repeat" style={{ pageBreakBefore: 'always', backgroundColor: 'white' }}>
+                        <td colSpan="5" style={{ padding: '20px 0 15px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                              <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '4px' }}>MAYKER EVENTS</div>
+                            </div>
+                            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                              <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                <div>{proposal.clientName}</div>
+                                <div>{formatDateRange(proposal)}</div>
+                                <div>{proposal.venueName}</div>
+                              </div>
+                              <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                    // Insert repeating column headers
+                    rows.push(
+                      <tr key={`colheaders-${globalIndex}`} className="invoice-header-repeat" style={{ backgroundColor: 'white' }}>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Section</th>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Product</th>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Qty</th>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Unit Price</th>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Total</th>
+                      </tr>
+                    );
+                  }
+                  
+                  rows.push(
                     <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
                       <td style={{ padding: '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                         {productIndex === 0 ? section.name : ''}
@@ -909,8 +952,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                       </td>
                     </tr>
                   );
-                })
-              ))}
+                  
+                  return rows;
+                });
+              })()}
             </tbody>
           </table>
           
