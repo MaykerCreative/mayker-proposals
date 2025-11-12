@@ -881,13 +881,13 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               </div>
             </div>
             {/* Separator line */}
-            <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: '15px' }}></div>
+            <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: '25px' }}></div>
             {/* INVOICE title */}
-            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', fontFamily: "'Domaine Text', serif" }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', fontFamily: "'Domaine Text', serif" }}>
               {isFirstPage ? 'Invoice' : 'Invoice (Cont.)'}
             </h2>
             {/* Column headers */}
-            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0, marginBottom: '10px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0, marginBottom: '0' }}>
               <colgroup>
                 <col style={{ width: '15%' }} />
                 <col style={{ width: '45%' }} />
@@ -954,19 +954,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     
                     return (
                       <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
-                        <td style={{ padding: '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                           {showSectionName ? section.name : ''}
                         </td>
-                        <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                           {product.name}
                         </td>
-                        <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                           {product.quantity}
                         </td>
-                        <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
                           ${formatNumber(extendedPrice)}
                         </td>
-                        <td style={{ padding: '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
                           ${formatNumber(lineTotal)}
                         </td>
                       </tr>
