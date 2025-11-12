@@ -742,7 +742,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } .invoice-header-repeat { display: none; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } .print-page { page-break-inside: avoid; break-inside: avoid; } thead { display: table-header-group; } tbody { display: table-row-group; } .invoice-header-repeat { display: table-row !important; page-break-after: avoid; page-break-inside: avoid; } .invoice-header { page-break-after: avoid; page-break-inside: avoid; } @page { size: letter; margin: 0.5in; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } .invoice-header-repeat { display: none; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } .print-page { page-break-inside: avoid; break-inside: avoid; } .cover-page { margin: 0 !important; padding: 0 !important; } thead { display: table-header-group; } tbody { display: table-row-group; } .invoice-header-repeat { display: table-row !important; page-break-before: always; page-break-after: avoid; page-break-inside: avoid; } .invoice-header { page-break-after: avoid; page-break-inside: avoid; } .page-number { position: absolute; bottom: 30px; right: 60px; font-size: 10px; color: #999; font-family: 'Neue Haas Unica', 'Inter', sans-serif; } @page { size: letter; margin: 0.5in; } @page:first { margin: 0; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }` }} />
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
@@ -760,7 +760,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
       </div>
 
-      <div className="print-break-after print-page" style={{ backgroundColor: brandTaupe, minHeight: '10in', height: '10in', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box' }}>
+      <div className="print-break-after print-page cover-page" style={{ backgroundColor: brandTaupe, minHeight: '11in', height: '11in', width: '8.5in', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
@@ -794,8 +794,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
-                className={isLastPage ? "print-break-after print-page" : "print-page"} 
-                style={{ minHeight: '10in', padding: '30px 60px 40px', position: 'relative' }}
+                className={isLastPage ? "" : "print-page"} 
+                style={{ minHeight: '10in', padding: '30px 60px 40px', position: 'relative', pageBreakAfter: isLastPage ? 'always' : 'auto' }}
               >
                 <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -836,7 +836,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   ))}
                 </div>
                 
-                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
+                <div className="page-number">{currentPageNum}</div>
               </div>
             );
           }
@@ -845,8 +845,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         return sectionPages;
       })()}
 
-      <div className="print-break-after print-page invoice-section" style={{ minHeight: '10in', padding: '30px 60px 40px', position: 'relative' }}>
-        {/* Header that appears on first page */}
+      <div className="print-page invoice-section" style={{ minHeight: '10in', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always' }}>
+        {/* Header that appears on first page and repeats on subsequent pages */}
         <div className="invoice-header" style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
@@ -887,28 +887,41 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   const extendedPrice = product.price * totals.rentalMultiplier;
                   const lineTotal = extendedPrice * product.quantity;
                   
-                  // Insert repeating header before every 25th row (approximately every page)
+                  // Insert repeating header before every 20th row (approximately every page)
                   const rowNumber = sections.slice(0, sectionIndex).reduce((sum, s) => sum + s.products.length, 0) + productIndex + 1;
-                  const shouldShowHeader = rowNumber > 1 && rowNumber % 25 === 1;
+                  const shouldShowHeader = rowNumber > 1 && rowNumber % 20 === 1;
                   
                   return (
                     <React.Fragment key={`${sectionIndex}-${productIndex}`}>
                       {shouldShowHeader && (
-                        <tr className="invoice-header-repeat">
-                          <td colSpan="5" style={{ padding: '20px 0 10px', borderBottom: '1px solid #e5e7eb' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                              <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
-                              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                                <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                                  <div>{proposal.clientName}</div>
-                                  <div>{formatDateRange(proposal)}</div>
-                                  <div>{proposal.venueName}</div>
+                        <React.Fragment>
+                          <tr className="invoice-header-repeat">
+                            <td colSpan="5" style={{ padding: '20px 0 10px 0', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', pageBreakBefore: 'always' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+                                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                                  <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                    <div>{proposal.clientName}</div>
+                                    <div>{formatDateRange(proposal)}</div>
+                                    <div>{proposal.venueName}</div>
+                                  </div>
+                                  <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
                                 </div>
-                                <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
                               </div>
-                            </div>
-                          </td>
-                        </tr>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td colSpan="5" style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb' }}>
+                              <div style={{ display: 'grid', gridTemplateColumns: '15% 45% 10% 15% 15%' }}>
+                                <div style={{ textAlign: 'left' }}>Section</div>
+                                <div style={{ textAlign: 'left' }}>Product</div>
+                                <div style={{ textAlign: 'center' }}>Qty</div>
+                                <div style={{ textAlign: 'right' }}>Unit Price</div>
+                                <div style={{ textAlign: 'right' }}>Total</div>
+                              </div>
+                            </td>
+                          </tr>
+                        </React.Fragment>
                       )}
                       <tr style={{ borderBottom: '1px solid #f8f8f8' }}>
                         <td style={{ padding: '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
@@ -988,7 +1001,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           </div>
         </div>
         
-        <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{invoicePageNum}</div>
+        <div className="page-number">{invoicePageNum}</div>
       </div>
 
       <div className="print-page" style={{ minHeight: '10in', padding: '30px 60px 40px', position: 'relative' }}>
@@ -1020,7 +1033,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
         </ul>
         
-        <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{projectDetailsPageNum}</div>
+        <div className="page-number">{projectDetailsPageNum}</div>
       </div>
     </div>
   );
