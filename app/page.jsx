@@ -742,7 +742,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } @page:first { margin: 0; } div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } }` }} />
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
@@ -760,7 +760,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
       </div>
 
-      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box' }}>
+      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
@@ -789,17 +789,22 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             const isLastPageOfSection = pageIndex === totalPages - 1;
             const isLastSection = sectionIndex === sections.length - 1;
             const isLastPage = isLastPageOfSection && isLastSection;
+            const isFirstPageOfSection = pageIndex === 0;
             const currentPageNum = pageCounter++;
             
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
-                className={isLastPage ? "print-break-after" : ""} 
-                style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}
+                style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstPageOfSection && sectionIndex === 0 ? 'auto' : 'auto' }}
               >
                 <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '4px' }}>MAYKER EVENTS</div>
+                      {isFirstPageOfSection && (
+                        <div style={{ fontSize: '12px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Inter', sans-serif", textTransform: 'uppercase' }}>{section.name}</div>
+                      )}
+                    </div>
                     <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
                       <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                         <div>{proposal.clientName}</div>
@@ -811,9 +816,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </div>
                 
-                <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>
-                  {section.name}
-                </h2>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                   {pageProducts.map((product, productIndex) => (
@@ -845,10 +847,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         return sectionPages;
       })()}
 
-      <div style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative' }}>
+      <div style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always' }}>
         <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+            <div>
+              <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '4px' }}>MAYKER EVENTS</div>
+            </div>
             <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
               <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
                 <div>{proposal.clientName}</div>
