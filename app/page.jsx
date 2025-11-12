@@ -841,7 +841,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '4px' }}>MAYKER EVENTS</div>
+                      <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginBottom: isFirstPageOfSection ? '8px' : '0' }} />
                       {isFirstPageOfSection && (
                         <div style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginTop: '8px', fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.05em' }}>{section.name}</div>
                       )}
