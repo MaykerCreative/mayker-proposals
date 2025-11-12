@@ -864,7 +864,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         const totalInvoicePages = Math.ceil(allProducts.length / rowsPerPage);
         
         // Invoice header component matching the screenshot
-        const InvoiceHeader = ({ pageNum }) => (
+        const InvoiceHeader = ({ pageNum, isFirstPage, totalPages }) => (
           <div style={{ marginBottom: '30px' }}>
             {/* Top header row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
@@ -883,7 +883,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             {/* Separator line */}
             <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: '15px' }}></div>
             {/* INVOICE title */}
-            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', fontFamily: "'Domaine Text', serif" }}>Invoice</h2>
+            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', fontFamily: "'Domaine Text', serif" }}>
+              {isFirstPage ? 'Invoice' : 'Invoice (Cont.)'}
+            </h2>
             {/* Column headers */}
             <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0, marginBottom: '10px' }}>
               <colgroup>
@@ -916,6 +918,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           const endIndex = startIndex + rowsPerPage;
           const pageProducts = allProducts.slice(startIndex, endIndex);
           const isLastPage = pageIndex === totalInvoicePages - 1;
+          const isFirstPage = pageIndex === 0;
           const currentPageNum = invoiceStartPage + pageIndex;
           
           invoicePages.push(
@@ -928,7 +931,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 pageBreakBefore: pageIndex > 0 ? 'always' : 'always'
               }}
             >
-              <InvoiceHeader pageNum={currentPageNum} />
+              <InvoiceHeader pageNum={currentPageNum} isFirstPage={isFirstPage} totalPages={totalInvoicePages} />
               
               <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
                 <colgroup>
