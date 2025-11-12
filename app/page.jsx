@@ -1131,6 +1131,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     projectNumber: proposal.projectNumber || ''
   });
   const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
+  const [draggedSection, setDraggedSection] = useState(null);
+  const [draggedProduct, setDraggedProduct] = useState({ sectionIdx: null, productIdx: null });
 
   useEffect(() => {
     const convertTo24Hour = (time12hr) => {
@@ -1197,6 +1199,75 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     const newSections = [...sections];
     newSections[idx].name = newName;
     setSections(newSections);
+  };
+
+  // Drag and drop handlers for sections
+  const handleSectionDragStart = (e, sectionIdx) => {
+    // Prevent dragging when clicking on inputs, buttons, or selects
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.closest('input, button, select')) {
+      e.preventDefault();
+      return;
+    }
+    setDraggedSection(sectionIdx);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleSectionDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+  const handleSectionDrop = (e, targetSectionIdx) => {
+    e.preventDefault();
+    if (draggedSection === null || draggedSection === targetSectionIdx) {
+      setDraggedSection(null);
+      return;
+    }
+    const newSections = [...sections];
+    const [movedSection] = newSections.splice(draggedSection, 1);
+    newSections.splice(targetSectionIdx, 0, movedSection);
+    setSections(newSections);
+    setDraggedSection(null);
+  };
+  const handleSectionDragEnd = () => {
+    setDraggedSection(null);
+  };
+
+  // Drag and drop handlers for products
+  const handleProductDragStart = (e, sectionIdx, productIdx) => {
+    // Prevent dragging when clicking on inputs, buttons, or selects
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT' || e.target.closest('input, button, select')) {
+      e.preventDefault();
+      return;
+    }
+    setDraggedProduct({ sectionIdx, productIdx });
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  const handleProductDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+  const handleProductDrop = (e, targetSectionIdx, targetProductIdx) => {
+    e.preventDefault();
+    if (draggedProduct.sectionIdx === null || 
+        (draggedProduct.sectionIdx === targetSectionIdx && draggedProduct.productIdx === targetProductIdx)) {
+      setDraggedProduct({ sectionIdx: null, productIdx: null });
+      return;
+    }
+    const newSections = JSON.parse(JSON.stringify(sections));
+    const sourceSection = newSections[draggedProduct.sectionIdx];
+    const [movedProduct] = sourceSection.products.splice(draggedProduct.productIdx, 1);
+    
+    // Adjust target index if moving within the same section and dragging down
+    let adjustedTargetIdx = targetProductIdx;
+    if (draggedProduct.sectionIdx === targetSectionIdx && draggedProduct.productIdx < targetProductIdx) {
+      adjustedTargetIdx = targetProductIdx;
+    }
+    
+    newSections[targetSectionIdx].products.splice(adjustedTargetIdx, 0, movedProduct);
+    setSections(newSections);
+    setDraggedProduct({ sectionIdx: null, productIdx: null });
+  };
+  const handleProductDragEnd = () => {
+    setDraggedProduct({ sectionIdx: null, productIdx: null });
   };
 
   const handleSaveClick = () => {
@@ -1338,11 +1409,32 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           <h2 style={{ fontSize: '12px', fontWeight: '600', marginBottom: '24px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Products by Section</h2>
           
           {sections.map((section, sectionIdx) => (
-            <div key={sectionIdx} style={{ marginBottom: '32px', paddingBottom: '32px', borderBottom: '1px solid #f0ede5' }}>
+            <div 
+              key={sectionIdx} 
+              draggable
+              onDragStart={(e) => handleSectionDragStart(e, sectionIdx)}
+              onDragOver={handleSectionDragOver}
+              onDrop={(e) => handleSectionDrop(e, sectionIdx)}
+              onDragEnd={handleSectionDragEnd}
+              style={{ 
+                marginBottom: '32px', 
+                paddingBottom: '32px', 
+                borderBottom: '1px solid #f0ede5',
+                cursor: 'move',
+                opacity: draggedSection === sectionIdx ? 0.5 : 1,
+                transition: 'opacity 0.2s'
+              }}
+            >
               <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'flex-end' }}>
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Section Name</label>
-                  <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", textTransform: 'uppercase', transition: 'border-color 0.2s' }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                  <span 
+                    style={{ fontSize: '18px', color: '#999', cursor: 'grab', userSelect: 'none' }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >☰</span>
+                  <div style={{ flex: 1 }}>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Section Name</label>
+                    <input type="text" value={section.name} onChange={(e) => handleSectionNameChange(sectionIdx, e.target.value)} placeholder="e.g., BAR, LOUNGE" style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", textTransform: 'uppercase', transition: 'border-color 0.2s' }} />
+                  </div>
                 </div>
                 {sections.length > 1 && (
                   <button onClick={() => handleRemoveSection(sectionIdx)} style={{ padding: '12px 20px', backgroundColor: '#fafaf8', color: brandCharcoal, border: '1px solid #e5e7eb', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
@@ -1352,13 +1444,41 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               </div>
               
               {section.products.map((product, productIdx) => (
-                <div key={productIdx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '12px', marginBottom: '16px', alignItems: 'end' }}>
+                <div 
+                  key={productIdx} 
+                  draggable
+                  onDragStart={(e) => handleProductDragStart(e, sectionIdx, productIdx)}
+                  onDragOver={handleProductDragOver}
+                  onDrop={(e) => handleProductDrop(e, sectionIdx, productIdx)}
+                  onDragEnd={handleProductDragEnd}
+                  style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'auto 2fr 1fr 1fr auto', 
+                    gap: '12px', 
+                    marginBottom: '16px', 
+                    alignItems: 'end',
+                    cursor: 'move',
+                    opacity: draggedProduct.sectionIdx === sectionIdx && draggedProduct.productIdx === productIdx ? 0.5 : 1,
+                    transition: 'opacity 0.2s',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    backgroundColor: draggedProduct.sectionIdx === sectionIdx && draggedProduct.productIdx === productIdx ? '#f0ede5' : 'transparent'
+                  }}
+                >
+                  <span 
+                    style={{ fontSize: '16px', color: '#999', cursor: 'grab', userSelect: 'none', alignSelf: 'center' }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  >☰</span>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Product</label>
-                    <select value={product.name} onChange={(e) => {
-                      const selected = catalog.find(p => p.name === e.target.value);
-                      if (selected) handleProductSelect(sectionIdx, productIdx, selected);
-                    }} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", backgroundColor: 'white', transition: 'border-color 0.2s' }}>
+                    <select 
+                      value={product.name} 
+                      onChange={(e) => {
+                        const selected = catalog.find(p => p.name === e.target.value);
+                        if (selected) handleProductSelect(sectionIdx, productIdx, selected);
+                      }} 
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", backgroundColor: 'white', transition: 'border-color 0.2s' }}>
                       <option value="">{product.name || 'Select product...'}</option>
                       {catalog.map((p, idx) => (
                         <option key={idx} value={p.name}>{p.name}</option>
@@ -1367,13 +1487,24 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Qty</label>
-                    <input type="number" min="1" value={product.quantity} onChange={(e) => handleProductQuantityChange(sectionIdx, productIdx, e.target.value)} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} />
+                    <input 
+                      type="number" 
+                      min="1" 
+                      value={product.quantity} 
+                      onChange={(e) => handleProductQuantityChange(sectionIdx, productIdx, e.target.value)} 
+                      onMouseDown={(e) => e.stopPropagation()}
+                      style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} 
+                    />
                   </div>
                   <div>
                     <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Price</label>
                     <input type="text" value={`$${product.price.toFixed(2)}`} disabled style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', backgroundColor: '#fafaf8', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} />
                   </div>
-                  <button onClick={() => handleRemoveProduct(sectionIdx, productIdx)} style={{ padding: '12px 16px', backgroundColor: '#fafaf8', color: brandCharcoal, border: '1px solid #e5e7eb', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}>
+                  <button 
+                    onClick={() => handleRemoveProduct(sectionIdx, productIdx)} 
+                    onMouseDown={(e) => e.stopPropagation()}
+                    style={{ padding: '12px 16px', backgroundColor: '#fafaf8', color: brandCharcoal, border: '1px solid #e5e7eb', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', whiteSpace: 'nowrap', fontFamily: "'Inter', sans-serif", transition: 'all 0.2s' }}
+                  >
                     Remove
                   </button>
                 </div>
