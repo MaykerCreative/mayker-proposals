@@ -1237,6 +1237,34 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     setSections([...sections, { name: '', products: [], type: 'products' }]);
   };
 
+  const handleAddImagePage = () => {
+    setSections([...sections, { name: '', products: [], type: 'image', imageData: '' }]);
+  };
+
+  const handleImageUpload = (sectionIdx, e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    // Check if it's an image
+    if (!file.type.match('image.*')) {
+      alert('Please select an image file (JPG or PNG)');
+      return;
+    }
+    
+    // Convert to base64
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const newSections = JSON.parse(JSON.stringify(sections));
+      newSections[sectionIdx].imageData = reader.result;
+      setSections(newSections);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImagePage = (sectionIdx) => {
+    setSections(sections.filter((_, i) => i !== sectionIdx));
+  };
+
   const handleSectionNameChange = (idx, newName) => {
     const newSections = [...sections];
     newSections[idx].name = newName;
