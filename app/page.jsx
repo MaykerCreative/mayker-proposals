@@ -170,6 +170,9 @@ function calculateTotal(proposal) {
 }
 
 function formatNumber(num) {
+  if (num === undefined || num === null || isNaN(num)) {
+    return '0.00';
+  }
   return num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
@@ -999,7 +1002,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 </tr>
                 <tr>
                   <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Delivery</td>
-                  <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.deliveryFee)}</td>
+                  <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
                 </tr>
                 <tr style={{ borderTop: '1px solid #e5e7eb' }}>
                   <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Subtotal</td>
