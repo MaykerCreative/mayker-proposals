@@ -742,7 +742,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
-      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } @page:first { margin: 0; } div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } thead { display: table-header-group; } .invoice-header-repeat { display: table-row !important; page-break-before: always; page-break-after: avoid; page-break-inside: avoid; } .invoice-header-repeat td { background-color: white !important; } }` }} />
+      <style dangerouslySetInnerHTML={{ __html: `@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); * { box-sizing: border-box; margin: 0; padding: 0; } body { font-family: 'Inter', sans-serif; } @media print { .no-print { display: none !important; } .print-break-after { page-break-after: always; } body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } @page { size: letter; margin: 0; } @page:first { margin: 0; } div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } thead { display: table-header-group !important; } tbody tr.invoice-header-repeat { display: table-row !important; page-break-before: always !important; page-break-after: avoid !important; page-break-inside: avoid !important; break-before: page !important; break-after: avoid !important; break-inside: avoid !important; } tbody tr.invoice-header-repeat td { background-color: white !important; padding: 20px 0 15px !important; border-bottom: 1px solid #e5e7eb !important; } tbody tr.invoice-colheaders { display: table-row !important; page-break-after: avoid !important; page-break-inside: avoid !important; } tbody tr.invoice-colheaders th { background-color: white !important; border-bottom: 1px solid #e5e7eb !important; } }` }} />
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
@@ -868,7 +868,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'center', fontFamily: "'Domaine Text', serif" }}>Invoice</h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', minHeight: 'calc(100vh - 200px)' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px', tableLayout: 'fixed' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '30px', tableLayout: 'fixed', borderSpacing: 0 }}>
             <colgroup>
               <col style={{ width: '15%' }} />
               <col style={{ width: '45%' }} />
@@ -876,7 +876,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               <col style={{ width: '15%' }} />
               <col style={{ width: '15%' }} />
             </colgroup>
-            <thead>
+            <thead style={{ display: 'table-header-group' }}>
               <tr style={{ borderBottom: '1px solid #e5e7eb' }}>
                 <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Section</th>
                 <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Product</th>
@@ -900,11 +900,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   const lineTotal = extendedPrice * product.quantity;
                   const rows = [];
                   
-                  // Insert repeating header every 20 rows (after row 0, 20, 40, etc.)
-                  if (globalIndex > 0 && globalIndex % 20 === 0) {
+                  // Insert repeating header every 10 rows to ensure it appears on new pages
+                  // More frequent insertion increases chance of headers appearing at page breaks
+                  if (globalIndex > 0 && globalIndex % 10 === 0) {
                     rows.push(
-                      <tr key={`header-${globalIndex}`} className="invoice-header-repeat" style={{ pageBreakBefore: 'always', backgroundColor: 'white' }}>
-                        <td colSpan="5" style={{ padding: '20px 0 15px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>
+                      <tr key={`header-${globalIndex}`} className="invoice-header-repeat" style={{ pageBreakBefore: 'always', breakBefore: 'page' }}>
+                        <td colSpan="5" style={{ padding: '20px 0 15px', borderBottom: '1px solid #e5e7eb' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
                               <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '4px' }}>MAYKER EVENTS</div>
@@ -923,12 +924,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     );
                     // Insert repeating column headers
                     rows.push(
-                      <tr key={`colheaders-${globalIndex}`} className="invoice-header-repeat" style={{ backgroundColor: 'white' }}>
-                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Section</th>
-                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Product</th>
-                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Qty</th>
-                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Unit Price</th>
-                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb', backgroundColor: 'white' }}>Total</th>
+                      <tr key={`colheaders-${globalIndex}`} className="invoice-colheaders">
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb' }}>Section</th>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb' }}>Product</th>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb' }}>Qty</th>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb' }}>Unit Price</th>
+                        <th style={{ padding: '8px 0', fontSize: '9px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.1em', color: '#666', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", borderBottom: '1px solid #e5e7eb' }}>Total</th>
                       </tr>
                     );
                   }
