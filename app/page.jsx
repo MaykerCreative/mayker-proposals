@@ -859,8 +859,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           });
         });
         
-        // Calculate how many products fit per page (approximately 20-22 rows)
-        const rowsPerPage = 20;
+        // Calculate how many products fit per page (approximately 23 rows)
+        const rowsPerPage = 23;
         const totalInvoicePages = Math.ceil(allProducts.length / rowsPerPage);
         
         // Invoice header component matching the screenshot
