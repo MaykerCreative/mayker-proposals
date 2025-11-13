@@ -481,10 +481,11 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   const handleProductSelect = (sectionIdx, productIdx, selectedProduct) => {
     const newSections = JSON.parse(JSON.stringify(sections));
     const existingProduct = newSections[sectionIdx].products[productIdx];
+    // Preserve existing note and quantity when selecting a new product
     newSections[sectionIdx].products[productIdx] = { 
-      ...selectedProduct, 
-      quantity: existingProduct.quantity || 1,
-      note: existingProduct.note || ''
+      ...selectedProduct,
+      quantity: existingProduct?.quantity || 1,
+      note: existingProduct?.note || '' // Preserve note if it exists
     };
     setSections(newSections);
   };
@@ -1385,10 +1386,11 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   const handleProductSelect = (sectionIdx, productIdx, selectedProduct) => {
     const newSections = JSON.parse(JSON.stringify(sections));
     const existingProduct = newSections[sectionIdx].products[productIdx];
+    // Preserve existing note and quantity when selecting a new product
     newSections[sectionIdx].products[productIdx] = { 
-      ...selectedProduct, 
-      quantity: existingProduct.quantity || 1,
-      note: existingProduct.note || ''
+      ...selectedProduct,
+      quantity: existingProduct?.quantity || 1,
+      note: existingProduct?.note || '' // Preserve note if it exists
     };
     setSections(newSections);
   };
@@ -1647,12 +1649,15 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     
     // Debug: Check sections state before saving
     console.log('=== BEFORE SAVING ===');
-    console.log('Sections state:', sections.map(s => ({
+    console.log('Sections state (full):', JSON.stringify(sections, null, 2));
+    console.log('Sections state (summary):', sections.map(s => ({
       name: s.name,
       products: s.products ? s.products.map(p => ({ 
         name: p.name, 
         note: p.note, 
-        hasNote: 'note' in p 
+        hasNote: 'note' in p,
+        noteType: typeof p.note,
+        allKeys: Object.keys(p)
       })) : []
     })));
     
