@@ -884,7 +884,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           thead { display: table-header-group !important; } 
           thead tr { page-break-inside: avoid; } 
           thead td, thead th { background-color: white !important; } 
-          tbody tr[style*="page-break-before"] { page-break-before: always !important; break-before: page !important; } 
+          tbody tr[style*="page-break-before"] { page-break-before: always !important; break-before: page !important; }
+          .no-page-break { page-break-inside: avoid !important; break-inside: avoid !important; } 
         }
       ` }} />
 
@@ -1030,9 +1031,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                       </h3>
                       <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Quantity: {product.quantity}</p>
                       {product.dimensions && (
-                        <p style={{ fontSize: '10px', color: '#666', marginBottom: product.note ? '4px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
+                        <p style={{ fontSize: '10px', color: '#666', marginBottom: (product.note && product.note.trim()) ? '4px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
                       )}
-                      {product.note && (
+                      {product.note && product.note.trim() && (
                         <p style={{ fontSize: '10px', color: '#666', fontStyle: 'italic', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.note}</p>
                       )}
                     </div>
@@ -1161,7 +1162,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                           <div>
                             {product.name}
-                            {product.note && (
+                            {product.note && product.note.trim() && (
                               <div style={{ fontSize: '10px', color: '#888', fontStyle: 'italic', marginTop: '2px' }}>{product.note}</div>
                             )}
                           </div>
@@ -1182,9 +1183,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               </table>
               
               {isLastPage && (
-                <div style={{ marginTop: '40px', paddingTop: '20px' }}>
-                  <div style={{ marginLeft: 'auto', width: '30%' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div className="no-page-break" style={{ marginTop: '40px', paddingTop: '20px' }}>
+                  <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
+                    <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
                         <tr>
                           <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right', width: '50%' }}>Product Subtotal</td>
