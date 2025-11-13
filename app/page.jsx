@@ -727,6 +727,20 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
 
 function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  
+  // Debug: log sections when viewing
+  console.log('ViewProposalView - Loaded sections:', sections.length);
+  const imagePages = sections.filter(s => (s.type === 'image' || (!s.products || s.products.length === 0)) && s.imageData);
+  console.log('ViewProposalView - Image pages found:', imagePages.length);
+  if (imagePages.length > 0) {
+    console.log('ViewProposalView - Image page details:', imagePages.map(ip => ({
+      type: ip.type,
+      hasImageData: !!ip.imageData,
+      imageDataLength: ip.imageData ? ip.imageData.length : 0,
+      imageDataPreview: ip.imageData ? ip.imageData.substring(0, 50) + '...' : 'none'
+    })));
+  }
+  
   const totals = calculateDetailedTotals(proposal);
   const brandTaupe = '#545142';
   const brandCharcoal = '#2C2C2C';
@@ -1401,9 +1415,29 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     // Debug: log to check if image data is included
     console.log('Saving sections:', sectionsToSave.map(s => ({
       type: s.type,
+      name: s.name,
       hasImageData: !!s.imageData,
-      imageDataLength: s.imageData ? s.imageData.length : 0
+      imageDataLength: s.imageData ? s.imageData.length : 0,
+      imageDataPreview: s.imageData ? s.imageData.substring(0, 50) + '...' : 'none',
+      productsCount: s.products ? s.products.length : 0
     })));
+    
+    // Check for image pages specifically
+    const imagePages = sectionsToSave.filter(s => s.type === 'image');
+    console.log('Image pages found:', imagePages.length);
+    if (imagePages.length > 0) {
+      console.log('Image page details:', imagePages.map(ip => ({
+        hasImageData: !!ip.imageData,
+        imageDataLength: ip.imageData ? ip.imageData.length : 0
+      })));
+    }
+    
+    // Check total size of sectionsJSON
+    const sectionsJSONString = JSON.stringify(sectionsToSave);
+    console.log('Total sectionsJSON size:', sectionsJSONString.length, 'characters');
+    if (sectionsJSONString.length > 50000) {
+      console.warn('WARNING: sectionsJSON exceeds Google Sheets cell limit (50,000 chars). Data may be truncated!');
+    }
     
     onSave(finalData);
   };
