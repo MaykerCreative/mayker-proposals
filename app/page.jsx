@@ -1713,9 +1713,31 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                         value={section.imageUrl || ''}
                         onChange={(e) => {
                           const newSections = JSON.parse(JSON.stringify(sections));
-                          newSections[sectionIdx].imageUrl = e.target.value;
+                          let url = e.target.value;
+                          
+                          // Convert Google Drive folder/file links to direct image URLs
+                          if (url.includes('drive.google.com')) {
+                            // Extract file ID from various Google Drive URL formats
+                            let fileId = null;
+                            
+                            // Format: /file/d/FILE_ID/view or /file/d/FILE_ID/edit
+                            const fileMatch = url.match(/\/file\/d\/([a-zA-Z0-9_-]+)/);
+                            if (fileMatch) {
+                              fileId = fileMatch[1];
+                            }
+                            
+                            // Format: /folders/FOLDER_ID (can't convert folder links directly)
+                            // User needs to open the file first
+                            
+                            if (fileId) {
+                              // Convert to direct image URL
+                              url = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                            }
+                          }
+                          
+                          newSections[sectionIdx].imageUrl = url;
                           // Clear imageData if URL is provided
-                          if (e.target.value) {
+                          if (url) {
                             newSections[sectionIdx].imageData = '';
                           }
                           setSections(newSections);
@@ -1723,7 +1745,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                         style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }}
                       />
                       <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>
-                        For Google Drive: Right-click image → "Get link" → Change "view" to "uc" in URL, or use a publicly accessible image URL
+                        <strong>For Google Drive:</strong> Open the image file (not the folder) → Right-click → "Get link" → Paste here. The link will be automatically converted to a direct image URL.
+                        <br />
+                        <strong>Note:</strong> Make sure the file is set to "Anyone with the link can view" in sharing settings.
                       </div>
                     </div>
                     
