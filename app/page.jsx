@@ -498,8 +498,15 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
 
   const handleProductNoteChange = (sectionIdx, productIdx, newNote) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products[productIdx].note = newNote;
-    setSections(newSections);
+    // Ensure the product exists and update note
+    if (newSections[sectionIdx] && newSections[sectionIdx].products && newSections[sectionIdx].products[productIdx]) {
+      newSections[sectionIdx].products[productIdx] = {
+        ...newSections[sectionIdx].products[productIdx],
+        note: newNote || ''
+      };
+      console.log('Note changed (CreateProposalView):', { sectionIdx, productIdx, newNote, product: newSections[sectionIdx].products[productIdx] });
+      setSections(newSections);
+    }
   };
 
   const handleRemoveProduct = (sectionIdx, productIdx) => {
@@ -1403,8 +1410,15 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
 
   const handleProductNoteChange = (sectionIdx, productIdx, newNote) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products[productIdx].note = newNote;
-    setSections(newSections);
+    // Ensure the product exists and update note
+    if (newSections[sectionIdx] && newSections[sectionIdx].products && newSections[sectionIdx].products[productIdx]) {
+      newSections[sectionIdx].products[productIdx] = {
+        ...newSections[sectionIdx].products[productIdx],
+        note: newNote || ''
+      };
+      console.log('Note changed (EditProposalView):', { sectionIdx, productIdx, newNote, product: newSections[sectionIdx].products[productIdx] });
+      setSections(newSections);
+    }
   };
 
   const handleRemoveProduct = (sectionIdx, productIdx) => {
@@ -1687,13 +1701,15 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         type: section.type || 'products',
         name: section.name || '',
         products: (section.products || []).map(product => {
-          // Preserve all product fields including note
-          const savedProduct = { ...product };
-          // Ensure note field exists (even if empty)
-          if (!('note' in savedProduct)) {
-            savedProduct.note = '';
-          }
-          return savedProduct;
+          // Explicitly preserve ALL product fields, ensuring note is included
+          return {
+            name: product.name || '',
+            quantity: product.quantity || 1,
+            price: product.price || 0,
+            imageUrl: product.imageUrl || '',
+            dimensions: product.dimensions || '',
+            note: product.note || '' // Explicitly include note field
+          };
         })
       };
     });
