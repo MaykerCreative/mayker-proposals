@@ -32,7 +32,7 @@ function getTimezoneFromState(stateCode) {
     'LA': 'America/Chicago', 'ME': 'America/New_York', 'MD': 'America/New_York',
     'MA': 'America/New_York', 'MI': 'America/Detroit', 'MN': 'America/Chicago',
     'MS': 'America/Chicago', 'MO': 'America/Chicago', 'MT': 'America/Denver',
-    'NE': 'America/Chicago', 'NV': 'America/Los_Angeles', 'NH': 'America/New_York',
+      'NE': 'America/Chicago', 'NV': 'America/Los_Angeles', 'NH': 'America/New_York',
     'NJ': 'America/New_York', 'NM': 'America/Denver', 'NY': 'America/New_York',
     'NC': 'America/New_York', 'ND': 'America/Chicago', 'OH': 'America/New_York',
     'OK': 'America/Chicago', 'OR': 'America/Los_Angeles', 'PA': 'America/New_York',
@@ -743,15 +743,17 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   // Debug: log sections when viewing
   console.log('ViewProposalView - Loaded sections:', sections.length);
-  const imagePages = sections.filter(s => (s.type === 'image' || (!s.products || s.products.length === 0)) && (s.imageData || s.imageUrl));
+  const imagePages = sections.filter(s => (s.type === 'image' || (!s.products || s.products.length === 0)) && (s.imageDriveId || s.imageData || s.imageUrl));
   console.log('ViewProposalView - Image pages found:', imagePages.length);
   if (imagePages.length > 0) {
     console.log('ViewProposalView - Image page details:', imagePages.map(ip => ({
       type: ip.type,
+      hasImageDriveId: !!ip.imageDriveId,
+      imageDriveId: ip.imageDriveId || 'none',
       hasImageUrl: !!ip.imageUrl,
+      imageUrl: ip.imageUrl ? ip.imageUrl.substring(0, 50) + '...' : 'none',
       hasImageData: !!ip.imageData,
       imageDataLength: ip.imageData ? ip.imageData.length : 0,
-      imageUrl: ip.imageUrl ? ip.imageUrl.substring(0, 50) + '...' : 'none',
       imageDataPreview: ip.imageData ? ip.imageData.substring(0, 50) + '...' : 'none'
     })));
   }
@@ -1595,9 +1597,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     console.log('Saving sections:', sectionsToSave.map(s => ({
       type: s.type,
       name: s.name,
+      hasImageDriveId: !!s.imageDriveId,
+      imageDriveId: s.imageDriveId || 'none',
+      hasImageUrl: !!s.imageUrl,
+      imageUrl: s.imageUrl ? s.imageUrl.substring(0, 50) + '...' : 'none',
       hasImageData: !!s.imageData,
       imageDataLength: s.imageData ? s.imageData.length : 0,
-      imageDataPreview: s.imageData ? s.imageData.substring(0, 50) + '...' : 'none',
       productsCount: s.products ? s.products.length : 0
     })));
     
@@ -1606,10 +1611,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     console.log('Image pages found:', imagePages.length);
     if (imagePages.length > 0) {
       console.log('Image page details:', imagePages.map(ip => ({
+        hasImageDriveId: !!ip.imageDriveId,
+        imageDriveId: ip.imageDriveId || 'none',
         hasImageUrl: !!ip.imageUrl,
+        imageUrl: ip.imageUrl ? ip.imageUrl.substring(0, 50) + '...' : 'none',
         hasImageData: !!ip.imageData,
-        imageDataLength: ip.imageData ? ip.imageData.length : 0,
-        imageUrl: ip.imageUrl ? ip.imageUrl.substring(0, 50) + '...' : 'none'
+        imageDataLength: ip.imageData ? ip.imageData.length : 0
       })));
     }
     
@@ -1865,6 +1872,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                       <div style={{ marginTop: '16px', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '16px', backgroundColor: '#fafaf8' }}>
                         {section.imageDriveId ? (
                           <>
+                            <div style={{ fontSize: '11px', color: '#059669', marginBottom: '8px', fontFamily: "'Inter', sans-serif", fontWeight: '500' }}>
+                              ✓ Google Drive file ID detected: {section.imageDriveId.substring(0, 20)}...
+                            </div>
                             <img 
                               src={`https://drive.google.com/thumbnail?id=${section.imageDriveId}&sz=w1000`}
                               alt="Google Drive image" 
@@ -1886,24 +1896,24 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                             </div>
                           </>
                         ) : (
-                          <img 
-                            src={section.imageData || section.imageUrl} 
-                            alt="Uploaded image" 
-                            style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px' }}
-                            crossOrigin="anonymous"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              const errorDiv = e.target.nextSibling;
-                              if (errorDiv) {
-                                errorDiv.style.display = 'block';
-                              }
-                            }}
-                          />
-                        )}
-                        {!section.imageDriveId && (
-                          <div style={{ display: 'none', color: '#d32f2f', fontSize: '12px', fontFamily: "'Inter', sans-serif", padding: '12px', backgroundColor: '#ffebee', borderRadius: '4px' }}>
-                            <strong>Error loading image.</strong> Please check the URL or use the "Upload Image File" option above.
-                          </div>
+                          <>
+                            <img 
+                              src={section.imageData || section.imageUrl} 
+                              alt="Uploaded image" 
+                              style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px' }}
+                              crossOrigin="anonymous"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                                const errorDiv = e.target.nextSibling;
+                                if (errorDiv) {
+                                  errorDiv.style.display = 'block';
+                                }
+                              }}
+                            />
+                            <div style={{ display: 'none', color: '#d32f2f', fontSize: '12px', fontFamily: "'Inter', sans-serif", padding: '12px', backgroundColor: '#ffebee', borderRadius: '4px' }}>
+                              <strong>Error loading image.</strong> Please check the URL or use the "Upload Image File" option above.
+                            </div>
+                          </>
                         )}
                       </div>
                     )}
