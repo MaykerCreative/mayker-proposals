@@ -791,8 +791,15 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   // Debug: log sections when viewing
   console.log('ViewProposalView - Loaded sections:', sections.length);
   const allProducts = sections.flatMap(s => s.products || []);
-  const productsWithNotes = allProducts.filter(p => p.note && p.note.trim());
   console.log('ViewProposalView - Total products:', allProducts.length);
+  console.log('ViewProposalView - Sample products (first 3):', allProducts.slice(0, 3).map(p => ({ 
+    name: p.name, 
+    hasNoteField: 'note' in p, 
+    noteValue: p.note, 
+    noteType: typeof p.note,
+    allKeys: Object.keys(p)
+  })));
+  const productsWithNotes = allProducts.filter(p => p.note && p.note.trim());
   console.log('ViewProposalView - Products with notes:', productsWithNotes.length);
   if (productsWithNotes.length > 0) {
     console.log('ViewProposalView - Sample products with notes:', productsWithNotes.slice(0, 3).map(p => ({ name: p.name, note: p.note })));
@@ -1663,7 +1670,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       return {
         type: section.type || 'products',
         name: section.name || '',
-        products: section.products || []
+        products: (section.products || []).map(product => ({
+          ...product,
+          note: product.note || '' // Ensure note field is always present
+        }))
       };
     });
     
@@ -1687,7 +1697,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       hasImageData: !!s.imageData,
       imageDataLength: s.imageData ? s.imageData.length : 0,
       productsCount: s.products ? s.products.length : 0,
-      productsWithNotes: s.products ? s.products.filter(p => p.note && p.note.trim()).map(p => ({ name: p.name, note: p.note })) : []
+      productsWithNotes: s.products ? s.products.filter(p => p.note && p.note.trim()).map(p => ({ name: p.name, note: p.note })) : [],
+      allProductsSample: s.products && s.products.length > 0 ? s.products.slice(0, 2).map(p => ({ name: p.name, hasNote: !!p.note, note: p.note || '(empty)' })) : []
     })));
     
     // Check for image pages specifically
