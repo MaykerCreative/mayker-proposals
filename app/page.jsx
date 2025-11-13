@@ -1645,6 +1645,17 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       return `${displayHour}:${minutes} ${ampm}`;
     };
     
+    // Debug: Check sections state before saving
+    console.log('=== BEFORE SAVING ===');
+    console.log('Sections state:', sections.map(s => ({
+      name: s.name,
+      products: s.products ? s.products.map(p => ({ 
+        name: p.name, 
+        note: p.note, 
+        hasNote: 'note' in p 
+      })) : []
+    })));
+    
     // Ensure all sections have proper structure before saving
     const sectionsToSave = sections.map(section => {
       if (section.type === 'image') {
@@ -1670,10 +1681,15 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       return {
         type: section.type || 'products',
         name: section.name || '',
-        products: (section.products || []).map(product => ({
-          ...product,
-          note: product.note || '' // Ensure note field is always present
-        }))
+        products: (section.products || []).map(product => {
+          // Preserve all product fields including note
+          const savedProduct = { ...product };
+          // Ensure note field exists (even if empty)
+          if (!('note' in savedProduct)) {
+            savedProduct.note = '';
+          }
+          return savedProduct;
+        })
       };
     });
     
@@ -1698,7 +1714,13 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       imageDataLength: s.imageData ? s.imageData.length : 0,
       productsCount: s.products ? s.products.length : 0,
       productsWithNotes: s.products ? s.products.filter(p => p.note && p.note.trim()).map(p => ({ name: p.name, note: p.note })) : [],
-      allProductsSample: s.products && s.products.length > 0 ? s.products.slice(0, 2).map(p => ({ name: p.name, hasNote: !!p.note, note: p.note || '(empty)' })) : []
+      allProductsSample: s.products && s.products.length > 0 ? s.products.slice(0, 3).map(p => ({ 
+        name: p.name, 
+        hasNote: 'note' in p, 
+        noteValue: p.note, 
+        noteType: typeof p.note,
+        allKeys: Object.keys(p)
+      })) : []
     })));
     
     // Check for image pages specifically
