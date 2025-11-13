@@ -204,7 +204,11 @@ export default function ProposalApp() {
 
   const fetchProposals = async () => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec');
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache'
+      });
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
@@ -248,12 +252,16 @@ export default function ProposalApp() {
       catalog={catalog} 
       onSave={async (formData) => {
         try {
-          await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+          const saveResponse = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
             method: 'POST',
             headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify(formData),
-            mode: 'no-cors'
+            mode: 'cors'
           });
+          const saveResult = await saveResponse.json();
+          if (saveResult.success === false) {
+            throw new Error(saveResult.error || 'Failed to save proposal');
+          }
           alert('Proposal created successfully!');
           setIsCreatingNew(false);
           fetchProposals();
@@ -701,12 +709,17 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
         pdfBase64: null
       };
       
-      await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+      const saveResponse = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(payload),
-        mode: 'no-cors'
+        mode: 'cors'
       });
+      
+      const saveResult = await saveResponse.json();
+      if (saveResult.success === false) {
+        throw new Error(saveResult.error || 'Failed to save proposal');
+      }
       
       const successMsg = 'Proposal saved successfully. Use the "Print / Export as PDF" button to download the PDF.';
       alert(successMsg);
@@ -1408,7 +1421,6 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       });
       
       // Upload to Google Drive via Apps Script
-      // Use a temporary CORS proxy or try direct fetch
       try {
         const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
           method: 'POST',
@@ -1419,10 +1431,11 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             imageBase64: base64,
             imageName: file.name,
             mimeType: compressedBlob.type
-          })
+          }),
+          mode: 'cors'
         });
         
-        // Try to read response (may fail due to CORS)
+        // Read response
         let result;
         try {
           result = await response.json();
