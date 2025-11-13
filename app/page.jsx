@@ -279,11 +279,13 @@ export default function ProposalApp() {
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
         
+        /* Font loading with fallbacks - fonts will fall back to system fonts if files aren't found */
         @font-face {
           font-family: 'Neue Haas Unica';
           src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
           font-weight: 400;
           font-style: normal;
+          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
         }
         
         @font-face {
@@ -291,6 +293,7 @@ export default function ProposalApp() {
           src: url('/assets/Neue Haas Unica Medium-abce.ttf') format('truetype');
           font-weight: 500;
           font-style: normal;
+          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
         }
         
         @font-face {
@@ -298,6 +301,16 @@ export default function ProposalApp() {
           src: url('/assets/TestDomaineText-Light.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
+          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
+        }
+        
+        /* Fallback font stacks */
+        .font-neue-haas {
+          font-family: 'Neue Haas Unica', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        
+        .font-domaine {
+          font-family: 'Domaine Text', Georgia, 'Times New Roman', serif;
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; } 
@@ -730,13 +743,15 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   // Debug: log sections when viewing
   console.log('ViewProposalView - Loaded sections:', sections.length);
-  const imagePages = sections.filter(s => (s.type === 'image' || (!s.products || s.products.length === 0)) && s.imageData);
+  const imagePages = sections.filter(s => (s.type === 'image' || (!s.products || s.products.length === 0)) && (s.imageData || s.imageUrl));
   console.log('ViewProposalView - Image pages found:', imagePages.length);
   if (imagePages.length > 0) {
     console.log('ViewProposalView - Image page details:', imagePages.map(ip => ({
       type: ip.type,
+      hasImageUrl: !!ip.imageUrl,
       hasImageData: !!ip.imageData,
       imageDataLength: ip.imageData ? ip.imageData.length : 0,
+      imageUrl: ip.imageUrl ? ip.imageUrl.substring(0, 50) + '...' : 'none',
       imageDataPreview: ip.imageData ? ip.imageData.substring(0, 50) + '...' : 'none'
     })));
   }
@@ -767,11 +782,13 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
+        /* Font loading with fallbacks - fonts will fall back to system fonts if files aren't found */
         @font-face {
           font-family: 'Neue Haas Unica';
           src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
           font-weight: 400;
           font-style: normal;
+          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
         }
         
         @font-face {
@@ -779,6 +796,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           src: url('/assets/Neue Haas Unica Medium-abce.ttf') format('truetype');
           font-weight: 500;
           font-style: normal;
+          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
         }
         
         @font-face {
@@ -786,6 +804,16 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           src: url('/assets/TestDomaineText-Light.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
+          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
+        }
+        
+        /* Fallback font stacks */
+        .font-neue-haas {
+          font-family: 'Neue Haas Unica', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+        }
+        
+        .font-domaine {
+          font-family: 'Domaine Text', Georgia, 'Times New Roman', serif;
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; } 
@@ -841,7 +869,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         sections.forEach((section, sectionIndex) => {
           // Check if this is an image page (support both new format with type and legacy format)
-          const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && section.imageData;
+          // Image page can have either imageData (base64) or imageUrl
+          const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageData || section.imageUrl);
           if (isImagePage) {
             const currentPageNum = pageCounter++;
             sectionPages.push(
@@ -867,9 +896,17 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 200px)' }}>
                   <img 
-                    src={section.imageData} 
+                    src={section.imageUrl || section.imageData} 
                     alt="Floor plan or collage" 
                     style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 200px)', objectFit: 'contain' }}
+                    onError={(e) => {
+                      console.error('Error loading image:', section.imageUrl || 'base64 data');
+                      e.target.style.display = 'none';
+                      const errorDiv = document.createElement('div');
+                      errorDiv.style.cssText = 'color: #d32f2f; text-align: center; padding: 20px; font-family: Inter, sans-serif;';
+                      errorDiv.textContent = 'Error loading image. Please check the URL or re-upload the image.';
+                      e.target.parentElement.appendChild(errorDiv);
+                    }}
                   />
                 </div>
                 
@@ -1197,12 +1234,16 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     // Ensure all sections have a type field for backward compatibility
     return parsed.map(section => {
       if (!section.type) {
-        // If it has imageData but no products, it's an image page
-        if (section.imageData && (!section.products || section.products.length === 0)) {
-          return { ...section, type: 'image' };
+        // If it has imageData or imageUrl but no products, it's an image page
+        if ((section.imageData || section.imageUrl) && (!section.products || section.products.length === 0)) {
+          return { ...section, type: 'image', imageUrl: section.imageUrl || '' };
         }
         // Otherwise it's a product section
         return { ...section, type: 'products' };
+      }
+      // Ensure imageUrl exists for image pages
+      if (section.type === 'image') {
+        return { ...section, imageUrl: section.imageUrl || '' };
       }
       return section;
     });
@@ -1272,7 +1313,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   };
 
   const handleAddImagePage = () => {
-    setSections([...sections, { name: '', products: [], type: 'image', imageData: '' }]);
+    setSections([...sections, { name: '', products: [], type: 'image', imageData: '', imageUrl: '' }]);
   };
 
   const handleImageUpload = (sectionIdx, e) => {
@@ -1434,11 +1475,22 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     // Ensure all sections have proper structure before saving
     const sectionsToSave = sections.map(section => {
       if (section.type === 'image') {
+        // Prefer URL over base64 to avoid size limits
+        // Only include imageData if URL is not provided and data is small enough
+        const imageData = section.imageUrl ? '' : (section.imageData || '');
+        const imageUrl = section.imageUrl || '';
+        
+        // If using base64, check size and warn
+        if (imageData && imageData.length > 40000) {
+          alert('Warning: Image data is very large. Consider using a URL instead (Google Drive, etc.) to avoid data loss.');
+        }
+        
         return {
           type: 'image',
           name: section.name || '',
           products: [],
-          imageData: section.imageData || ''
+          imageUrl: imageUrl,
+          imageData: imageData // Only include if URL is not used
         };
       }
       return {
@@ -1472,8 +1524,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     console.log('Image pages found:', imagePages.length);
     if (imagePages.length > 0) {
       console.log('Image page details:', imagePages.map(ip => ({
+        hasImageUrl: !!ip.imageUrl,
         hasImageData: !!ip.imageData,
-        imageDataLength: ip.imageData ? ip.imageData.length : 0
+        imageDataLength: ip.imageData ? ip.imageData.length : 0,
+        imageUrl: ip.imageUrl ? ip.imageUrl.substring(0, 50) + '...' : 'none'
       })));
     }
     
@@ -1642,21 +1696,51 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                     </div>
                     
                     <div style={{ marginBottom: '16px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Upload Image File</label>
                       <input 
                         type="file" 
                         accept="image/jpeg,image/jpg,image/png" 
                         onChange={(e) => handleImageUpload(sectionIdx, e)}
-                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }}
+                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif", marginBottom: '12px' }}
                       />
                     </div>
                     
-                    {section.imageData && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>OR Enter Image URL (Google Drive, etc.)</label>
+                      <input 
+                        type="text" 
+                        placeholder="https://drive.google.com/file/d/... or any image URL"
+                        value={section.imageUrl || ''}
+                        onChange={(e) => {
+                          const newSections = JSON.parse(JSON.stringify(sections));
+                          newSections[sectionIdx].imageUrl = e.target.value;
+                          // Clear imageData if URL is provided
+                          if (e.target.value) {
+                            newSections[sectionIdx].imageData = '';
+                          }
+                          setSections(newSections);
+                        }}
+                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }}
+                      />
+                      <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>
+                        For Google Drive: Right-click image → "Get link" → Change "view" to "uc" in URL, or use a publicly accessible image URL
+                      </div>
+                    </div>
+                    
+                    {(section.imageData || section.imageUrl) && (
                       <div style={{ marginTop: '16px', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '16px', backgroundColor: '#fafaf8' }}>
                         <img 
-                          src={section.imageData} 
+                          src={section.imageData || section.imageUrl} 
                           alt="Uploaded image" 
                           style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px' }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'block';
+                          }}
                         />
+                        <div style={{ display: 'none', color: '#d32f2f', fontSize: '12px', fontFamily: "'Inter', sans-serif" }}>
+                          Error loading image. Please check the URL or try uploading the file directly.
+                        </div>
                       </div>
                     )}
                   </div>
