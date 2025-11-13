@@ -482,11 +482,23 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     const newSections = JSON.parse(JSON.stringify(sections));
     const existingProduct = newSections[sectionIdx].products[productIdx];
     // Preserve existing note and quantity when selecting a new product
-    newSections[sectionIdx].products[productIdx] = { 
-      ...selectedProduct,
-      quantity: existingProduct?.quantity || 1,
-      note: existingProduct?.note || '' // Preserve note if it exists
-    };
+    // IMPORTANT: Only update if the product name actually changed to avoid overwriting notes
+    if (existingProduct?.name === selectedProduct.name) {
+      // Same product selected - don't overwrite, just ensure catalog properties are up to date
+      newSections[sectionIdx].products[productIdx] = {
+        ...existingProduct,
+        ...selectedProduct, // Update catalog properties (price, imageUrl, dimensions)
+        quantity: existingProduct.quantity || 1,
+        note: existingProduct.note || '' // Keep existing note
+      };
+    } else {
+      // Different product - preserve note from existing product
+      newSections[sectionIdx].products[productIdx] = { 
+        ...selectedProduct,
+        quantity: existingProduct?.quantity || 1,
+        note: existingProduct?.note || '' // Preserve note if it exists
+      };
+    }
     setSections(newSections);
   };
 
@@ -1339,10 +1351,14 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       if (section.products && Array.isArray(section.products)) {
         return {
           ...section,
-          products: section.products.map(product => ({
-            ...product,
-            note: product.note || ''
-          }))
+          products: section.products.map(product => {
+            // Ensure note field exists - check if it's undefined vs empty string
+            const productWithNote = { ...product };
+            if (!('note' in productWithNote)) {
+              productWithNote.note = '';
+            }
+            return productWithNote;
+          })
         };
       }
       return section;
@@ -1394,11 +1410,23 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     const newSections = JSON.parse(JSON.stringify(sections));
     const existingProduct = newSections[sectionIdx].products[productIdx];
     // Preserve existing note and quantity when selecting a new product
-    newSections[sectionIdx].products[productIdx] = { 
-      ...selectedProduct,
-      quantity: existingProduct?.quantity || 1,
-      note: existingProduct?.note || '' // Preserve note if it exists
-    };
+    // IMPORTANT: Only update if the product name actually changed to avoid overwriting notes
+    if (existingProduct?.name === selectedProduct.name) {
+      // Same product selected - don't overwrite, just ensure catalog properties are up to date
+      newSections[sectionIdx].products[productIdx] = {
+        ...existingProduct,
+        ...selectedProduct, // Update catalog properties (price, imageUrl, dimensions)
+        quantity: existingProduct.quantity || 1,
+        note: existingProduct.note || '' // Keep existing note
+      };
+    } else {
+      // Different product - preserve note from existing product
+      newSections[sectionIdx].products[productIdx] = { 
+        ...selectedProduct,
+        quantity: existingProduct?.quantity || 1,
+        note: existingProduct?.note || '' // Preserve note if it exists
+      };
+    }
     setSections(newSections);
   };
 
