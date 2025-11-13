@@ -733,7 +733,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   const productsPerPage = 9;
   const totalSectionPages = sections.reduce((total, section) => {
-    return total + Math.ceil(section.products.length / productsPerPage);
+    // Image pages count as 1 page
+    if (section.type === 'image' && section.imageData) {
+      return total + 1;
+    }
+    // Product sections count based on number of products
+    return total + Math.ceil((section.products?.length || 0) / productsPerPage);
   }, 0);
   
   const invoicePageNum = 1 + totalSectionPages + 1;
@@ -821,8 +826,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         const sectionPages = [];
         
         sections.forEach((section, sectionIndex) => {
-          // Check if this is an image page
-          if (section.type === 'image' && section.imageData) {
+          // Check if this is an image page (support both new format with type and legacy format)
+          const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && section.imageData;
+          if (isImagePage) {
             const currentPageNum = pageCounter++;
             sectionPages.push(
               <div 
@@ -1172,7 +1178,21 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     status: proposal.status || 'Pending',
     projectNumber: proposal.projectNumber || ''
   });
-  const [sections, setSections] = useState(JSON.parse(proposal.sectionsJSON || '[]'));
+  const [sections, setSections] = useState(() => {
+    const parsed = JSON.parse(proposal.sectionsJSON || '[]');
+    // Ensure all sections have a type field for backward compatibility
+    return parsed.map(section => {
+      if (!section.type) {
+        // If it has imageData but no products, it's an image page
+        if (section.imageData && (!section.products || section.products.length === 0)) {
+          return { ...section, type: 'image' };
+        }
+        // Otherwise it's a product section
+        return { ...section, type: 'products' };
+      }
+      return section;
+    });
+  });
   const [draggedSection, setDraggedSection] = useState(null);
   const [draggedProduct, setDraggedProduct] = useState({ sectionIdx: null, productIdx: null });
 
@@ -1352,14 +1372,39 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       return `${displayHour}:${minutes} ${ampm}`;
     };
     
+    // Ensure all sections have proper structure before saving
+    const sectionsToSave = sections.map(section => {
+      if (section.type === 'image') {
+        return {
+          type: 'image',
+          name: section.name || '',
+          products: [],
+          imageData: section.imageData || ''
+        };
+      }
+      return {
+        type: section.type || 'products',
+        name: section.name || '',
+        products: section.products || []
+      };
+    });
+    
     const finalData = {
       ...formData,
       clientName: clientNameWithoutVersion,
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
-      sectionsJSON: JSON.stringify(sections),
+      sectionsJSON: JSON.stringify(sectionsToSave),
       generatePDF: true
     };
+    
+    // Debug: log to check if image data is included
+    console.log('Saving sections:', sectionsToSave.map(s => ({
+      type: s.type,
+      hasImageData: !!s.imageData,
+      imageDataLength: s.imageData ? s.imageData.length : 0
+    })));
+    
     onSave(finalData);
   };
 
