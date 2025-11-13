@@ -699,16 +699,6 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                       Remove
                     </button>
                   </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Note (e.g., Group A Lounge, Paired with Bistros)</label>
-                    <input 
-                      type="text" 
-                      value={product.note || ''} 
-                      onChange={(e) => handleProductNoteChange(sectionIdx, productIdx, e.target.value)} 
-                      placeholder="Optional note..."
-                      style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
-                    />
-                  </div>
                 </div>
               ))}
               
@@ -1058,10 +1048,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                       </h3>
                       <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Quantity: {product.quantity}</p>
                       {product.dimensions && (
-                        <p style={{ fontSize: '10px', color: '#666', marginBottom: (product.note && product.note.trim()) ? '4px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
-                      )}
-                      {product.note && product.note.trim() && (
-                        <p style={{ fontSize: '10px', color: '#666', fontStyle: 'italic', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.note}</p>
+                        <p style={{ fontSize: '10px', color: '#666', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
                       )}
                     </div>
                   ))}
@@ -1187,12 +1174,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                           {showSectionName ? section.name : ''}
                         </td>
                         <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                          <div>
-                            {product.name}
-                            {product.note && product.note.trim() && (
-                              <div style={{ fontSize: '10px', color: '#888', fontStyle: 'italic', marginTop: '2px' }}>{product.note}</div>
-                            )}
-                          </div>
+                          {product.name}
                         </td>
                         <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                           {product.quantity}
@@ -2169,17 +2151,6 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                     >
                       Remove
                     </button>
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Note (e.g., Group A Lounge, Paired with Bistros)</label>
-                    <input 
-                      type="text" 
-                      value={product.note || ''} 
-                      onChange={(e) => handleProductNoteChange(sectionIdx, productIdx, e.target.value)} 
-                      onMouseDown={(e) => e.stopPropagation()}
-                      placeholder="Optional note..."
-                      style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} 
-                    />
                   </div>
                 </div>
               ))}
