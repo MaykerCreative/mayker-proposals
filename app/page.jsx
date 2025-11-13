@@ -772,10 +772,31 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
 }
 
 function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
-  const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  const rawSections = JSON.parse(proposal.sectionsJSON || '[]');
+  
+  // Ensure all products have note field for backward compatibility
+  const sections = rawSections.map(section => {
+    if (section.products && Array.isArray(section.products)) {
+      return {
+        ...section,
+        products: section.products.map(product => ({
+          ...product,
+          note: product.note || ''
+        }))
+      };
+    }
+    return section;
+  });
   
   // Debug: log sections when viewing
   console.log('ViewProposalView - Loaded sections:', sections.length);
+  const allProducts = sections.flatMap(s => s.products || []);
+  const productsWithNotes = allProducts.filter(p => p.note && p.note.trim());
+  console.log('ViewProposalView - Total products:', allProducts.length);
+  console.log('ViewProposalView - Products with notes:', productsWithNotes.length);
+  if (productsWithNotes.length > 0) {
+    console.log('ViewProposalView - Sample products with notes:', productsWithNotes.slice(0, 3).map(p => ({ name: p.name, note: p.note })));
+  }
   const imagePages = sections.filter(s => (s.type === 'image' || (!s.products || s.products.length === 0)) && (s.imageDriveId || s.imageData || s.imageUrl));
   console.log('ViewProposalView - Image pages found:', imagePages.length);
   if (imagePages.length > 0) {
@@ -994,7 +1015,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </div>
                 
-                
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                   {pageProducts.map((product, productIndex) => (
                     <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px' }}>
@@ -1010,10 +1030,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                       </h3>
                       <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Quantity: {product.quantity}</p>
                       {product.dimensions && (
-                        <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
+                        <p style={{ fontSize: '10px', color: '#666', marginBottom: product.note ? '4px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
                       )}
                       {product.note && (
-                        <p style={{ fontSize: '10px', color: '#666', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.note}</p>
+                        <p style={{ fontSize: '10px', color: '#666', fontStyle: 'italic', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.note}</p>
                       )}
                     </div>
                   ))}
@@ -1665,7 +1685,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       imageUrl: s.imageUrl ? s.imageUrl.substring(0, 50) + '...' : 'none',
       hasImageData: !!s.imageData,
       imageDataLength: s.imageData ? s.imageData.length : 0,
-      productsCount: s.products ? s.products.length : 0
+      productsCount: s.products ? s.products.length : 0,
+      productsWithNotes: s.products ? s.products.filter(p => p.note && p.note.trim()).map(p => ({ name: p.name, note: p.note })) : []
     })));
     
     // Check for image pages specifically
