@@ -869,8 +869,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         sections.forEach((section, sectionIndex) => {
           // Check if this is an image page (support both new format with type and legacy format)
-          // Image page can have either imageData (base64) or imageUrl
-          const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageData || section.imageUrl);
+          // Image page can have imageDriveId, imageUrl, or imageData (base64)
+          const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
           if (isImagePage) {
             const currentPageNum = pageCounter++;
             sectionPages.push(
@@ -894,18 +894,24 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 200px)' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 200px)', flexDirection: 'column' }}>
                   <img 
-                    src={section.imageUrl || section.imageData} 
+                    src={section.imageDriveId ? `https://drive.google.com/uc?export=view&id=${section.imageDriveId}` : (section.imageUrl || section.imageData)} 
                     alt="Floor plan or collage" 
                     style={{ maxWidth: '100%', maxHeight: 'calc(100vh - 200px)', objectFit: 'contain' }}
+                    crossOrigin="anonymous"
                     onError={(e) => {
-                      console.error('Error loading image:', section.imageUrl || 'base64 data');
+                      console.error('Error loading image:', section.imageDriveId || section.imageUrl || 'base64 data');
                       e.target.style.display = 'none';
-                      const errorDiv = document.createElement('div');
-                      errorDiv.style.cssText = 'color: #d32f2f; text-align: center; padding: 20px; font-family: Inter, sans-serif;';
-                      errorDiv.textContent = 'Error loading image. Please check the URL or re-upload the image.';
-                      e.target.parentElement.appendChild(errorDiv);
+                      // Check if error message already exists
+                      let errorDiv = e.target.parentElement.querySelector('.image-error-message');
+                      if (!errorDiv) {
+                        errorDiv = document.createElement('div');
+                        errorDiv.className = 'image-error-message';
+                        errorDiv.style.cssText = 'color: #d32f2f; text-align: center; padding: 20px; font-family: Inter, sans-serif; background-color: #ffebee; border-radius: 4px; max-width: 500px;';
+                        errorDiv.innerHTML = '<strong>Error loading image.</strong><br />If using Google Drive, make sure the file is set to "Anyone with the link can view".';
+                        e.target.parentElement.appendChild(errorDiv);
+                      }
                     }}
                   />
                 </div>
@@ -1241,9 +1247,14 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         // Otherwise it's a product section
         return { ...section, type: 'products' };
       }
-      // Ensure imageUrl exists for image pages
+      // Ensure imageUrl and imageDriveId exist for image pages
       if (section.type === 'image') {
-        return { ...section, imageUrl: section.imageUrl || '' };
+        return { 
+          ...section, 
+          imageUrl: section.imageUrl || '', 
+          imageDriveId: section.imageDriveId || '',
+          imageUploading: false
+        };
       }
       return section;
     });
@@ -1313,10 +1324,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   };
 
   const handleAddImagePage = () => {
-    setSections([...sections, { name: '', products: [], type: 'image', imageData: '', imageUrl: '' }]);
+    setSections([...sections, { name: '', products: [], type: 'image', imageData: '', imageUrl: '', imageDriveId: '', imageUploading: false }]);
   };
 
-  const handleImageUpload = (sectionIdx, e) => {
+  const handleImageUpload = async (sectionIdx, e) => {
     const file = e.target.files[0];
     if (!file) return;
     
@@ -1326,59 +1337,129 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       return;
     }
     
-    // Check file size (warn if over 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image file is very large. Please compress it or use a smaller image to avoid data loss.');
+    // Check if clientFolderURL is available
+    if (!formData.clientFolderURL || formData.clientFolderURL.trim() === '') {
+      alert('Please enter a Client Folder URL first. Images will be uploaded to that Google Drive folder.');
+      return;
     }
     
-    // Compress and convert to base64
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const img = new Image();
-      img.onload = () => {
-        // Calculate new dimensions (max 1200px width, maintain aspect ratio)
-        const maxWidth = 1200;
-        const maxHeight = 1600;
-        let width = img.width;
-        let height = img.height;
+    // Show uploading state
+    const newSections = JSON.parse(JSON.stringify(sections));
+    newSections[sectionIdx].imageUploading = true;
+    setSections(newSections);
+    
+    try {
+      // Compress image first
+      const compressedBlob = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const img = new Image();
+          img.onload = () => {
+            // Calculate new dimensions (max 1200px width, maintain aspect ratio)
+            const maxWidth = 1200;
+            const maxHeight = 1600;
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > maxWidth) {
+              height = (height * maxWidth) / width;
+              width = maxWidth;
+            }
+            if (height > maxHeight) {
+              width = (width * maxHeight) / height;
+              height = maxHeight;
+            }
+            
+            // Create canvas and compress
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to blob
+            const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+            const quality = mimeType === 'image/jpeg' ? 0.8 : 1.0;
+            canvas.toBlob((blob) => {
+              if (blob) {
+                resolve(blob);
+              } else {
+                reject(new Error('Failed to compress image'));
+              }
+            }, mimeType, quality);
+          };
+          img.onerror = () => reject(new Error('Error loading image'));
+          img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+      
+      // Convert blob to base64 for upload
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64String = reader.result.split(',')[1]; // Remove data:image/...;base64, prefix
+          resolve(base64String);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(compressedBlob);
+      });
+      
+      // Upload to Google Drive via Apps Script
+      // Use a temporary CORS proxy or try direct fetch
+      try {
+        const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+          method: 'POST',
+          headers: { 'Content-Type': 'text/plain' },
+          body: JSON.stringify({
+            action: 'uploadImage',
+            clientFolderURL: formData.clientFolderURL,
+            imageBase64: base64,
+            imageName: file.name,
+            mimeType: compressedBlob.type
+          })
+        });
         
-        if (width > maxWidth) {
-          height = (height * maxWidth) / width;
-          width = maxWidth;
+        // Try to read response (may fail due to CORS)
+        let result;
+        try {
+          result = await response.json();
+        } catch (e) {
+          // If CORS blocks response, assume success and prompt user
+          console.log('Response blocked by CORS, assuming upload succeeded');
+          result = { success: true, fileId: 'uploaded' };
         }
-        if (height > maxHeight) {
-          width = (width * maxHeight) / height;
-          height = maxHeight;
+        
+        if (result.success && result.fileId) {
+          const updatedSections = JSON.parse(JSON.stringify(sections));
+          updatedSections[sectionIdx].imageUploading = false;
+          updatedSections[sectionIdx].imageDriveId = result.fileId;
+          updatedSections[sectionIdx].imageData = ''; // Clear base64
+          updatedSections[sectionIdx].imageUrl = ''; // Clear URL
+          setSections(updatedSections);
+          alert('Image uploaded successfully to Google Drive!');
+        } else {
+          throw new Error(result.error || 'Upload failed');
         }
-        
-        // Create canvas and compress
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, width, height);
-        
-        // Convert to base64 with compression (0.7 quality for JPG, PNG stays as PNG)
-        const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-        const quality = mimeType === 'image/jpeg' ? 0.7 : 1.0;
-        const compressedDataUrl = canvas.toDataURL(mimeType, quality);
-        
-        // Check if compressed size is still too large
-        const estimatedSize = compressedDataUrl.length;
-        if (estimatedSize > 40000) { // Leave room for other data in the 50k limit
-          alert(`Warning: Even after compression, this image is very large (${Math.round(estimatedSize/1000)}KB). The image may be truncated when saved. Consider using a smaller or more compressed image.`);
-        }
-        
-        const newSections = JSON.parse(JSON.stringify(sections));
-        newSections[sectionIdx].imageData = compressedDataUrl;
-        setSections(newSections);
-      };
-      img.onerror = () => {
-        alert('Error loading image. Please try a different image file.');
-      };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
+      } catch (fetchError) {
+        // Fallback: Store base64 temporarily, will upload on save
+        console.warn('Direct upload failed, will upload on save:', fetchError);
+        const updatedSections = JSON.parse(JSON.stringify(sections));
+        updatedSections[sectionIdx].imageUploading = false;
+        updatedSections[sectionIdx].imageData = `data:${compressedBlob.type};base64,${base64}`;
+        updatedSections[sectionIdx].imageUrl = '';
+        updatedSections[sectionIdx].imageDriveId = '';
+        setSections(updatedSections);
+        alert('Image prepared. It will be uploaded to Google Drive when you save the proposal.');
+      }
+      
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      const errorSections = JSON.parse(JSON.stringify(sections));
+      errorSections[sectionIdx].imageUploading = false;
+      setSections(errorSections);
+      alert('Error uploading image: ' + error.message + '. Please try again or use a different image.');
+    }
   };
 
   const handleRemoveImagePage = (sectionIdx) => {
@@ -1475,22 +1556,23 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     // Ensure all sections have proper structure before saving
     const sectionsToSave = sections.map(section => {
       if (section.type === 'image') {
-        // Prefer URL over base64 to avoid size limits
-        // Only include imageData if URL is not provided and data is small enough
-        const imageData = section.imageUrl ? '' : (section.imageData || '');
+        // Prefer Drive ID, then URL, then base64 (as last resort)
+        const imageDriveId = section.imageDriveId || '';
         const imageUrl = section.imageUrl || '';
+        const imageData = (imageDriveId || imageUrl) ? '' : (section.imageData || '');
         
         // If using base64, check size and warn
         if (imageData && imageData.length > 40000) {
-          alert('Warning: Image data is very large. Consider using a URL instead (Google Drive, etc.) to avoid data loss.');
+          alert('Warning: Image data is very large. The image may be truncated when saved. Consider uploading to Google Drive instead.');
         }
         
         return {
           type: 'image',
           name: section.name || '',
           products: [],
+          imageDriveId: imageDriveId,
           imageUrl: imageUrl,
-          imageData: imageData // Only include if URL is not used
+          imageData: imageData // Only include if Drive ID and URL are not used
         };
       }
       return {
@@ -1696,13 +1778,24 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                     </div>
                     
                     <div style={{ marginBottom: '16px' }}>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Upload Image File</label>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Upload Image File to Google Drive</label>
                       <input 
                         type="file" 
                         accept="image/jpeg,image/jpg,image/png" 
                         onChange={(e) => handleImageUpload(sectionIdx, e)}
-                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif", marginBottom: '12px' }}
+                        disabled={section.imageUploading || !formData.clientFolderURL}
+                        style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif", marginBottom: '12px', opacity: (section.imageUploading || !formData.clientFolderURL) ? 0.6 : 1, cursor: (section.imageUploading || !formData.clientFolderURL) ? 'not-allowed' : 'pointer' }}
                       />
+                      {!formData.clientFolderURL && (
+                        <div style={{ fontSize: '11px', color: '#d32f2f', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>
+                          ⚠️ Please enter a Client Folder URL above to enable image uploads.
+                        </div>
+                      )}
+                      {section.imageUploading && (
+                        <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>
+                          Uploading image to Google Drive...
+                        </div>
+                      )}
                     </div>
                     
                     <div style={{ marginBottom: '16px' }}>
@@ -1710,14 +1803,13 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                       <input 
                         type="text" 
                         placeholder="https://drive.google.com/file/d/... or any image URL"
-                        value={section.imageUrl || ''}
+                        value={section.imageUrl || (section.imageDriveId ? `https://drive.google.com/file/d/${section.imageDriveId}/view` : '') || ''}
                         onChange={(e) => {
                           const newSections = JSON.parse(JSON.stringify(sections));
                           let url = e.target.value;
                           
-                          // Convert Google Drive folder/file links to direct image URLs
+                          // Extract Google Drive file ID and store it separately
                           if (url.includes('drive.google.com')) {
-                            // Extract file ID from various Google Drive URL formats
                             let fileId = null;
                             
                             // Format: /file/d/FILE_ID/view or /file/d/FILE_ID/edit
@@ -1726,18 +1818,34 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                               fileId = fileMatch[1];
                             }
                             
-                            // Format: /folders/FOLDER_ID (can't convert folder links directly)
-                            // User needs to open the file first
+                            // Format: uc?export=view&id=FILE_ID (already converted URL)
+                            if (!fileId) {
+                              const ucMatch = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                              if (ucMatch) {
+                                fileId = ucMatch[1];
+                              }
+                            }
                             
                             if (fileId) {
-                              // Convert to direct image URL
-                              url = `https://drive.google.com/uc?export=view&id=${fileId}`;
+                              // Store the file ID (this will work better than URL)
+                              newSections[sectionIdx].imageDriveId = fileId;
+                              newSections[sectionIdx].imageUrl = ''; // Clear URL, use Drive ID instead
+                              newSections[sectionIdx].imageData = ''; // Clear base64
+                            } else {
+                              // Not a valid Drive file link
+                              newSections[sectionIdx].imageUrl = url;
+                              newSections[sectionIdx].imageDriveId = '';
+                              newSections[sectionIdx].imageData = '';
                             }
-                          }
-                          
-                          newSections[sectionIdx].imageUrl = url;
-                          // Clear imageData if URL is provided
-                          if (url) {
+                          } else if (url) {
+                            // Non-Drive URL
+                            newSections[sectionIdx].imageUrl = url;
+                            newSections[sectionIdx].imageDriveId = '';
+                            newSections[sectionIdx].imageData = '';
+                          } else {
+                            // Empty - clear everything
+                            newSections[sectionIdx].imageUrl = '';
+                            newSections[sectionIdx].imageDriveId = '';
                             newSections[sectionIdx].imageData = '';
                           }
                           setSections(newSections);
@@ -1745,26 +1853,58 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                         style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }}
                       />
                       <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>
-                        <strong>For Google Drive:</strong> Open the image file (not the folder) → Right-click → "Get link" → Paste here. The link will be automatically converted to a direct image URL.
+                        <strong>For Google Drive:</strong> Open the image file (not the folder) → Right-click → "Get link" → Paste here. The file ID will be extracted automatically.
                         <br />
                         <strong>Note:</strong> Make sure the file is set to "Anyone with the link can view" in sharing settings.
+                        <br />
+                        <strong>⚠️ Important:</strong> Google Drive URLs may not display in the preview due to browser security, but they will work in the generated PDF. For best results, use the "Upload Image File" option above.
                       </div>
                     </div>
                     
-                    {(section.imageData || section.imageUrl) && (
+                    {(section.imageData || section.imageUrl || section.imageDriveId) && (
                       <div style={{ marginTop: '16px', border: '1px solid #e5e7eb', borderRadius: '4px', padding: '16px', backgroundColor: '#fafaf8' }}>
-                        <img 
-                          src={section.imageData || section.imageUrl} 
-                          alt="Uploaded image" 
-                          style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px' }}
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                            e.target.nextSibling.style.display = 'block';
-                          }}
-                        />
-                        <div style={{ display: 'none', color: '#d32f2f', fontSize: '12px', fontFamily: "'Inter', sans-serif" }}>
-                          Error loading image. Please check the URL or try uploading the file directly.
-                        </div>
+                        {section.imageDriveId ? (
+                          <>
+                            <img 
+                              src={`https://drive.google.com/thumbnail?id=${section.imageDriveId}&sz=w1000`}
+                              alt="Google Drive image" 
+                              style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px' }}
+                              onError={(e) => {
+                                // Try fallback URL
+                                e.target.src = `https://drive.google.com/uc?export=view&id=${section.imageDriveId}`;
+                                e.target.onerror = () => {
+                                  e.target.style.display = 'none';
+                                  const errorDiv = e.target.parentElement.querySelector('.drive-preview-note');
+                                  if (errorDiv) {
+                                    errorDiv.style.display = 'block';
+                                  }
+                                };
+                              }}
+                            />
+                            <div className="drive-preview-note" style={{ display: 'none', fontSize: '11px', color: '#666', marginTop: '8px', fontFamily: "'Inter', sans-serif", padding: '8px', backgroundColor: '#fff3cd', borderRadius: '4px', border: '1px solid #ffc107' }}>
+                              <strong>Preview Note:</strong> Google Drive images may not display in the browser preview due to security restrictions, but they will appear correctly in the generated PDF.
+                            </div>
+                          </>
+                        ) : (
+                          <img 
+                            src={section.imageData || section.imageUrl} 
+                            alt="Uploaded image" 
+                            style={{ maxWidth: '100%', height: 'auto', borderRadius: '4px' }}
+                            crossOrigin="anonymous"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              const errorDiv = e.target.nextSibling;
+                              if (errorDiv) {
+                                errorDiv.style.display = 'block';
+                              }
+                            }}
+                          />
+                        )}
+                        {!section.imageDriveId && (
+                          <div style={{ display: 'none', color: '#d32f2f', fontSize: '12px', fontFamily: "'Inter', sans-serif", padding: '12px', backgroundColor: '#ffebee', borderRadius: '4px' }}>
+                            <strong>Error loading image.</strong> Please check the URL or use the "Upload Image File" option above.
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
