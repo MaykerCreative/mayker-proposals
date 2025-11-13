@@ -1285,12 +1285,57 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       return;
     }
     
-    // Convert to base64
+    // Check file size (warn if over 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      alert('Image file is very large. Please compress it or use a smaller image to avoid data loss.');
+    }
+    
+    // Compress and convert to base64
     const reader = new FileReader();
     reader.onloadend = () => {
-      const newSections = JSON.parse(JSON.stringify(sections));
-      newSections[sectionIdx].imageData = reader.result;
-      setSections(newSections);
+      const img = new Image();
+      img.onload = () => {
+        // Calculate new dimensions (max 1200px width, maintain aspect ratio)
+        const maxWidth = 1200;
+        const maxHeight = 1600;
+        let width = img.width;
+        let height = img.height;
+        
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = (width * maxHeight) / height;
+          height = maxHeight;
+        }
+        
+        // Create canvas and compress
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Convert to base64 with compression (0.7 quality for JPG, PNG stays as PNG)
+        const mimeType = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+        const quality = mimeType === 'image/jpeg' ? 0.7 : 1.0;
+        const compressedDataUrl = canvas.toDataURL(mimeType, quality);
+        
+        // Check if compressed size is still too large
+        const estimatedSize = compressedDataUrl.length;
+        if (estimatedSize > 40000) { // Leave room for other data in the 50k limit
+          alert(`Warning: Even after compression, this image is very large (${Math.round(estimatedSize/1000)}KB). The image may be truncated when saved. Consider using a smaller or more compressed image.`);
+        }
+        
+        const newSections = JSON.parse(JSON.stringify(sections));
+        newSections[sectionIdx].imageData = compressedDataUrl;
+        setSections(newSections);
+      };
+      img.onerror = () => {
+        alert('Error loading image. Please try a different image file.');
+      };
+      img.src = reader.result;
     };
     reader.readAsDataURL(file);
   };
