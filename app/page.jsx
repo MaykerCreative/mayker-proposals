@@ -1058,12 +1058,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                       </h3>
                       <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>Quantity: {product.quantity}</p>
                       {product.dimensions && (
-                        <p style={{ fontSize: '10px', color: '#666', marginBottom: product.note && product.note.trim() ? '3px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>{product.dimensions}</p>
+                        <p style={{ fontSize: '10px', color: '#666', marginBottom: product.note && product.note.trim() ? '4px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>Dimensions: {product.dimensions}</p>
                       )}
                       {product.note && product.note.trim() && (
-                        <p style={{ fontSize: '10px', color: '#666', fontStyle: 'italic', marginTop: product.dimensions ? '0' : '0', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>
-                          <span style={{ color: '#888', fontWeight: '400' }}>Note: </span>{product.note}
-                        </p>
+                        <p style={{ fontSize: '10px', color: '#666', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>Product Note: {product.note}</p>
                       )}
                     </div>
                   ))}
@@ -1220,7 +1218,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         {totals.standardRateDiscount > 0 && (
                           <tr>
                             <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                              Discount ({proposal.discount}% off)
+                              {proposal.discountName && proposal.discountName.trim() ? proposal.discountName : `Discount (${proposal.discount}% off)`}
                             </td>
                             <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                               -${formatNumber(totals.standardRateDiscount)}
