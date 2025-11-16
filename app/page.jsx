@@ -845,26 +845,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   const productsPerPage = 9;
   
-  // Calculate total section pages by actually counting what will be rendered
-  // This needs to match the logic in the rendering section below
-  const calculateTotalSectionPages = () => {
-    let total = 0;
-    sections.forEach((section) => {
-      // Check if this is an image page (support both new format with type and legacy format)
-      const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
-      if (isImagePage) {
-        total += 1;
-      } else {
-        // Product sections count based on number of products
-        total += Math.ceil((section.products?.length || 0) / productsPerPage);
-      }
-    });
-    return total;
-  };
-  
-  const totalSectionPages = calculateTotalSectionPages();
-  const invoicePageNum = 1 + totalSectionPages + 1;
-  const projectDetailsPageNum = invoicePageNum + 1;
+  // Simple sequential page counter - starts at 1 for cover, increments for each page
+  let globalPageCounter = 1;
   
   const handlePrintDownload = () => {
     window.print();
@@ -957,8 +939,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       </div>
 
       {(() => {
-        const productsPerPage = 9;
-        let pageCounter = 2;
         const sectionPages = [];
         
         sections.forEach((section, sectionIndex) => {
@@ -966,7 +946,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           // Image page can have imageDriveId, imageUrl, or imageData (base64)
           const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
           if (isImagePage) {
-            const currentPageNum = pageCounter++;
+            globalPageCounter++; // Increment for image page
+            const currentPageNum = globalPageCounter;
             sectionPages.push(
               <div 
                 key={`image-${sectionIndex}`} 
@@ -1027,10 +1008,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             const isLastSection = sectionIndex === sections.length - 1;
             const isLastPage = isLastPageOfSection && isLastSection;
             const isFirstPageOfSection = pageIndex === 0;
-            const currentPageNum = pageCounter++;
             
             // First product page should not have pageBreakBefore to avoid blank page after cover
             const isFirstProductPage = sectionIndex === 0 && pageIndex === 0;
+            
+            globalPageCounter++; // Increment for product page
+            const currentPageNum = globalPageCounter;
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
@@ -1085,9 +1068,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           }
         });
         
-        // Store the last page number for invoice calculation
-        const lastProductPageNum = pageCounter - 1;
-        
         return sectionPages;
       })()}
 
@@ -1106,26 +1086,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         // Calculate how many products fit per page (approximately 23 rows)
         const rowsPerPage = 23;
         const totalInvoicePages = Math.ceil(allProducts.length / rowsPerPage);
-        
-        // Calculate invoice starting page number using the actual last product page number
-        // We need to recalculate it the same way the product pages were calculated
-        const calculateLastProductPageNum = () => {
-          let pageCounter = 2;
-          sections.forEach((section) => {
-            const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
-            if (isImagePage) {
-              pageCounter++;
-            } else {
-              const productsPerPage = 9;
-              const totalPages = Math.ceil((section.products?.length || 0) / productsPerPage);
-              pageCounter += totalPages;
-            }
-          });
-          return pageCounter - 1;
-        };
-        
-        const lastProductPageNum = calculateLastProductPageNum();
-        const invoiceStartPage = lastProductPageNum + 1;
         
         // Invoice header component matching the screenshot
         const InvoiceHeader = ({ pageNum, isFirstPage, totalPages }) => (
@@ -1180,7 +1140,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           const pageProducts = allProducts.slice(startIndex, endIndex);
           const isLastPage = pageIndex === totalInvoicePages - 1;
           const isFirstPage = pageIndex === 0;
-          const currentPageNum = invoiceStartPage + pageIndex;
+          
+          globalPageCounter++; // Increment for invoice page
+          const currentPageNum = globalPageCounter;
           
           invoicePages.push(
             <div 
@@ -1300,37 +1262,44 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         return invoicePages;
       })()}
 
-      <div style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always' }}>
-        <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
-            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-              <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                <div>{proposal.clientName}</div>
-                <div>{formatDateRange(proposal)}</div>
-                <div>{proposal.venueName}</div>
+      {(() => {
+        globalPageCounter++; // Increment for project details page
+        const projectDetailsPageNum = globalPageCounter;
+        
+        return (
+          <div key="project-details" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always' }}>
+            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
+                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+                  <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    <div>{proposal.clientName}</div>
+                    <div>{formatDateRange(proposal)}</div>
+                    <div>{proposal.venueName}</div>
+                  </div>
+                  <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+                </div>
               </div>
-              <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
             </div>
+            
+            <h2 style={{ fontSize: '16px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>Project Details</h2>
+            
+            <p style={{ marginBottom: '24px', fontSize: '12px', lineHeight: '1.6', color: '#444' }}>
+              The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
+            </p>
+            
+            <ul style={{ fontSize: '12px', lineHeight: '1.8', marginBottom: '20px', color: '#222', listStyle: 'none', padding: 0 }}>
+              <li style={{ marginBottom: '8px' }}><strong>Project Location:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
+              <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+              <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
+              <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+              <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
+            </ul>
+            
+            <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{projectDetailsPageNum}</div>
           </div>
-        </div>
-        
-        <h2 style={{ fontSize: '16px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>Project Details</h2>
-        
-        <p style={{ marginBottom: '24px', fontSize: '12px', lineHeight: '1.6', color: '#444' }}>
-          The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
-        </p>
-        
-        <ul style={{ fontSize: '12px', lineHeight: '1.8', marginBottom: '20px', color: '#222', listStyle: 'none', padding: 0 }}>
-          <li style={{ marginBottom: '8px' }}><strong>Project Location:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
-          <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-          <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
-          <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-          <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
-        </ul>
-        
-        <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{projectDetailsPageNum}</div>
-      </div>
+        );
+      })()}
     </div>
   );
 }
