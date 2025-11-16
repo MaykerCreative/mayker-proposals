@@ -904,11 +904,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         body { font-family: 'Inter', sans-serif; } 
         @media print { 
           .no-print { display: none !important; } 
-          .print-break-after { page-break-after: always; } 
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
           @page { size: letter; margin: 0; } 
           @page:first { margin: 0; } 
-          div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } 
           thead { display: table-header-group !important; } 
           thead tr { page-break-inside: avoid; } 
           thead td, thead th { background-color: white !important; } 
@@ -933,7 +931,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
       </div>
 
-      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0 }}>
+      <div style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0 }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
