@@ -1096,7 +1096,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         const totalInvoicePages = Math.ceil(allProducts.length / rowsPerPage);
         
         // Invoice header component matching the screenshot
-        const InvoiceHeader = ({ pageNum, isFirstPage, totalPages }) => (
+        const InvoiceHeader = ({ isFirstPage }) => (
           <div style={{ marginBottom: '30px' }}>
             {/* Top header row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
@@ -1140,21 +1140,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           </div>
         );
         
-        // Calculate invoice starting page number
-        // Cover page (1) + all section pages + 1 = invoice start page
-        // We need to recalculate totalSectionPages here using the same logic
-        const calculatedTotalSectionPages = sections.reduce((total, section) => {
-          // Image pages count as 1 page
-          const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
-          if (isImagePage) {
-            return total + 1;
-          }
-          // Product sections count based on number of products
-          return total + Math.ceil((section.products?.length || 0) / 9);
-        }, 0);
-        const invoiceStartPage = 1 + calculatedTotalSectionPages + 1;
-        
-        // Create invoice pages
+        // Create invoice pages (no page numbers to simplify formatting)
         const invoicePages = [];
         for (let pageIndex = 0; pageIndex < totalInvoicePages; pageIndex++) {
           const startIndex = pageIndex * rowsPerPage;
@@ -1162,7 +1148,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           const pageProducts = allProducts.slice(startIndex, endIndex);
           const isLastPage = pageIndex === totalInvoicePages - 1;
           const isFirstPage = pageIndex === 0;
-          const currentPageNum = invoiceStartPage + pageIndex;
           
           invoicePages.push(
             <div 
@@ -1174,7 +1159,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 pageBreakBefore: pageIndex > 0 ? 'always' : 'always'
               }}
             >
-              <InvoiceHeader pageNum={currentPageNum} isFirstPage={isFirstPage} totalPages={totalInvoicePages} />
+              <InvoiceHeader isFirstPage={isFirstPage} />
               
               <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
                 <colgroup>
@@ -1272,9 +1257,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </div>
               )}
-              
-              {/* Page number */}
-              <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
             </div>
           );
         }
