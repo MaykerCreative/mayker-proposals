@@ -1045,7 +1045,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
                   {pageProducts.map((product, productIndex) => (
-                    <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px' }}>
+                    <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '15px', borderRadius: '4px', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
                         {product.imageUrl ? (
                           <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
@@ -1053,15 +1053,17 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                           '[Product Image]'
                         )}
                       </div>
-                      <h3 style={{ fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                      <h3 style={{ fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.3' }}>
                         {product.name}
                       </h3>
-                      <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Quantity: {product.quantity}</p>
+                      <p style={{ fontSize: '10px', color: '#666', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>Quantity: {product.quantity}</p>
                       {product.dimensions && (
-                        <p style={{ fontSize: '10px', color: '#666', marginBottom: (product.note && product.note.trim()) ? '4px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.dimensions}</p>
+                        <p style={{ fontSize: '10px', color: '#666', marginBottom: product.note && product.note.trim() ? '3px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>{product.dimensions}</p>
                       )}
                       {product.note && product.note.trim() && (
-                        <p style={{ fontSize: '10px', color: '#666', fontStyle: 'italic', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.note}</p>
+                        <p style={{ fontSize: '10px', color: '#666', fontStyle: 'italic', marginTop: product.dimensions ? '0' : '0', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>
+                          <span style={{ color: '#888', fontWeight: '400' }}>Note: </span>{product.note}
+                        </p>
                       )}
                     </div>
                   ))}
