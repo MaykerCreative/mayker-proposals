@@ -1010,6 +1010,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   />
                 </div>
                 
+                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
               </div>
             );
             return; // Skip product rendering for image pages
@@ -1084,6 +1085,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           }
         });
         
+        // Store the last page number for invoice calculation
+        const lastProductPageNum = pageCounter - 1;
+        
         return sectionPages;
       })()}
 
@@ -1102,6 +1106,26 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         // Calculate how many products fit per page (approximately 23 rows)
         const rowsPerPage = 23;
         const totalInvoicePages = Math.ceil(allProducts.length / rowsPerPage);
+        
+        // Calculate invoice starting page number using the actual last product page number
+        // We need to recalculate it the same way the product pages were calculated
+        const calculateLastProductPageNum = () => {
+          let pageCounter = 2;
+          sections.forEach((section) => {
+            const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
+            if (isImagePage) {
+              pageCounter++;
+            } else {
+              const productsPerPage = 9;
+              const totalPages = Math.ceil((section.products?.length || 0) / productsPerPage);
+              pageCounter += totalPages;
+            }
+          });
+          return pageCounter - 1;
+        };
+        
+        const lastProductPageNum = calculateLastProductPageNum();
+        const invoiceStartPage = lastProductPageNum + 1;
         
         // Invoice header component matching the screenshot
         const InvoiceHeader = ({ pageNum, isFirstPage, totalPages }) => (
@@ -1147,9 +1171,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             </table>
           </div>
         );
-        
-        // Calculate invoice starting page number
-        const invoiceStartPage = 1 + totalSectionPages + 1;
         
         // Create invoice pages
         const invoicePages = [];
