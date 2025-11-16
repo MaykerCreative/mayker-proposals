@@ -1139,9 +1139,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           </div>
         );
         
-        // Calculate invoice starting page number based on actual pageCounter
-        // pageCounter is already at the next page number after all sections
-        const invoiceStartPage = pageCounter;
+        // Calculate invoice starting page number
+        // Cover page (1) + all section pages + 1 = invoice start page
+        // We need to recalculate totalSectionPages here using the same logic
+        const calculatedTotalSectionPages = sections.reduce((total, section) => {
+          // Image pages count as 1 page
+          const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
+          if (isImagePage) {
+            return total + 1;
+          }
+          // Product sections count based on number of products
+          return total + Math.ceil((section.products?.length || 0) / 9);
+        }, 0);
+        const invoiceStartPage = 1 + calculatedTotalSectionPages + 1;
         
         // Create invoice pages
         const invoicePages = [];
