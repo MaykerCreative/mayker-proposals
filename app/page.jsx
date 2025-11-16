@@ -933,7 +933,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
       </div>
 
-      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always', pageBreakBefore: 'auto' }}>
+      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'auto', pageBreakBefore: 'auto' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
@@ -1001,7 +1001,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   />
                 </div>
                 
-                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
+                <div style={{ position: 'absolute', bottom: '20px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", zIndex: 10 }}>{currentPageNum}</div>
               </div>
             );
             return; // Skip product rendering for image pages
@@ -1025,7 +1025,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
-                style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid' }}
+                style={{ minHeight: '100vh', padding: '30px 60px 50px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid' }}
               >
                 <div style={{ marginBottom: '15px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1070,7 +1070,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   ))}
                 </div>
                 
-                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
+                <div style={{ position: 'absolute', bottom: '20px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", zIndex: 10 }}>{currentPageNum}</div>
               </div>
             );
           }
