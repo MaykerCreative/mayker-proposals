@@ -845,8 +845,14 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   const productsPerPage = 9;
   
-  // Simple sequential page counter - starts at 1 for cover, increments for each page
-  let globalPageCounter = 1;
+  // Use useRef to maintain page counter - starts at 1 (cover page)
+  const pageCounterRef = React.useRef(1);
+  
+  // Helper function to get and increment page number
+  const getNextPageNumber = () => {
+    pageCounterRef.current++;
+    return pageCounterRef.current;
+  };
   
   const handlePrintDownload = () => {
     window.print();
@@ -946,8 +952,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           // Image page can have imageDriveId, imageUrl, or imageData (base64)
           const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
           if (isImagePage) {
-            globalPageCounter++; // Increment for image page
-            const currentPageNum = globalPageCounter;
+            const currentPageNum = getNextPageNumber();
             sectionPages.push(
               <div 
                 key={`image-${sectionIndex}`} 
@@ -1012,8 +1017,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             // First product page should not have pageBreakBefore to avoid blank page after cover
             const isFirstProductPage = sectionIndex === 0 && pageIndex === 0;
             
-            globalPageCounter++; // Increment for product page
-            const currentPageNum = globalPageCounter;
+            const currentPageNum = getNextPageNumber();
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
@@ -1141,15 +1145,15 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           const isLastPage = pageIndex === totalInvoicePages - 1;
           const isFirstPage = pageIndex === 0;
           
-          globalPageCounter++; // Increment for invoice page
-          const currentPageNum = globalPageCounter;
+          const currentPageNum = getNextPageNumber();
+          console.log(`Invoice page ${pageIndex + 1} of ${totalInvoicePages}: page number ${currentPageNum}`);
           
           invoicePages.push(
             <div 
               key={`invoice-page-${pageIndex}`} 
               style={{ 
                 minHeight: '100vh', 
-                padding: '30px 60px 40px', 
+                padding: '30px 60px 60px', // Extra padding at bottom for page number
                 position: 'relative',
                 pageBreakBefore: pageIndex > 0 ? 'always' : 'always'
               }}
@@ -1253,8 +1257,18 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 </div>
               )}
               
-              {/* Page number */}
-              <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
+              {/* Page number - absolute footer position relative to page */}
+              <div style={{ 
+                position: 'absolute',
+                bottom: '20px',
+                right: '60px',
+                fontSize: '10px',
+                color: '#999',
+                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
+                zIndex: 10,
+                backgroundColor: 'white',
+                padding: '2px 4px'
+              }}>{currentPageNum}</div>
             </div>
           );
         }
@@ -1263,8 +1277,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       })()}
 
       {(() => {
-        globalPageCounter++; // Increment for project details page
-        const projectDetailsPageNum = globalPageCounter;
+        const projectDetailsPageNum = getNextPageNumber();
         
         return (
           <div key="project-details" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always' }}>
