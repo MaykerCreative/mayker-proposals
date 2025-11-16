@@ -904,9 +904,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         body { font-family: 'Inter', sans-serif; } 
         @media print { 
           .no-print { display: none !important; } 
+          .print-break-after { page-break-after: always; } 
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
           @page { size: letter; margin: 0; } 
           @page:first { margin: 0; } 
+          div[data-proposal-view="true"] > div:first-of-type { page-break-after: always; } 
           thead { display: table-header-group !important; } 
           thead tr { page-break-inside: avoid; } 
           thead td, thead th { background-color: white !important; } 
@@ -931,7 +933,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
       </div>
 
-      <div style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0 }}>
+      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
@@ -999,7 +1001,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   />
                 </div>
                 
-                <div style={{ position: 'absolute', bottom: '20px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", zIndex: 10 }}>{currentPageNum}</div>
+                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
               </div>
             );
             return; // Skip product rendering for image pages
@@ -1018,12 +1020,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             const isFirstPageOfSection = pageIndex === 0;
             const currentPageNum = pageCounter++;
             
-            // First page overall should flow naturally after cover, all others need page breaks
-            const isFirstPageOverall = sectionIndex === 0 && pageIndex === 0;
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
-                style={{ minHeight: '100vh', padding: '30px 60px 50px', position: 'relative', pageBreakBefore: isFirstPageOverall ? 'auto' : 'always', pageBreakInside: 'avoid', breakInside: 'avoid' }}
+                style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstPageOfSection && sectionIndex === 0 ? 'auto' : 'auto' }}
               >
                 <div style={{ marginBottom: '15px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1068,7 +1068,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   ))}
                 </div>
                 
-                <div style={{ position: 'absolute', bottom: '20px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", zIndex: 10 }}>{currentPageNum}</div>
+                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
               </div>
             );
           }
