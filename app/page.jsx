@@ -845,8 +845,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   const productsPerPage = 9;
   const totalSectionPages = sections.reduce((total, section) => {
-    // Image pages count as 1 page
-    if (section.type === 'image' && section.imageData) {
+    // Image pages count as 1 page (check for imageDriveId, imageUrl, or imageData)
+    const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
+    if (isImagePage) {
       return total + 1;
     }
     // Product sections count based on number of products
@@ -1045,25 +1046,25 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', maxHeight: 'calc(100vh - 180px)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   {pageProducts.map((product, productIndex) => (
-                    <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', display: 'flex', flexDirection: 'column', pageBreakInside: 'avoid', breakInside: 'avoid', height: 'fit-content' }}>
-                      <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
+                    <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '12px', borderRadius: '4px', display: 'flex', flexDirection: 'column', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                      <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
                         {product.imageUrl ? (
                           <img src={product.imageUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
                         ) : (
                           '[Product Image]'
                         )}
                       </div>
-                      <h3 style={{ fontSize: '10px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '2px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.2' }}>
+                      <h3 style={{ fontSize: '11px', fontWeight: '500', color: brandCharcoal, textTransform: 'uppercase', marginBottom: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.3' }}>
                         {product.name}
                       </h3>
-                      <p style={{ fontSize: '9px', color: '#666', marginBottom: '2px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.3' }}>Quantity: {product.quantity}</p>
+                      <p style={{ fontSize: '10px', color: '#666', marginBottom: '3px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>Quantity: {product.quantity}</p>
                       {product.dimensions && (
-                        <p style={{ fontSize: '9px', color: '#666', marginBottom: product.note && product.note.trim() ? '2px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.3' }}>Size: {product.dimensions}</p>
+                        <p style={{ fontSize: '10px', color: '#666', marginBottom: product.note && product.note.trim() ? '3px' : '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>Size: {product.dimensions}</p>
                       )}
                       {product.note && product.note.trim() && (
-                        <p style={{ fontSize: '9px', color: '#666', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.3' }}>Product Note: {product.note}</p>
+                        <p style={{ fontSize: '10px', color: '#666', marginBottom: '0', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4' }}>Product Note: {product.note}</p>
                       )}
                     </div>
                   ))}
