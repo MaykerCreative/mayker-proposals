@@ -1139,8 +1139,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           </div>
         );
         
-        // Calculate invoice starting page number
-        const invoiceStartPage = 1 + totalSectionPages + 1;
+        // Calculate invoice starting page number based on actual pageCounter
+        // pageCounter is already at the next page number after all sections
+        const invoiceStartPage = pageCounter;
         
         // Create invoice pages
         const invoicePages = [];
