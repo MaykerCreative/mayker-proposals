@@ -844,15 +844,25 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   const brandCharcoal = '#2C2C2C';
   
   const productsPerPage = 9;
-  const totalSectionPages = sections.reduce((total, section) => {
-    // Image pages count as 1 page
-    if (section.type === 'image' && section.imageData) {
-      return total + 1;
-    }
-    // Product sections count based on number of products
-    return total + Math.ceil((section.products?.length || 0) / productsPerPage);
-  }, 0);
   
+  // Calculate total section pages by actually counting what will be rendered
+  // This needs to match the logic in the rendering section below
+  const calculateTotalSectionPages = () => {
+    let total = 0;
+    sections.forEach((section) => {
+      // Check if this is an image page (support both new format with type and legacy format)
+      const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
+      if (isImagePage) {
+        total += 1;
+      } else {
+        // Product sections count based on number of products
+        total += Math.ceil((section.products?.length || 0) / productsPerPage);
+      }
+    });
+    return total;
+  };
+  
+  const totalSectionPages = calculateTotalSectionPages();
   const invoicePageNum = 1 + totalSectionPages + 1;
   const projectDetailsPageNum = invoicePageNum + 1;
   
