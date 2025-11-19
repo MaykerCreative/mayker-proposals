@@ -1090,7 +1090,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         // Invoice header component matching the screenshot
         const InvoiceHeader = ({ isFirstPage }) => (
-          <div style={{ marginBottom: '30px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+          <div style={{ marginBottom: '30px', pageBreakInside: 'avoid', breakInside: 'avoid', display: 'block', visibility: 'visible' }}>
             {/* Top header row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
               <div>
