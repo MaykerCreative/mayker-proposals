@@ -298,7 +298,7 @@ export default function ProposalApp() {
         
         @font-face {
           font-family: 'Neue Haas Unica';
-          src: url('/assets/Neue Haas Unica Medium-abce.ttf') format('truetype');
+          src: url('/assets/Neue%20Haas%20Unica%20Medium-abce.ttf') format('truetype');
           font-weight: 500;
           font-style: normal;
           font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
@@ -306,7 +306,7 @@ export default function ProposalApp() {
         
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/assets/TestDomaineText-Light.otf') format('opentype');
+          src: url('/assets/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
           font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
@@ -865,7 +865,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         @font-face {
           font-family: 'Neue Haas Unica';
-          src: url('/assets/Neue Haas Unica Medium-abce.ttf') format('truetype');
+          src: url('/assets/Neue%20Haas%20Unica%20Medium-abce.ttf') format('truetype');
           font-weight: 500;
           font-style: normal;
           font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
@@ -873,7 +873,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/assets/TestDomaineText-Light.otf') format('opentype');
+          src: url('/assets/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
           font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
