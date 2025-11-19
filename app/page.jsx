@@ -845,15 +845,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   const productsPerPage = 9;
   
-  // Use useRef to maintain page counter - starts at 1 (cover page)
-  const pageCounterRef = React.useRef(1);
-  
-  // Helper function to get and increment page number
-  const getNextPageNumber = () => {
-    pageCounterRef.current++;
-    return pageCounterRef.current;
-  };
-  
   const handlePrintDownload = () => {
     window.print();
   };
@@ -964,7 +955,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           // Image page can have imageDriveId, imageUrl, or imageData (base64)
           const isImagePage = (section.type === 'image' || (!section.products || section.products.length === 0)) && (section.imageDriveId || section.imageData || section.imageUrl);
           if (isImagePage) {
-            const currentPageNum = getNextPageNumber();
             sectionPages.push(
               <div 
                 key={`image-${sectionIndex}`} 
@@ -1007,8 +997,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     }}
                   />
                 </div>
-                
-                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
               </div>
             );
             return; // Skip product rendering for image pages
@@ -1029,7 +1017,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             // First product page should not have pageBreakBefore to avoid blank page after cover
             const isFirstProductPage = sectionIndex === 0 && pageIndex === 0;
             
-            const currentPageNum = getNextPageNumber();
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
@@ -1077,8 +1064,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     </div>
                   ))}
                 </div>
-                
-                <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{currentPageNum}</div>
               </div>
             );
           }
@@ -1104,8 +1089,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         const totalInvoicePages = Math.ceil(allProducts.length / rowsPerPage);
         
         // Invoice header component matching the screenshot
-        const InvoiceHeader = ({ pageNum, isFirstPage, totalPages }) => (
-          <div style={{ marginBottom: '30px' }}>
+        const InvoiceHeader = ({ isFirstPage }) => (
+          <div style={{ marginBottom: '30px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
             {/* Top header row */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
               <div>
@@ -1157,9 +1142,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           const isLastPage = pageIndex === totalInvoicePages - 1;
           const isFirstPage = pageIndex === 0;
           
-          const currentPageNum = getNextPageNumber();
-          console.log(`Invoice page ${pageIndex + 1} of ${totalInvoicePages}: page number ${currentPageNum}`);
-          
           invoicePages.push(
             <div 
               key={`invoice-page-${pageIndex}`} 
@@ -1167,14 +1149,14 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 minHeight: '100vh', 
                 width: '100%',
                 maxWidth: '100%',
-                padding: '30px 60px 60px', // Extra padding at bottom for page number
+                padding: '30px 60px 40px',
                 position: 'relative',
                 pageBreakBefore: pageIndex > 0 ? 'always' : 'always',
                 boxSizing: 'border-box',
                 overflow: 'hidden'
               }}
             >
-              <InvoiceHeader pageNum={currentPageNum} isFirstPage={isFirstPage} totalPages={totalInvoicePages} />
+              <InvoiceHeader isFirstPage={isFirstPage} />
               
               <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
                 <colgroup>
@@ -1272,19 +1254,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </div>
               )}
-              
-              {/* Page number - absolute footer position relative to page */}
-              <div style={{ 
-                position: 'absolute',
-                bottom: '20px',
-                right: '60px',
-                fontSize: '10px',
-                color: '#999',
-                fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
-                zIndex: 10,
-                backgroundColor: 'white',
-                padding: '2px 4px'
-              }}>{currentPageNum}</div>
             </div>
           );
         }
@@ -1293,8 +1262,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       })()}
 
       {(() => {
-        const projectDetailsPageNum = getNextPageNumber();
-        
         return (
           <div key="project-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden' }}>
             <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
@@ -1324,8 +1291,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
               <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
             </ul>
-            
-            <div style={{ position: 'absolute', bottom: '30px', right: '60px', fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{projectDetailsPageNum}</div>
           </div>
         );
       })()}
