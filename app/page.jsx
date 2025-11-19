@@ -1201,7 +1201,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               </table>
               
               {isLastPage && (
-                <div className="no-page-break" style={{ marginTop: '40px', paddingTop: '20px' }}>
+                <div className="no-page-break" style={{ marginTop: '40px', paddingTop: '20px', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakBefore: 'auto' }}>
                   <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
                     <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
