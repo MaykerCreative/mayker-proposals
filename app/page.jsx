@@ -859,7 +859,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   };
   
   return (
-    <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white' }}>
+    <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white', width: '100%', overflowX: 'hidden' }}>
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
@@ -899,6 +899,18 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         * { box-sizing: border-box; margin: 0; padding: 0; } 
         body { font-family: 'Inter', sans-serif; } 
+        
+        /* Browser preview styles - ensure proper layout */
+        div[data-proposal-view="true"] {
+          width: 100%;
+          overflow-x: hidden;
+        }
+        
+        div[data-proposal-view="true"] > div {
+          width: 100%;
+          max-width: 100%;
+        }
+        
         @media print { 
           .no-print { display: none !important; } 
           .print-break-after { page-break-after: always; } 
@@ -930,7 +942,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         </div>
       </div>
 
-      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always', pageBreakBefore: 'auto' }}>
+      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always', pageBreakBefore: 'auto', overflow: 'hidden' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
@@ -956,7 +968,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             sectionPages.push(
               <div 
                 key={`image-${sectionIndex}`} 
-                style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: sectionIndex === 0 ? 'auto' : 'always' }}
+                style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: sectionIndex === 0 ? 'auto' : 'always', boxSizing: 'border-box', overflow: 'hidden' }}
               >
                 <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1021,7 +1033,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
-                style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid' }}
+                style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid', boxSizing: 'border-box', overflow: 'hidden' }}
               >
                 <div style={{ marginBottom: '15px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1042,7 +1054,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', maxHeight: 'calc(100vh - 180px)' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', maxHeight: 'calc(100vh - 180px)', width: '100%', boxSizing: 'border-box' }}>
                   {pageProducts.map((product, productIndex) => (
                     <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', display: 'flex', flexDirection: 'column', pageBreakInside: 'avoid', breakInside: 'avoid', height: 'fit-content' }}>
                       <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
@@ -1153,9 +1165,13 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               key={`invoice-page-${pageIndex}`} 
               style={{ 
                 minHeight: '100vh', 
+                width: '100%',
+                maxWidth: '100%',
                 padding: '30px 60px 60px', // Extra padding at bottom for page number
                 position: 'relative',
-                pageBreakBefore: pageIndex > 0 ? 'always' : 'always'
+                pageBreakBefore: pageIndex > 0 ? 'always' : 'always',
+                boxSizing: 'border-box',
+                overflow: 'hidden'
               }}
             >
               <InvoiceHeader pageNum={currentPageNum} isFirstPage={isFirstPage} totalPages={totalInvoicePages} />
@@ -1280,7 +1296,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         const projectDetailsPageNum = getNextPageNumber();
         
         return (
-          <div key="project-details" style={{ minHeight: '100vh', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always' }}>
+          <div key="project-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden' }}>
             <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
