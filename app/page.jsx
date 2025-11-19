@@ -1152,8 +1152,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 padding: '30px 60px 40px',
                 position: 'relative',
                 pageBreakBefore: pageIndex > 0 ? 'always' : 'always',
-                boxSizing: 'border-box',
-                overflow: 'hidden'
+                boxSizing: 'border-box'
               }}
             >
               <InvoiceHeader isFirstPage={isFirstPage} />
@@ -1201,7 +1200,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               </table>
               
               {isLastPage && (
-                <div className="no-page-break" style={{ marginTop: '40px', paddingTop: '20px', pageBreakInside: 'avoid', breakInside: 'avoid', pageBreakBefore: 'auto' }}>
+                <div className="no-page-break" style={{ marginTop: '40px', paddingTop: '20px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
                     <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
