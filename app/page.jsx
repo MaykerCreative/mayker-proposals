@@ -850,6 +850,32 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
     window.print();
   };
   
+  // Shared header component for all pages
+  const PageHeader = ({ sectionName, showSectionName = false }) => (
+    <div style={{ marginBottom: '20px' }}>
+      {/* Top header row */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+        <div>
+          <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0' }}>MAYKER EVENTS</div>
+        </div>
+        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+          <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <div>{proposal.clientName}</div>
+            <div>{formatDateRange(proposal)}</div>
+            <div>{proposal.venueName}</div>
+          </div>
+          <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+        </div>
+      </div>
+      {/* Separator line */}
+      <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: showSectionName ? '15px' : '0' }}></div>
+      {/* Section name below separator if provided */}
+      {showSectionName && sectionName && (
+        <div style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginTop: '15px', fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.05em' }}>{sectionName}</div>
+      )}
+    </div>
+  );
+  
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white', width: '100%', overflowX: 'hidden' }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -962,21 +988,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 key={`image-${sectionIndex}`} 
                 style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: sectionIndex === 0 ? 'auto' : 'always', boxSizing: 'border-box', overflow: 'hidden' }}
               >
-                <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginBottom: '8px' }} />
-                    </div>
-                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                      <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                        <div>{proposal.clientName}</div>
-                        <div>{formatDateRange(proposal)}</div>
-                        <div>{proposal.venueName}</div>
-                      </div>
-                      <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
-                    </div>
-                  </div>
-                </div>
+                <PageHeader />
                 
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 200px)', flexDirection: 'column' }}>
                   <img 
@@ -1024,24 +1036,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 key={`${sectionIndex}-${pageIndex}`} 
                 style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid', boxSizing: 'border-box' }}
               >
-                <div style={{ marginBottom: '15px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div>
-                      <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginBottom: isFirstPageOfSection ? '8px' : '0' }} />
-                      {isFirstPageOfSection && (
-                        <div style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginTop: '8px', fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.05em' }}>{section.name}</div>
-                      )}
-                    </div>
-                    <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                      <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                        <div>{proposal.clientName}</div>
-                        <div>{formatDateRange(proposal)}</div>
-                        <div>{proposal.venueName}</div>
-                      </div>
-                      <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
-                    </div>
-                  </div>
-                </div>
+                <PageHeader sectionName={isFirstPageOfSection ? section.name : null} showSectionName={isFirstPageOfSection} />
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', width: '100%', boxSizing: 'border-box' }}>
                   {pageProducts.map((product, productIndex) => (
@@ -1093,24 +1088,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         // Invoice header component matching the screenshot
         const InvoiceHeader = ({ isFirstPage }) => (
           <div style={{ marginBottom: '30px', pageBreakInside: 'avoid', breakInside: 'avoid', display: 'block', visibility: 'visible' }}>
-            {/* Top header row */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-              <div>
-                <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '4px' }}>MAYKER EVENTS</div>
-              </div>
-              <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                  <div>{proposal.clientName}</div>
-                  <div>{formatDateRange(proposal)}</div>
-                  <div>{proposal.venueName}</div>
-                </div>
-                <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
-              </div>
-            </div>
-            {/* Separator line */}
-            <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: '25px' }}></div>
+            <PageHeader />
             {/* INVOICE title */}
-            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', fontFamily: "'Domaine Text', serif" }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginTop: '15px', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', fontFamily: "'Domaine Text', serif" }}>
               {isFirstPage ? 'Invoice' : 'Invoice (Cont.)'}
             </h2>
             {/* Column headers */}
@@ -1265,21 +1245,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       {(() => {
         return (
           <div key="project-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden' }}>
-            <div style={{ marginBottom: '20px', paddingBottom: '15px', borderBottom: '1px solid #e5e7eb' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '22px', marginTop: '4px' }} />
-                <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
-                  <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
-                    <div>{proposal.clientName}</div>
-                    <div>{formatDateRange(proposal)}</div>
-                    <div>{proposal.venueName}</div>
-                  </div>
-                  <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
-                </div>
-              </div>
-            </div>
-            
-            <h2 style={{ fontSize: '16px', fontWeight: '400', color: brandCharcoal, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>Project Details</h2>
+            <PageHeader sectionName="Project Details" showSectionName={true} />
             
             <p style={{ marginBottom: '24px', fontSize: '12px', lineHeight: '1.6', color: '#444' }}>
               The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
