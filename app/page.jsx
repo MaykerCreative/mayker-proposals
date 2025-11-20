@@ -1137,53 +1137,56 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 boxSizing: 'border-box'
               }}
             >
-              <InvoiceHeader isFirstPage={isFirstPage} />
-              
-              <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
-                <colgroup>
-                  <col style={{ width: '15%' }} />
-                  <col style={{ width: '45%' }} />
-                  <col style={{ width: '10%' }} />
-                  <col style={{ width: '15%' }} />
-                  <col style={{ width: '15%' }} />
-                </colgroup>
-                <tbody>
-                  {pageProducts.map((item, pageItemIndex) => {
-                    const { section, sectionIndex, product, productIndex } = item;
-                    const extendedPrice = product.price * totals.rentalMultiplier;
-                    const lineTotal = extendedPrice * product.quantity;
+              {isLastPage ? (
+                // On last page, wrap header and totals together to prevent separation
+                <>
+                  <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                    <InvoiceHeader isFirstPage={isFirstPage} />
                     
-                    // Show section name if this is the first product in the section on this page
-                    const showSectionName = pageItemIndex === 0 || 
-                      (pageItemIndex > 0 && pageProducts[pageItemIndex - 1].sectionIndex !== sectionIndex) ||
-                      productIndex === 0;
+                    <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
+                      <colgroup>
+                        <col style={{ width: '15%' }} />
+                        <col style={{ width: '45%' }} />
+                        <col style={{ width: '10%' }} />
+                        <col style={{ width: '15%' }} />
+                        <col style={{ width: '15%' }} />
+                      </colgroup>
+                      <tbody>
+                        {pageProducts.map((item, pageItemIndex) => {
+                          const { section, sectionIndex, product, productIndex } = item;
+                          const extendedPrice = product.price * totals.rentalMultiplier;
+                          const lineTotal = extendedPrice * product.quantity;
+                          
+                          // Show section name if this is the first product in the section on this page
+                          const showSectionName = pageItemIndex === 0 || 
+                            (pageItemIndex > 0 && pageProducts[pageItemIndex - 1].sectionIndex !== sectionIndex) ||
+                            productIndex === 0;
+                          
+                          return (
+                            <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
+                              <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                                {showSectionName ? section.name : ''}
+                              </td>
+                              <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                                {product.name}
+                              </td>
+                              <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                                {product.quantity}
+                              </td>
+                              <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                                ${formatNumber(extendedPrice)}
+                              </td>
+                              <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                                ${formatNumber(lineTotal)}
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
                     
-                    return (
-                      <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
-                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                          {showSectionName ? section.name : ''}
-                        </td>
-                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                          {product.name}
-                        </td>
-                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                          {product.quantity}
-                        </td>
-                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
-                          ${formatNumber(extendedPrice)}
-                        </td>
-                        <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
-                          ${formatNumber(lineTotal)}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              
-              {isLastPage && (
-                <div className="no-page-break" style={{ marginTop: '40px', paddingTop: '20px', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                  <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
+                    <div style={{ marginTop: '40px', paddingTop: '20px' }}>
+                      <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
                     <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
                         <tr>
@@ -1234,6 +1237,55 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     </table>
                   </div>
                 </div>
+                </div>
+                </>
+              ) : (
+                // Non-last pages: normal structure
+                <>
+                  <InvoiceHeader isFirstPage={isFirstPage} />
+                  
+                  <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
+                    <colgroup>
+                      <col style={{ width: '15%' }} />
+                      <col style={{ width: '45%' }} />
+                      <col style={{ width: '10%' }} />
+                      <col style={{ width: '15%' }} />
+                      <col style={{ width: '15%' }} />
+                    </colgroup>
+                    <tbody>
+                      {pageProducts.map((item, pageItemIndex) => {
+                        const { section, sectionIndex, product, productIndex } = item;
+                        const extendedPrice = product.price * totals.rentalMultiplier;
+                        const lineTotal = extendedPrice * product.quantity;
+                        
+                        // Show section name if this is the first product in the section on this page
+                        const showSectionName = pageItemIndex === 0 || 
+                          (pageItemIndex > 0 && pageProducts[pageItemIndex - 1].sectionIndex !== sectionIndex) ||
+                          productIndex === 0;
+                        
+                        return (
+                          <tr key={`${sectionIndex}-${productIndex}`} style={{ borderBottom: '1px solid #f8f8f8' }}>
+                            <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: '#888', fontStyle: 'italic', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                              {showSectionName ? section.name : ''}
+                            </td>
+                            <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                              {product.name}
+                            </td>
+                            <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'center', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                              {product.quantity}
+                            </td>
+                            <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                              ${formatNumber(extendedPrice)}
+                            </td>
+                            <td style={{ padding: pageItemIndex === 0 ? '5px 0 10px 0' : '10px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>
+                              ${formatNumber(lineTotal)}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </>
               )}
             </div>
           );
