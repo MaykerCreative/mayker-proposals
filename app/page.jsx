@@ -306,7 +306,8 @@ export default function ProposalApp() {
         
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/assets/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype');
+          src: url('/assets/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype'),
+               url('/assets/TestDomaineText-Light.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
           font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
@@ -873,7 +874,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/assets/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype');
+          src: url('/assets/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype'),
+               url('/assets/TestDomaineText-Light.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
           font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
@@ -1020,7 +1022,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
-                style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid', boxSizing: 'border-box', overflow: 'hidden' }}
+                style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid', boxSizing: 'border-box' }}
               >
                 <div style={{ marginBottom: '15px', paddingBottom: '12px', borderBottom: '1px solid #e5e7eb' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -1041,7 +1043,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', maxHeight: 'calc(100vh - 180px)', width: '100%', boxSizing: 'border-box' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', width: '100%', boxSizing: 'border-box' }}>
                   {pageProducts.map((product, productIndex) => (
                     <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', display: 'flex', flexDirection: 'column', pageBreakInside: 'avoid', breakInside: 'avoid', height: 'fit-content' }}>
                       <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
