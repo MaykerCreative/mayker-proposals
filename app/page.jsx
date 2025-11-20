@@ -127,8 +127,20 @@ function calculateDetailedTotals(proposal) {
   });
   
   const extendedProductTotal = baseProductTotal * rentalMultiplier;
-  const discountPercent = parseFloat(proposal.discount) || 0;
-  const standardRateDiscount = extendedProductTotal * (discountPercent / 100);
+  
+  // Support both percentage and dollar value discounts
+  const discountType = proposal.discountType || 'percentage'; // 'percentage' or 'dollar'
+  const discountValue = parseFloat(proposal.discount || proposal.discountValue || 0) || 0;
+  
+  let standardRateDiscount = 0;
+  if (discountType === 'dollar') {
+    // Direct dollar amount discount
+    standardRateDiscount = discountValue;
+  } else {
+    // Percentage discount (default/legacy behavior)
+    standardRateDiscount = extendedProductTotal * (discountValue / 100);
+  }
+  
   const rentalTotal = extendedProductTotal - standardRateDiscount;
   const productCare = extendedProductTotal * 0.10;
   const delivery = parseFloat(proposal.deliveryFee) || 0;
@@ -446,6 +458,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     strikeTime: '',
     deliveryFee: '0',
     discount: '0',
+    discountType: 'percentage', // 'percentage' or 'dollar'
+    discountValue: '0',
     discountName: '',
     clientFolderURL: '',
     salesLead: '',
@@ -553,7 +567,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       ...formData,
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
-      sectionsJSON: JSON.stringify(sections)
+      sectionsJSON: JSON.stringify(sections),
+      // Sync discountValue to discount for backward compatibility
+      discount: formData.discountValue || formData.discount || '0'
     };
     
     if (!finalData.projectNumber || finalData.projectNumber.trim() === '') {
@@ -634,8 +650,27 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
               <input type="number" name="deliveryFee" value={formData.deliveryFee} onChange={handleInputChange} placeholder="0" step="0.01" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount (%)</label>
-              <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} placeholder="0" min="0" max="100" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount Type</label>
+              <select name="discountType" value={formData.discountType || 'percentage'} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
+                <option value="percentage">Percentage (%)</option>
+                <option value="dollar">Dollar Amount ($)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>
+                {formData.discountType === 'dollar' ? 'Discount Amount ($)' : 'Discount (%)'}
+              </label>
+              <input 
+                type="number" 
+                name="discountValue" 
+                value={formData.discountValue || formData.discount || '0'} 
+                onChange={handleInputChange} 
+                placeholder="0" 
+                min="0" 
+                max={formData.discountType === 'percentage' ? '100' : undefined}
+                step={formData.discountType === 'dollar' ? '0.01' : '1'}
+                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
+              />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount Name</label>
@@ -1198,7 +1233,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         {totals.standardRateDiscount > 0 && (
                           <tr>
                             <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                              {proposal.discountName && proposal.discountName.trim() ? proposal.discountName : `Discount (${proposal.discount}% off)`}
+                              {proposal.discountName && proposal.discountName.trim() 
+                                ? proposal.discountName 
+                                : (proposal.discountType === 'dollar' 
+                                  ? `Discount ($${formatNumber(parseFloat(proposal.discountValue || proposal.discount || 0))})`
+                                  : `Discount (${proposal.discount || proposal.discountValue || 0}% off)`)
+                              }
                             </td>
                             <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                               -${formatNumber(totals.standardRateDiscount)}
@@ -1329,6 +1369,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     strikeTime: proposal.strikeTime || '',
     deliveryFee: proposal.deliveryFee || '',
     discount: proposal.discount || '',
+    discountType: proposal.discountType || 'percentage',
+    discountValue: proposal.discountValue || proposal.discount || '0',
     discountName: proposal.discountName || '',
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
@@ -1757,7 +1799,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
       sectionsJSON: JSON.stringify(sectionsToSave),
-      generatePDF: true
+      generatePDF: true,
+      // Sync discountValue to discount for backward compatibility
+      discount: formData.discountValue || formData.discount || '0'
     };
     
     // Debug: log to check if image data is included
@@ -1891,8 +1935,26 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               <input type="number" name="deliveryFee" value={formData.deliveryFee} onChange={handleInputChange} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} />
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Discount (%)</label>
-              <input type="number" name="discount" value={formData.discount} onChange={handleInputChange} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} />
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Discount Type</label>
+              <select name="discountType" value={formData.discountType || 'percentage'} onChange={handleInputChange} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }}>
+                <option value="percentage">Percentage (%)</option>
+                <option value="dollar">Dollar Amount ($)</option>
+              </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                {formData.discountType === 'dollar' ? 'Discount Amount ($)' : 'Discount (%)'}
+              </label>
+              <input 
+                type="number" 
+                name="discountValue" 
+                value={formData.discountValue || formData.discount || '0'} 
+                onChange={handleInputChange} 
+                min="0" 
+                max={formData.discountType === 'percentage' ? '100' : undefined}
+                step={formData.discountType === 'dollar' ? '0.01' : '1'}
+                style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} 
+              />
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Discount Name</label>
