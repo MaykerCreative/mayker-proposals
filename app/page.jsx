@@ -854,11 +854,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   const PageHeader = ({ sectionName, showSectionName = false }) => (
     <div style={{ marginBottom: '20px' }}>
       {/* Top header row */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <div>
-          <div style={{ fontSize: '14px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0' }}>MAYKER EVENTS</div>
+          <div style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2' }}>MAYKER EVENTS</div>
         </div>
-        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'flex-start', gap: '20px' }}>
+        <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
             <div>{proposal.clientName}</div>
             <div>{formatDateRange(proposal)}</div>
