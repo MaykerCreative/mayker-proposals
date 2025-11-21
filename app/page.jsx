@@ -462,6 +462,7 @@ export default function ProposalApp() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
         
         /* Font loading with fallbacks - fonts will fall back to system fonts if files aren't found */
+        /* Custom fonts - will fallback to system fonts if not available */
         @font-face {
           font-family: 'Neue Haas Unica';
           src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
@@ -486,13 +487,18 @@ export default function ProposalApp() {
           font-display: swap;
         }
         
-        /* Fallback font stacks */
+        /* Fallback font stacks - will use system fonts if custom fonts fail to load */
         .font-neue-haas {
-          font-family: 'Neue Haas Unica', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+          font-family: 'Neue Haas Unica', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
         
         .font-domaine {
-          font-family: 'Domaine Text', Georgia, 'Times New Roman', serif;
+          font-family: 'Domaine Text', Georgia, 'Times New Roman', 'Palatino', serif;
+        }
+        
+        /* Ensure fallbacks are used if fonts don't load */
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; } 
@@ -1179,6 +1185,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
         /* Font loading with fallbacks - fonts will fall back to system fonts if files aren't found */
+        /* Custom fonts - will fallback to system fonts if not available */
         @font-face {
           font-family: 'Neue Haas Unica';
           src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
@@ -1203,13 +1210,18 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           font-display: swap;
         }
         
-        /* Fallback font stacks */
+        /* Fallback font stacks - will use system fonts if custom fonts fail to load */
         .font-neue-haas {
-          font-family: 'Neue Haas Unica', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+          font-family: 'Neue Haas Unica', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
         
         .font-domaine {
-          font-family: 'Domaine Text', Georgia, 'Times New Roman', serif;
+          font-family: 'Domaine Text', Georgia, 'Times New Roman', 'Palatino', serif;
+        }
+        
+        /* Ensure fallbacks are used if fonts don't load */
+        body {
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; } 
