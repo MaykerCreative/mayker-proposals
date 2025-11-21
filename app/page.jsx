@@ -1484,18 +1484,23 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 minHeight: '100vh', 
                 width: '100%',
                 maxWidth: '100%',
-                padding: '30px 60px 40px',
+                padding: '30px 60px',
+                paddingBottom: '60px',
                 position: 'relative',
                 pageBreakBefore: pageIndex > 0 ? 'always' : 'always',
-                boxSizing: 'border-box'
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'column'
               }}
             >
               {isLastPage ? (
-                // On last page, wrap header and totals together to prevent separation
+                // On last page, use flexbox to ensure footer stays at bottom
                 <>
-                  <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                  <div style={{ flex: '0 0 auto', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                     <InvoiceHeader isFirstPage={isFirstPage} />
-                    
+                  </div>
+                  
+                  <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
                       <colgroup>
                         <col style={{ width: '15%' }} />
@@ -1538,7 +1543,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                       </tbody>
                     </table>
                     
-                    <div style={{ marginTop: '40px', paddingTop: '20px' }}>
+                    <div style={{ marginTop: 'auto', paddingTop: '30px', paddingBottom: '20px' }}>
                       <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
                     <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
                       <tbody>
@@ -1627,14 +1632,17 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     </table>
                   </div>
                 </div>
-                </div>
+                  </div>
                 </>
               ) : (
-                // Non-last pages: normal structure
+                // Non-last pages: normal structure with flexbox for footer spacing
                 <>
-                  <InvoiceHeader isFirstPage={isFirstPage} />
+                  <div style={{ flex: '0 0 auto' }}>
+                    <InvoiceHeader isFirstPage={isFirstPage} />
+                  </div>
                   
-                  <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
+                  <div style={{ flex: '1 1 auto', minHeight: 0 }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed', borderSpacing: 0 }}>
                     <colgroup>
                       <col style={{ width: '15%' }} />
                       <col style={{ width: '45%' }} />
@@ -1675,9 +1683,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                       })}
                     </tbody>
                   </table>
+                  </div>
                 </>
               )}
-              <PageFooter pageNum={currentPageNum} />
+              <div style={{ flex: '0 0 auto', marginTop: 'auto' }}>
+                <PageFooter pageNum={currentPageNum} />
+              </div>
             </div>
           );
         }
