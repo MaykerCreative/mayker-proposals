@@ -1608,12 +1608,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
 
       {(() => {
         return (
-          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 60px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <PageHeader sectionName="Total" showSectionName={true} />
             
-            <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
               {/* Totals Section */}
-              <div style={{ marginBottom: '50px' }}>
+              <div style={{ marginBottom: '40px' }}>
                 <div className="no-page-break" style={{ width: '100%', maxWidth: '500px' }}>
                   <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <tbody>
@@ -1703,15 +1703,15 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 </div>
               </div>
               
-                {/* Project Details Section */}
-                <div style={{ marginTop: 'auto', paddingTop: '30px', borderTop: '1px solid #e5e7eb' }}>
-                  <h2 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: "'Domaine Text', serif" }}>
-                    Project Details
-                  </h2>
+              {/* Project Details Section */}
+              <div style={{ paddingTop: '40px', borderTop: '1px solid #e5e7eb' }}>
+                <h2 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: "'Domaine Text', serif" }}>
+                  Project Details
+                </h2>
                 <p style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                   The delivery fee quoted is based on the current scope of rentals, as well as the below delivery details. If your project needs change, we're happy to accommodate where possible, but delivery fees may adjust accordingly:
                 </p>
-                <ul style={{ fontSize: '12px', lineHeight: '1.8', marginBottom: '30px', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                <ul style={{ fontSize: '12px', lineHeight: '1.8', marginBottom: '40px', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                   <li style={{ marginBottom: '8px' }}><strong>Project Address:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
                   <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
                   <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
@@ -1720,7 +1720,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 </ul>
                 
                 {/* Confirmation & Payment Section */}
-                <h2 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: "'Domaine Text', serif" }}>
+                <h2 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: "'Domaine Text', serif" }}>
                   Confirmation & Payment
                 </h2>
                 <p style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
@@ -1732,7 +1732,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   <div>1206 4th Ave. N</div>
                   <div>Nashville, TN 37208</div>
                 </div>
-                <p style={{ fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                   A 3% processing fee is applied to all credit card payments.
                 </p>
               </div>
