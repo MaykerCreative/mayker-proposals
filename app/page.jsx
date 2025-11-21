@@ -120,12 +120,16 @@ function calculateDetailedTotals(proposal) {
   
   // Check for custom rental multiplier (stored in dedicated field)
   let rentalMultiplier = null;
-  if (proposal.customRentalMultiplier && proposal.customRentalMultiplier.trim()) {
-    rentalMultiplier = parseFloat(proposal.customRentalMultiplier);
+  const customMultiplierValue = proposal.customRentalMultiplier;
+  if (customMultiplierValue && String(customMultiplierValue).trim() !== '') {
+    const parsed = parseFloat(customMultiplierValue);
+    if (!isNaN(parsed) && parsed > 0) {
+      rentalMultiplier = parsed;
+    }
   }
   
   // Use custom multiplier if provided, otherwise calculate from duration
-  if (!rentalMultiplier || isNaN(rentalMultiplier)) {
+  if (!rentalMultiplier || isNaN(rentalMultiplier) || rentalMultiplier <= 0) {
     rentalMultiplier = getRentalMultiplier(duration);
   }
   
@@ -191,6 +195,7 @@ function calculateDetailedTotals(proposal) {
   const total = subtotal + tax;
   
   return {
+    rentalMultiplier, // Include the multiplier so it can be used in display
     productSubtotal: extendedProductTotal,
     standardRateDiscount,
     rentalTotal,
