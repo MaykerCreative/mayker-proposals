@@ -242,6 +242,74 @@ function calculateTotal(proposal) {
   return totals.total;
 }
 
+// Helper function to extract exceptions from a proposal
+function getProposalExceptions(proposal) {
+  const exceptions = [];
+  
+  // Check for waived fees
+  let waiveProductCare = proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || String(proposal.waiveProductCare || '').toLowerCase() === 'true';
+  let waiveServiceFee = proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || String(proposal.waiveServiceFee || '').toLowerCase() === 'true';
+  
+  // Extract from discountName if stored there
+  if (proposal.discountName && proposal.discountName.includes('WAIVE:')) {
+    const waiveMatch = proposal.discountName.match(/WAIVE:([^|]+)/);
+    if (waiveMatch) {
+      const waivedItems = waiveMatch[1].split(',');
+      waiveProductCare = waiveProductCare || waivedItems.includes('PC');
+      waiveServiceFee = waiveServiceFee || waivedItems.includes('SF');
+    }
+  }
+  
+  if (waiveProductCare) {
+    exceptions.push('Waived Product Care Fee');
+  }
+  if (waiveServiceFee) {
+    exceptions.push('Waived Service Fee');
+  }
+  
+  // Check for custom rental multiplier
+  const duration = getDuration(proposal);
+  const standardMultiplier = getRentalMultiplier(duration);
+  
+  let customMultiplier = null;
+  if (proposal.customRentalMultiplier && proposal.customRentalMultiplier.trim() !== '') {
+    customMultiplier = parseFloat(proposal.customRentalMultiplier);
+  } else if (proposal.discountName && proposal.discountName.includes('MULT:')) {
+    const multMatch = proposal.discountName.match(/MULT:([\d.]+)/);
+    if (multMatch) {
+      customMultiplier = parseFloat(multMatch[1]);
+    }
+  }
+  
+  if (customMultiplier && !isNaN(customMultiplier) && customMultiplier > 0 && customMultiplier !== standardMultiplier) {
+    exceptions.push(`Custom Rental: ${customMultiplier}x (standard: ${standardMultiplier}x)`);
+  }
+  
+  return exceptions;
+}
+
+// Helper function to extract clean discount name
+function getDiscountApplied(proposal) {
+  let discountName = proposal.discountName || '';
+  
+  // Remove TYPE: prefix
+  if (discountName.includes('TYPE:')) {
+    discountName = discountName.replace(/TYPE:\w+\|?/, '');
+  }
+  // Remove WAIVE: prefix
+  if (discountName.includes('WAIVE:')) {
+    discountName = discountName.replace(/WAIVE:[^|]+\|?/, '');
+  }
+  // Remove MULT: prefix
+  if (discountName.includes('MULT:')) {
+    discountName = discountName.replace(/MULT:[\d.]+\|?/, '');
+  }
+  // Clean up any remaining leading pipes
+  discountName = discountName.replace(/^\|+/, '').trim();
+  
+  return discountName || '-';
+}
+
 function formatNumber(num) {
   if (num === undefined || num === null || isNaN(num)) {
     return '0.00';
@@ -494,6 +562,8 @@ export default function ProposalApp() {
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Version</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Sales Lead</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Status</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Discount</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Exceptions</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Last Edited</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Total</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
@@ -513,6 +583,22 @@ export default function ProposalApp() {
                     <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: proposal.status === 'Pending' ? '#f5f1e6' : proposal.status === 'Approved' ? '#e8f5e9' : '#ffebee', color: proposal.status === 'Pending' ? '#b8860b' : proposal.status === 'Approved' ? '#2e7d32' : '#c62828' }}>
                       {proposal.status || 'Pending'}
                     </span>
+                  </td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{getDiscountApplied(proposal)}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '12px', color: '#666', lineHeight: '1.4' }}>
+                    {(() => {
+                      const exceptions = getProposalExceptions(proposal);
+                      if (exceptions.length === 0) {
+                        return <span style={{ color: '#999', fontStyle: 'italic' }}>None</span>;
+                      }
+                      return (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {exceptions.map((exc, idx) => (
+                            <span key={idx} style={{ display: 'block', fontSize: '11px' }}>{exc}</span>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#888888' }}>{proposal.lastUpdated || '-'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', fontWeight: '500' }}>${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
