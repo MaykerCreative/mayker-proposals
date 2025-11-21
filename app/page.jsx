@@ -462,10 +462,12 @@ export default function ProposalApp() {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
         
         /* Font loading with fallbacks - fonts will fall back to system fonts if files aren't found */
-        /* Custom fonts - will fallback to system fonts if not available */
+        /* Custom fonts - using WOFF2 for optimal web performance */
+        /* WOFF2 is 30-50% smaller than OTF and loads faster */
         @font-face {
           font-family: 'Neue Haas Unica';
-          src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
+          src: url('https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/NeueHaasUnica-Regular.woff2') format('woff2'),
+               url('/assets/NeueHaasUnica-Regular.woff2') format('woff2');
           font-weight: 400;
           font-style: normal;
           font-display: swap;
@@ -473,7 +475,8 @@ export default function ProposalApp() {
         
         @font-face {
           font-family: 'Neue Haas Unica';
-          src: url('/assets/Neue%20Haas%20Unica%20Medium-abce.otf') format('opentype');
+          src: url('https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/NeueHaasUnica-Medium.woff2') format('woff2'),
+               url('/assets/NeueHaasUnica-Medium.woff2') format('woff2');
           font-weight: 500;
           font-style: normal;
           font-display: swap;
@@ -481,7 +484,8 @@ export default function ProposalApp() {
         
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/assets/TestDomaineText-Light.otf') format('opentype');
+          src: url('https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/test-domaine-text-light.woff2') format('woff2'),
+               url('/assets/test-domaine-text-light.woff2') format('woff2');
           font-weight: 300;
           font-style: normal;
           font-display: swap;
@@ -1185,10 +1189,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
         
         /* Font loading with fallbacks - fonts will fall back to system fonts if files aren't found */
-        /* Custom fonts - will fallback to system fonts if not available */
+        /* Custom fonts - using WOFF2 for optimal web performance */
+        /* WOFF2 is 30-50% smaller than OTF and loads faster */
         @font-face {
           font-family: 'Neue Haas Unica';
-          src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
+          src: url('https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/NeueHaasUnica-Regular.woff2') format('woff2'),
+               url('/assets/NeueHaasUnica-Regular.woff2') format('woff2');
           font-weight: 400;
           font-style: normal;
           font-display: swap;
@@ -1196,7 +1202,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         @font-face {
           font-family: 'Neue Haas Unica';
-          src: url('/assets/Neue%20Haas%20Unica%20Medium-abce.otf') format('opentype');
+          src: url('https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/NeueHaasUnica-Medium.woff2') format('woff2'),
+               url('/assets/NeueHaasUnica-Medium.woff2') format('woff2');
           font-weight: 500;
           font-style: normal;
           font-display: swap;
@@ -1204,7 +1211,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
         
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/assets/TestDomaineText-Light.otf') format('opentype');
+          src: url('https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/test-domaine-text-light.woff2') format('woff2'),
+               url('/assets/test-domaine-text-light.woff2') format('woff2');
           font-weight: 300;
           font-style: normal;
           font-display: swap;
