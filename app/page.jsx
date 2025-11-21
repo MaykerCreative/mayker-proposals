@@ -1544,133 +1544,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         })}
                       </tbody>
                     </table>
-                    
-                    <div style={{ marginTop: 'auto', paddingTop: '30px', paddingBottom: '20px' }}>
-                      <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
-                    <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                      <tbody>
-                        <tr>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right', width: '50%' }}>Product Subtotal</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '50%' }}>
-                            ${formatNumber(totals.productSubtotal)}
-                          </td>
-                        </tr>
-                        {totals.standardRateDiscount > 0 && (
-                          <tr>
-                            <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                              {(() => {
-                                // Extract clean discount name (remove TYPE:, WAIVE:, and MULT: prefixes if present)
-                                let displayName = proposal.discountName || '';
-                                // Remove TYPE: prefix
-                                if (displayName.includes('TYPE:')) {
-                                  displayName = displayName.replace(/TYPE:\w+\|?/, '');
-                                }
-                                // Remove WAIVE: prefix
-                                if (displayName.includes('WAIVE:')) {
-                                  displayName = displayName.replace(/WAIVE:[^|]+\|?/, '');
-                                }
-                                // Remove MULT: prefix
-                                if (displayName.includes('MULT:')) {
-                                  displayName = displayName.replace(/MULT:[\d.]+\|?/, '');
-                                }
-                                // Clean up any remaining leading pipes
-                                displayName = displayName.replace(/^\|+/, '').trim();
-                                
-                                if (displayName && displayName.trim()) {
-                                  return displayName;
-                                }
-                                // Fallback to default format if no name
-                                return (proposal.discountType === 'dollar' 
-                                  ? `Discount ($${formatNumber(parseFloat(proposal.discountValue || proposal.discount || 0))})`
-                                  : `Discount (${proposal.discount || proposal.discountValue || 0}% off)`);
-                              })()}
-                            </td>
-                            <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                              -${formatNumber(totals.standardRateDiscount)}
-                            </td>
-                          </tr>
-                        )}
-                        <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-                          <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Rental Total</td>
-                          <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.rentalTotal)}</td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Product Care (10%)</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                            {totals.waiveProductCare ? (
-                              <span style={{ color: '#059669' }}>Waived (-${formatNumber(totals.productCareAmount || totals.productCare)})</span>
-                            ) : (
-                              <span style={{ color: brandCharcoal }}>${formatNumber(totals.productCare)}</span>
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Service Fee (5%)</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                            {totals.waiveServiceFee ? (
-                              <span style={{ color: '#059669' }}>Waived (-${formatNumber(totals.serviceFeeAmount || totals.serviceFee)})</span>
-                            ) : (
-                              <span style={{ color: brandCharcoal }}>${formatNumber(totals.serviceFee)}</span>
-                            )}
-                          </td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Delivery</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
-                        </tr>
-                        <tr style={{ borderTop: '1px solid #e5e7eb' }}>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Subtotal</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.subtotal)}</td>
-                        </tr>
-                        <tr>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Tax ({proposal.taxRate || 9.75}%)</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.tax)}</td>
-                        </tr>
-                        <tr style={{ borderTop: '2px solid #2C2C2C', borderBottom: '2px solid #2C2C2C' }}>
-                          <td style={{ padding: '12px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>TOTAL</td>
-                          <td style={{ padding: '12px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.total)}</td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                
-                {/* Project Details Section */}
-                <div style={{ marginTop: '50px', paddingTop: '30px', borderTop: '1px solid #e5e7eb' }}>
-                  <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>
-                    Project Details
-                  </h2>
-                  <p style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
-                  </p>
-                  <ul style={{ fontSize: '12px', lineHeight: '1.8', marginBottom: '30px', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    <li style={{ marginBottom: '8px' }}><strong>Project Location:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
-                    <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-                    <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
-                    <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-                    <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
-                  </ul>
-                  
-                  {/* Confirmation & Payment Section */}
-                  <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>
-                    Confirmation & Payment
-                  </h2>
-                  <p style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    Projects are confirmed with a signed service agreement and a corresponding deposit payment. Payment can be made via wire, ACH, credit card, or check.
-                  </p>
-                  <p style={{ marginBottom: '10px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    If paying by check, payment should be remitted to:
-                  </p>
-                  <div style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.8', color: '#222', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    <div>Mayker</div>
-                    <div>Attn: Accounting Department</div>
-                    <div>1206 4th Ave. N</div>
-                    <div>Nashville, TN 37208</div>
-                  </div>
-                  <p style={{ fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    A 3% processing fee is applied to all credit card payments.
-                  </p>
-                </div>
                   </div>
                 </>
               ) : (
@@ -1725,12 +1598,149 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </>
               )}
-              <PageFooter pageNum={currentPageNum} useFlexbox={isLastPage} />
+              <PageFooter pageNum={currentPageNum} />
             </div>
           );
         }
         
         return invoicePages;
+      })()}
+
+      {(() => {
+        return (
+          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <PageHeader sectionName="Total" showSectionName={true} />
+            
+            <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
+              {/* Totals Section */}
+              <div style={{ marginBottom: '50px' }}>
+                <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
+                  <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <tbody>
+                      <tr>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right', width: '50%' }}>Product Subtotal</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '50%' }}>
+                          ${formatNumber(totals.productSubtotal)}
+                        </td>
+                      </tr>
+                      {totals.standardRateDiscount > 0 && (
+                        <tr>
+                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                            {(() => {
+                              // Extract clean discount name (remove TYPE:, WAIVE:, and MULT: prefixes if present)
+                              let displayName = proposal.discountName || '';
+                              // Remove TYPE: prefix
+                              if (displayName.includes('TYPE:')) {
+                                displayName = displayName.replace(/TYPE:\w+\|?/, '');
+                              }
+                              // Remove WAIVE: prefix
+                              if (displayName.includes('WAIVE:')) {
+                                displayName = displayName.replace(/WAIVE:[^|]+\|?/, '');
+                              }
+                              // Remove MULT: prefix
+                              if (displayName.includes('MULT:')) {
+                                displayName = displayName.replace(/MULT:[\d.]+\|?/, '');
+                              }
+                              // Clean up any remaining leading pipes
+                              displayName = displayName.replace(/^\|+/, '').trim();
+                              
+                              if (displayName && displayName.trim()) {
+                                return displayName;
+                              }
+                              // Fallback to default format if no name
+                              return (proposal.discountType === 'dollar' 
+                                ? `Discount ($${formatNumber(parseFloat(proposal.discountValue || proposal.discount || 0))})`
+                                : `Discount (${proposal.discount || proposal.discountValue || 0}% off)`);
+                            })()}
+                          </td>
+                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                            -${formatNumber(totals.standardRateDiscount)}
+                          </td>
+                        </tr>
+                      )}
+                      <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Rental Total</td>
+                        <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.rentalTotal)}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Product Care (10%)</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                          {totals.waiveProductCare ? (
+                            <span style={{ color: '#059669' }}>Waived (-${formatNumber(totals.productCareAmount || totals.productCare)})</span>
+                          ) : (
+                            <span style={{ color: brandCharcoal }}>${formatNumber(totals.productCare)}</span>
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Service Fee (5%)</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                          {totals.waiveServiceFee ? (
+                            <span style={{ color: '#059669' }}>Waived (-${formatNumber(totals.serviceFeeAmount || totals.serviceFee)})</span>
+                          ) : (
+                            <span style={{ color: brandCharcoal }}>${formatNumber(totals.serviceFee)}</span>
+                          )}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Delivery</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
+                      </tr>
+                      <tr style={{ borderTop: '1px solid #e5e7eb' }}>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Subtotal</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.subtotal)}</td>
+                      </tr>
+                      <tr>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Tax ({proposal.taxRate || 9.75}%)</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.tax)}</td>
+                      </tr>
+                      <tr style={{ borderTop: '2px solid #2C2C2C', borderBottom: '2px solid #2C2C2C' }}>
+                        <td style={{ padding: '12px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>TOTAL</td>
+                        <td style={{ padding: '12px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.total)}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+              
+              {/* Project Details Section */}
+              <div style={{ marginTop: 'auto', paddingTop: '30px', borderTop: '1px solid #e5e7eb' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>
+                  Project Details
+                </h2>
+                <p style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  The delivery fee quoted is based on the current scope of rentals, as well as the below delivery details. If your project needs change, we're happy to accommodate where possible, but delivery fees may adjust accordingly:
+                </p>
+                <ul style={{ fontSize: '12px', lineHeight: '1.8', marginBottom: '30px', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  <li style={{ marginBottom: '8px' }}><strong>Project Address:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+                  <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
+                </ul>
+                
+                {/* Confirmation & Payment Section */}
+                <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>
+                  Confirmation & Payment
+                </h2>
+                <p style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  Projects are confirmed with a signed service agreement and corresponding deposit payment. Payment can be made via wire, ACH, credit card, or check. If paying by check, please remit payment to the address below:
+                </p>
+                <div style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.8', color: '#222', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  <div>Mayker</div>
+                  <div>Attn: Accounting Department</div>
+                  <div>1206 4th Ave. N</div>
+                  <div>Nashville, TN 37208</div>
+                </div>
+                <p style={{ fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                  A 3% processing fee is applied to all credit card payments.
+                </p>
+              </div>
+            </div>
+            
+            <PageFooter pageNum={getNextPageNumber()} useFlexbox={true} />
+          </div>
+        );
       })()}
     </div>
   );
