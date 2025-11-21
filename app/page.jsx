@@ -770,36 +770,28 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
               </select>
             </div>
             <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Custom Rental Multiplier (Optional)</label>
-              <input 
-                type="number" 
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Custom Rental Multiplier</label>
+              <select 
                 name="customRentalMultiplier" 
                 value={formData.customRentalMultiplier || ''} 
                 onChange={handleInputChange} 
-                placeholder="Leave empty to use duration-based multiplier" 
-                min="0.1" 
-                step="0.1"
                 style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
-              />
-              <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                Override the automatic multiplier. Leave empty to use duration-based calculation.
-              </p>
-            </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Custom Rental Multiplier (Optional)</label>
-              <input 
-                type="number" 
-                name="customRentalMultiplier" 
-                value={formData.customRentalMultiplier || ''} 
-                onChange={handleInputChange} 
-                placeholder="Leave empty to use duration-based multiplier" 
-                min="0.1" 
-                step="0.1"
-                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
-              />
-              <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                Override the automatic multiplier. Leave empty to use duration-based calculation.
-              </p>
+              >
+                <option value="">Auto-calculated from duration</option>
+                <option value="1.0">1.0</option>
+                <option value="1.1">1.1</option>
+                <option value="1.2">1.2</option>
+                <option value="1.3">1.3</option>
+                <option value="1.4">1.4</option>
+                <option value="1.5">1.5</option>
+                <option value="2.0">2.0</option>
+                <option value="2.5">2.5</option>
+                <option value="3.0">3.0</option>
+                <option value="3.5">3.5</option>
+                <option value="4.0">4.0</option>
+                <option value="4.5">4.5</option>
+                <option value="5.0">5.0</option>
+              </select>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
@@ -2215,19 +2207,27 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Custom Rental Multiplier</label>
-              <input 
-                type="number" 
+              <select 
                 name="customRentalMultiplier" 
                 value={formData.customRentalMultiplier || ''} 
                 onChange={handleInputChange} 
-                placeholder="Auto-calculated from duration" 
-                min="0.1" 
-                step="0.1"
                 style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} 
-              />
-              <p style={{ fontSize: '10px', color: '#888888', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>
-                Override automatic multiplier. Leave empty for duration-based calculation.
-              </p>
+              >
+                <option value="">Auto-calculated from duration</option>
+                <option value="1.0">1.0</option>
+                <option value="1.1">1.1</option>
+                <option value="1.2">1.2</option>
+                <option value="1.3">1.3</option>
+                <option value="1.4">1.4</option>
+                <option value="1.5">1.5</option>
+                <option value="2.0">2.0</option>
+                <option value="2.5">2.5</option>
+                <option value="3.0">3.0</option>
+                <option value="3.5">3.5</option>
+                <option value="4.0">4.0</option>
+                <option value="4.5">4.5</option>
+                <option value="5.0">5.0</option>
+              </select>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Client Folder URL</label>
