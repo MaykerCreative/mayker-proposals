@@ -670,6 +670,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       customRentalMultiplier: formData.customRentalMultiplier || ''
     };
     
+    // Debug: Log the customRentalMultiplier being saved
+    console.log('Saving customRentalMultiplier:', finalData.customRentalMultiplier, 'from formData:', formData.customRentalMultiplier);
+    
     if (!finalData.projectNumber || finalData.projectNumber.trim() === '') {
       delete finalData.projectNumber;
     }
@@ -964,6 +967,10 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
 }
 
 function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
+  // Debug: Check if customRentalMultiplier is in the proposal
+  console.log('ViewProposalView - proposal.customRentalMultiplier:', proposal.customRentalMultiplier);
+  console.log('ViewProposalView - All proposal keys:', Object.keys(proposal));
+  
   const rawSections = JSON.parse(proposal.sectionsJSON || '[]');
   
   // Ensure all products have note field for backward compatibility
