@@ -118,34 +118,31 @@ function calculateDetailedTotals(proposal) {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
   const duration = getDuration(proposal); // Now uses fixed getDuration
   
-  // Check for custom rental multiplier (stored in dedicated field)
+  // Check for custom rental multiplier (stored in discountName as "MULT:2.0|..." or in dedicated field)
   let rentalMultiplier = null;
-  const customMultiplierValue = proposal.customRentalMultiplier;
   
-  // Debug logging
-  console.log('calculateDetailedTotals - customRentalMultiplier:', customMultiplierValue, 'type:', typeof customMultiplierValue);
-  console.log('Full proposal object keys:', Object.keys(proposal));
+  // First check dedicated field
+  let customMultiplierValue = proposal.customRentalMultiplier;
+  
+  // If not found, check discountName field (format: "MULT:2.0|..." or "TYPE:dollar|MULT:2.0|...")
+  if ((!customMultiplierValue || String(customMultiplierValue).trim() === '') && proposal.discountName && proposal.discountName.includes('MULT:')) {
+    const multMatch = proposal.discountName.match(/MULT:([\d.]+)/);
+    if (multMatch) {
+      customMultiplierValue = multMatch[1];
+    }
+  }
   
   if (customMultiplierValue && String(customMultiplierValue).trim() !== '') {
     const parsed = parseFloat(customMultiplierValue);
-    console.log('Parsed multiplier:', parsed, 'isNaN:', isNaN(parsed));
     if (!isNaN(parsed) && parsed > 0) {
       rentalMultiplier = parsed;
-      console.log('✓ Using custom rental multiplier:', rentalMultiplier);
-    } else {
-      console.log('✗ Parsed value invalid:', parsed);
     }
-  } else {
-    console.log('✗ No custom multiplier value or empty string');
   }
   
   // Use custom multiplier if provided, otherwise calculate from duration
   if (!rentalMultiplier || isNaN(rentalMultiplier) || rentalMultiplier <= 0) {
     rentalMultiplier = getRentalMultiplier(duration);
-    console.log('Using duration-based rental multiplier:', rentalMultiplier, 'for duration:', duration);
   }
-  
-  console.log('Final rentalMultiplier:', rentalMultiplier);
   
   let baseProductTotal = 0;
   sections.forEach(section => {
@@ -672,9 +669,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       discount: formData.discountValue || formData.discount || '0',
       discountType: formData.discountType || 'percentage',
       discountValue: formData.discountValue || formData.discount || '0',
-      // Store discountType and waiver flags in discountName for persistence
-      // Format: "TYPE:dollar|WAIVE:PC,SF|Discount Name" or variations
-      // Note: customRentalMultiplier is stored in its own dedicated field, not in discountName
+      // Store discountType, waiver flags, and custom multiplier in discountName for persistence
+      // Format: "TYPE:dollar|WAIVE:PC,SF|MULT:2.0|Discount Name" or variations
       discountName: (() => {
         let name = formData.discountName || '';
         let prefix = '';
@@ -692,17 +688,20 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
           prefix += `WAIVE:${waivers.join(',')}|`;
         }
         
+        // Add custom rental multiplier if provided
+        if (formData.customRentalMultiplier && formData.customRentalMultiplier.trim() !== '') {
+          prefix += `MULT:${formData.customRentalMultiplier}|`;
+        }
+        
         return prefix ? `${prefix}${name}`.replace(/\|$/, '') : name;
       })(),
       // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
-      waiveServiceFee: formData.waiveServiceFee || false,
-      // Include custom rental multiplier in dedicated field
-      customRentalMultiplier: formData.customRentalMultiplier || ''
+      waiveServiceFee: formData.waiveServiceFee || false
     };
     
     // Debug: Log the customRentalMultiplier being saved
-    console.log('CreateProposalView - Saving customRentalMultiplier:', finalData.customRentalMultiplier, 'from formData:', formData.customRentalMultiplier);
+    console.log('CreateProposalView - Saving customRentalMultiplier in discountName:', finalData.discountName, 'from formData:', formData.customRentalMultiplier);
     console.log('CreateProposalView - Full finalData keys:', Object.keys(finalData));
     console.log('CreateProposalView - finalData.customRentalMultiplier value:', finalData.customRentalMultiplier, 'type:', typeof finalData.customRentalMultiplier);
     
@@ -1598,6 +1597,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       if (name.includes('WAIVE:')) {
         name = name.replace(/WAIVE:[^|]+\|?/, '');
       }
+      // Remove MULT: prefix
+      if (name.includes('MULT:')) {
+        name = name.replace(/MULT:[\d.]+\|?/, '');
+      }
       // Clean up any remaining leading pipes
       name = name.replace(/^\|+/, '').trim();
       return name;
@@ -1630,7 +1633,20 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       }
       return false;
     })(),
-    customRentalMultiplier: proposal.customRentalMultiplier || '',
+    customRentalMultiplier: (() => {
+      // Check proposal field first
+      if (proposal.customRentalMultiplier && proposal.customRentalMultiplier.trim() !== '') {
+        return proposal.customRentalMultiplier;
+      }
+      // Extract from discountName if stored there (format: "MULT:2.0|...")
+      if (proposal.discountName && proposal.discountName.includes('MULT:')) {
+        const multMatch = proposal.discountName.match(/MULT:([\d.]+)/);
+        if (multMatch) {
+          return multMatch[1];
+        }
+      }
+      return '';
+    })(),
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
     status: proposal.status || 'Pending',
@@ -2065,9 +2081,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       discount: formData.discountValue || formData.discount || '0',
       discountType: formData.discountType || 'percentage',
       discountValue: formData.discountValue || formData.discount || '0',
-      // Store discountType and waiver flags in discountName for persistence
-      // Format: "TYPE:dollar|WAIVE:PC,SF|Discount Name" or variations
-      // Note: customRentalMultiplier is stored in its own dedicated field, not in discountName
+      // Store discountType, waiver flags, and custom multiplier in discountName for persistence
+      // Format: "TYPE:dollar|WAIVE:PC,SF|MULT:2.0|Discount Name" or variations
       discountName: (() => {
         let name = formData.discountName || '';
         let prefix = '';
@@ -2085,17 +2100,20 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           prefix += `WAIVE:${waivers.join(',')}|`;
         }
         
+        // Add custom rental multiplier if provided
+        if (formData.customRentalMultiplier && formData.customRentalMultiplier.trim() !== '') {
+          prefix += `MULT:${formData.customRentalMultiplier}|`;
+        }
+        
         return prefix ? `${prefix}${name}`.replace(/\|$/, '') : name;
       })(),
       // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
-      waiveServiceFee: formData.waiveServiceFee || false,
-      // Include custom rental multiplier in dedicated field
-      customRentalMultiplier: formData.customRentalMultiplier || ''
+      waiveServiceFee: formData.waiveServiceFee || false
     };
     
     // Debug: Log the customRentalMultiplier being saved
-    console.log('EditProposalView - Saving customRentalMultiplier:', finalData.customRentalMultiplier, 'from formData:', formData.customRentalMultiplier);
+    console.log('EditProposalView - Saving customRentalMultiplier in discountName:', finalData.discountName, 'from formData:', formData.customRentalMultiplier);
     console.log('EditProposalView - Full finalData keys:', Object.keys(finalData));
     console.log('EditProposalView - finalData.customRentalMultiplier value:', finalData.customRentalMultiplier, 'type:', typeof finalData.customRentalMultiplier);
     
