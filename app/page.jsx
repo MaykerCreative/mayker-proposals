@@ -1246,12 +1246,22 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         {totals.standardRateDiscount > 0 && (
                           <tr>
                             <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
-                              {proposal.discountName && proposal.discountName.trim() 
-                                ? proposal.discountName 
-                                : (proposal.discountType === 'dollar' 
+                              {(() => {
+                                // Extract clean discount name (remove TYPE: prefix if present)
+                                let displayName = proposal.discountName || '';
+                                if (displayName && displayName.startsWith('TYPE:')) {
+                                  const match = displayName.match(/^TYPE:\w+\|?(.+)?$/);
+                                  displayName = match && match[1] ? match[1] : '';
+                                }
+                                
+                                if (displayName && displayName.trim()) {
+                                  return displayName;
+                                }
+                                // Fallback to default format if no name
+                                return (proposal.discountType === 'dollar' 
                                   ? `Discount ($${formatNumber(parseFloat(proposal.discountValue || proposal.discount || 0))})`
-                                  : `Discount (${proposal.discount || proposal.discountValue || 0}% off)`)
-                              }
+                                  : `Discount (${proposal.discount || proposal.discountValue || 0}% off)`);
+                              })()}
                             </td>
                             <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                               -${formatNumber(totals.standardRateDiscount)}
