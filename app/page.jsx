@@ -1183,6 +1183,40 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
     </div>
   );
   
+  // Page counter for sequential numbering
+  const pageCounterRef = React.useRef(0);
+  
+  const getNextPageNumber = () => {
+    pageCounterRef.current += 1;
+    return pageCounterRef.current;
+  };
+  
+  // Reset counter when component mounts
+  React.useEffect(() => {
+    pageCounterRef.current = 0;
+  }, [proposal]);
+  
+  // Footer component
+  const PageFooter = ({ pageNum, isDark = false }) => (
+    <div style={{
+      position: 'absolute',
+      bottom: '20px',
+      left: '60px',
+      right: '60px',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      fontSize: '10px',
+      color: isDark ? 'rgba(255,255,255,0.8)' : '#666',
+      fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
+      pageBreakInside: 'avoid',
+      breakInside: 'avoid'
+    }}>
+      <div>EVENTS@MAYKER.COM</div>
+      <div>{pageNum}</div>
+    </div>
+  );
+
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white', width: '100%', overflowX: 'hidden' }}>
       <style dangerouslySetInnerHTML={{ __html: `
@@ -1327,6 +1361,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     }}
                   />
                 </div>
+                <PageFooter pageNum={getNextPageNumber()} />
               </div>
             );
             return; // Skip product rendering for image pages
@@ -1377,6 +1412,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     </div>
                   ))}
                 </div>
+                <PageFooter pageNum={getNextPageNumber()} />
               </div>
             );
           }
@@ -1440,6 +1476,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           const isLastPage = pageIndex === totalInvoicePages - 1;
           const isFirstPage = pageIndex === 0;
           
+          const currentPageNum = getNextPageNumber();
           invoicePages.push(
             <div 
               key={`invoice-page-${pageIndex}`} 
@@ -1640,6 +1677,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </table>
                 </>
               )}
+              <PageFooter pageNum={currentPageNum} />
             </div>
           );
         }
@@ -1663,6 +1701,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
               <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
             </ul>
+            <PageFooter pageNum={getNextPageNumber()} />
           </div>
         );
       })()}
