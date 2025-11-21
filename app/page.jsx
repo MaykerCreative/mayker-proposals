@@ -467,24 +467,23 @@ export default function ProposalApp() {
           src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
           font-weight: 400;
           font-style: normal;
-          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
+          font-display: swap;
         }
         
         @font-face {
           font-family: 'Neue Haas Unica';
-          src: url('/assets/Neue%20Haas%20Unica%20Medium-abce.ttf') format('truetype');
+          src: url('/assets/Neue%20Haas%20Unica%20Medium-abce.otf') format('opentype');
           font-weight: 500;
           font-style: normal;
-          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
+          font-display: swap;
         }
         
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/assets/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype'),
-               url('/assets/TestDomaineText-Light.otf') format('opentype');
+          src: url('/assets/TestDomaineText-Light.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
-          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
+          font-display: swap;
         }
         
         /* Fallback font stacks */
@@ -1185,24 +1184,23 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           src: url('/assets/NeueHaasUnica-Regular.ttf') format('truetype');
           font-weight: 400;
           font-style: normal;
-          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
+          font-display: swap;
         }
         
         @font-face {
           font-family: 'Neue Haas Unica';
-          src: url('/assets/Neue%20Haas%20Unica%20Medium-abce.ttf') format('truetype');
+          src: url('/assets/Neue%20Haas%20Unica%20Medium-abce.otf') format('opentype');
           font-weight: 500;
           font-style: normal;
-          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
+          font-display: swap;
         }
         
         @font-face {
           font-family: 'Domaine Text';
-          src: url('/assets/Test%20Domaine%20Text%20Light-2e27.otf') format('opentype'),
-               url('/assets/TestDomaineText-Light.otf') format('opentype');
+          src: url('/assets/TestDomaineText-Light.otf') format('opentype');
           font-weight: 300;
           font-style: normal;
-          font-display: optional; /* Only use if already downloaded, otherwise use fallback immediately */
+          font-display: swap;
         }
         
         /* Fallback font stacks */
