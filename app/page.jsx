@@ -366,7 +366,27 @@ export default function ProposalApp() {
   }
   
   if (selectedProposal) {
-    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={() => fetchProposals(true)} />;
+    const handleRefresh = async () => {
+      await fetchProposals();
+      // After fetching, update selectedProposal with fresh data
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      const data = await response.json();
+      if (data && data.proposals) {
+        const updatedProposal = data.proposals.find(p => 
+          p.projectNumber === selectedProposal.projectNumber && 
+          p.version === selectedProposal.version
+        );
+        if (updatedProposal) {
+          console.log('Updating selectedProposal with fresh data, customRentalMultiplier:', updatedProposal.customRentalMultiplier);
+          setSelectedProposal(updatedProposal);
+        }
+      }
+    };
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={handleRefresh} />;
   }
 
   return (
@@ -682,7 +702,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     };
     
     // Debug: Log the customRentalMultiplier being saved
-    console.log('Saving customRentalMultiplier:', finalData.customRentalMultiplier, 'from formData:', formData.customRentalMultiplier);
+    console.log('CreateProposalView - Saving customRentalMultiplier:', finalData.customRentalMultiplier, 'from formData:', formData.customRentalMultiplier);
+    console.log('CreateProposalView - Full finalData keys:', Object.keys(finalData));
+    console.log('CreateProposalView - finalData.customRentalMultiplier value:', finalData.customRentalMultiplier, 'type:', typeof finalData.customRentalMultiplier);
     
     if (!finalData.projectNumber || finalData.projectNumber.trim() === '') {
       delete finalData.projectNumber;
@@ -2071,6 +2093,11 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       // Include custom rental multiplier in dedicated field
       customRentalMultiplier: formData.customRentalMultiplier || ''
     };
+    
+    // Debug: Log the customRentalMultiplier being saved
+    console.log('EditProposalView - Saving customRentalMultiplier:', finalData.customRentalMultiplier, 'from formData:', formData.customRentalMultiplier);
+    console.log('EditProposalView - Full finalData keys:', Object.keys(finalData));
+    console.log('EditProposalView - finalData.customRentalMultiplier value:', finalData.customRentalMultiplier, 'type:', typeof finalData.customRentalMultiplier);
     
     // Debug: log to check if image data is included
     console.log('Saving sections:', sectionsToSave.map(s => ({
