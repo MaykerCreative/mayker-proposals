@@ -117,7 +117,17 @@ function getDuration(proposal) {
 function calculateDetailedTotals(proposal) {
   const sections = JSON.parse(proposal.sectionsJSON || '[]');
   const duration = getDuration(proposal); // Now uses fixed getDuration
-  const rentalMultiplier = getRentalMultiplier(duration);
+  
+  // Check for custom rental multiplier (stored in dedicated field)
+  let rentalMultiplier = null;
+  if (proposal.customRentalMultiplier && proposal.customRentalMultiplier.trim()) {
+    rentalMultiplier = parseFloat(proposal.customRentalMultiplier);
+  }
+  
+  // Use custom multiplier if provided, otherwise calculate from duration
+  if (!rentalMultiplier || isNaN(rentalMultiplier)) {
+    rentalMultiplier = getRentalMultiplier(duration);
+  }
   
   let baseProductTotal = 0;
   sections.forEach(section => {
@@ -498,6 +508,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     discountName: '',
     waiveProductCare: false,
     waiveServiceFee: false,
+    customRentalMultiplier: '', // Optional custom multiplier override
     clientFolderURL: '',
     salesLead: '',
     status: 'Pending',
@@ -612,7 +623,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       discountType: formData.discountType || 'percentage',
       discountValue: formData.discountValue || formData.discount || '0',
       // Store discountType and waiver flags in discountName for persistence
-      // Format: "TYPE:dollar|WAIVE:PC,SF|Discount Name" or "WAIVE:PC|Discount Name" or just "Discount Name"
+      // Format: "TYPE:dollar|WAIVE:PC,SF|Discount Name" or variations
+      // Note: customRentalMultiplier is stored in its own dedicated field, not in discountName
       discountName: (() => {
         let name = formData.discountName || '';
         let prefix = '';
@@ -634,7 +646,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       })(),
       // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
-      waiveServiceFee: formData.waiveServiceFee || false
+      waiveServiceFee: formData.waiveServiceFee || false,
+      // Include custom rental multiplier in dedicated field
+      customRentalMultiplier: formData.customRentalMultiplier || ''
     };
     
     if (!finalData.projectNumber || finalData.projectNumber.trim() === '') {
@@ -754,6 +768,38 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                 <option value="false">Apply (5%)</option>
                 <option value="true">Waive</option>
               </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Custom Rental Multiplier (Optional)</label>
+              <input 
+                type="number" 
+                name="customRentalMultiplier" 
+                value={formData.customRentalMultiplier || ''} 
+                onChange={handleInputChange} 
+                placeholder="Leave empty to use duration-based multiplier" 
+                min="0.1" 
+                step="0.1"
+                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
+              />
+              <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                Override the automatic multiplier. Leave empty to use duration-based calculation.
+              </p>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Custom Rental Multiplier (Optional)</label>
+              <input 
+                type="number" 
+                name="customRentalMultiplier" 
+                value={formData.customRentalMultiplier || ''} 
+                onChange={handleInputChange} 
+                placeholder="Leave empty to use duration-based multiplier" 
+                min="0.1" 
+                step="0.1"
+                style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
+              />
+              <p style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
+                Override the automatic multiplier. Leave empty to use duration-based calculation.
+              </p>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
@@ -1313,15 +1359,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                           <tr>
                             <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
                               {(() => {
-                                // Extract clean discount name (remove TYPE: and WAIVE: prefixes if present)
+                                // Extract clean discount name (remove TYPE:, WAIVE:, and MULT: prefixes if present)
                                 let displayName = proposal.discountName || '';
                                 // Remove TYPE: prefix
                                 if (displayName.includes('TYPE:')) {
-                                  displayName = displayName.replace(/^TYPE:\w+\|?/, '');
+                                  displayName = displayName.replace(/TYPE:\w+\|?/, '');
                                 }
                                 // Remove WAIVE: prefix
                                 if (displayName.includes('WAIVE:')) {
                                   displayName = displayName.replace(/WAIVE:[^|]+\|?/, '');
+                                }
+                                // Remove MULT: prefix
+                                if (displayName.includes('MULT:')) {
+                                  displayName = displayName.replace(/MULT:[\d.]+\|?/, '');
                                 }
                                 // Clean up any remaining leading pipes
                                 displayName = displayName.replace(/^\|+/, '').trim();
@@ -1486,19 +1536,19 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       return 'percentage';
     })(),
     discountValue: proposal.discountValue || proposal.discount || '0',
-    // Extract actual discountName and waiver flags (remove TYPE: and WAIVE: prefixes if present)
+    // Extract actual discountName and metadata (remove TYPE:, WAIVE:, and MULT: prefixes if present)
     discountName: (() => {
       let name = proposal.discountName || '';
       // Remove TYPE: prefix
       if (name.includes('TYPE:')) {
-        name = name.replace(/^TYPE:\w+\|?/, '');
+        name = name.replace(/TYPE:\w+\|?/, '');
       }
       // Remove WAIVE: prefix
       if (name.includes('WAIVE:')) {
         name = name.replace(/WAIVE:[^|]+\|?/, '');
       }
       // Clean up any remaining leading pipes
-      name = name.replace(/^\|+/, '');
+      name = name.replace(/^\|+/, '').trim();
       return name;
     })(),
     waiveProductCare: (() => {
@@ -1529,6 +1579,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       }
       return false;
     })(),
+    customRentalMultiplier: proposal.customRentalMultiplier || '',
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
     status: proposal.status || 'Pending',
@@ -1964,7 +2015,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       discountType: formData.discountType || 'percentage',
       discountValue: formData.discountValue || formData.discount || '0',
       // Store discountType and waiver flags in discountName for persistence
-      // Format: "TYPE:dollar|WAIVE:PC,SF|Discount Name" or "WAIVE:PC|Discount Name" or just "Discount Name"
+      // Format: "TYPE:dollar|WAIVE:PC,SF|Discount Name" or variations
+      // Note: customRentalMultiplier is stored in its own dedicated field, not in discountName
       discountName: (() => {
         let name = formData.discountName || '';
         let prefix = '';
@@ -1986,7 +2038,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       })(),
       // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
-      waiveServiceFee: formData.waiveServiceFee || false
+      waiveServiceFee: formData.waiveServiceFee || false,
+      // Include custom rental multiplier in dedicated field
+      customRentalMultiplier: formData.customRentalMultiplier || ''
     };
     
     // Debug: log to check if image data is included
@@ -2158,6 +2212,22 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 <option value="false">Apply (5%)</option>
                 <option value="true">Waive</option>
               </select>
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Custom Rental Multiplier</label>
+              <input 
+                type="number" 
+                name="customRentalMultiplier" 
+                value={formData.customRentalMultiplier || ''} 
+                onChange={handleInputChange} 
+                placeholder="Auto-calculated from duration" 
+                min="0.1" 
+                step="0.1"
+                style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} 
+              />
+              <p style={{ fontSize: '10px', color: '#888888', marginTop: '4px', fontFamily: "'Inter', sans-serif" }}>
+                Override automatic multiplier. Leave empty for duration-based calculation.
+              </p>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Client Folder URL</label>
