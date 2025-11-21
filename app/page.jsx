@@ -164,9 +164,18 @@ function calculateDetailedTotals(proposal) {
     }
   }
   
-  const productCare = waiveProductCare ? 0 : extendedProductTotal * 0.10;
+  // Calculate what the fees would have been (for display when waived)
+  const productCareAmount = extendedProductTotal * 0.10;
+  const productCare = waiveProductCare ? 0 : productCareAmount;
+  
   const delivery = parseFloat(proposal.deliveryFee) || 0;
+  
+  // Calculate service fee - use actual productCare for calculation (which might be 0 if waived)
   const serviceFee = waiveServiceFee ? 0 : (rentalTotal + productCare + delivery) * 0.05;
+  // For display when waived, calculate what service fee would have been if not waived
+  // Use actual productCare value (which reflects if it was waived) for accurate calculation
+  const serviceFeeAmount = (rentalTotal + productCare + delivery) * 0.05;
+  
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
   const tax = subtotal * 0.0975;
   const total = subtotal + tax;
@@ -176,7 +185,9 @@ function calculateDetailedTotals(proposal) {
     standardRateDiscount,
     rentalTotal,
     productCare,
+    productCareAmount, // Original amount before waiver
     serviceFee,
+    serviceFeeAmount, // Original amount before waiver
     delivery,
     subtotal,
     tax,
@@ -1335,14 +1346,22 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Product Care (10%)</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                            {totals.waiveProductCare ? 'Waived' : `$${formatNumber(totals.productCare)}`}
+                          <td style={{ padding: '8px 0', fontSize: '11px', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                            {totals.waiveProductCare ? (
+                              <span style={{ color: '#059669' }}>Waived (-${formatNumber(totals.productCareAmount || totals.productCare)})</span>
+                            ) : (
+                              <span style={{ color: brandCharcoal }}>${formatNumber(totals.productCare)}</span>
+                            )}
                           </td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Service Fee (5%)</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                            {totals.waiveServiceFee ? 'Waived' : `$${formatNumber(totals.serviceFee)}`}
+                          <td style={{ padding: '8px 0', fontSize: '11px', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                            {totals.waiveServiceFee ? (
+                              <span style={{ color: '#059669' }}>Waived (-${formatNumber(totals.serviceFeeAmount || totals.serviceFee)})</span>
+                            ) : (
+                              <span style={{ color: brandCharcoal }}>${formatNumber(totals.serviceFee)}</span>
+                            )}
                           </td>
                         </tr>
                         <tr>
