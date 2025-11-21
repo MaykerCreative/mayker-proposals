@@ -1178,7 +1178,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: showSectionName ? '15px' : '0' }}></div>
       {/* Section name below separator if provided */}
       {showSectionName && sectionName && (
-        <div style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginTop: '15px', fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.05em' }}>{sectionName}</div>
+        <div style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginTop: '15px', fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em' }}>{sectionName}</div>
       )}
     </div>
   );
@@ -1444,7 +1444,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           <div style={{ marginBottom: '30px', pageBreakInside: 'avoid', breakInside: 'avoid', display: 'block', visibility: 'visible' }}>
             <PageHeader />
             {/* INVOICE title */}
-            <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginTop: '15px', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: 'left', fontFamily: "'Domaine Text', serif" }}>
+            <h2 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginTop: '15px', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.02em', textAlign: 'left', fontFamily: "'Domaine Text', serif" }}>
               {isFirstPage ? 'Invoice' : 'Invoice (Cont.)'}
             </h2>
             {/* Column headers */}
@@ -1614,18 +1614,18 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: 'column' }}>
               {/* Totals Section */}
               <div style={{ marginBottom: '50px' }}>
-                <div className="no-page-break" style={{ marginLeft: 'auto', width: '30%' }}>
+                <div className="no-page-break" style={{ width: '100%', maxWidth: '500px' }}>
                   <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <tbody>
                       <tr>
-                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right', width: '50%' }}>Product Subtotal</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left', width: '50%' }}>Product Subtotal</td>
                         <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", width: '50%' }}>
                           ${formatNumber(totals.productSubtotal)}
                         </td>
                       </tr>
                       {totals.standardRateDiscount > 0 && (
                         <tr>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
+                          <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
                             {(() => {
                               // Extract clean discount name (remove TYPE:, WAIVE:, and MULT: prefixes if present)
                               let displayName = proposal.discountName || '';
@@ -1659,11 +1659,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         </tr>
                       )}
                       <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-                        <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Rental Total</td>
+                        <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Rental Total</td>
                         <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.rentalTotal)}</td>
                       </tr>
                       <tr>
-                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Product Care (10%)</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Product Care (10%)</td>
                         <td style={{ padding: '8px 0', fontSize: '11px', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                           {totals.waiveProductCare ? (
                             <span style={{ color: '#059669' }}>Waived (-${formatNumber(totals.productCareAmount || totals.productCare)})</span>
@@ -1673,7 +1673,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         </td>
                       </tr>
                       <tr>
-                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Service Fee (5%)</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Service Fee (5%)</td>
                         <td style={{ padding: '8px 0', fontSize: '11px', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                           {totals.waiveServiceFee ? (
                             <span style={{ color: '#059669' }}>Waived (-${formatNumber(totals.serviceFeeAmount || totals.serviceFee)})</span>
@@ -1683,19 +1683,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         </td>
                       </tr>
                       <tr>
-                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Delivery</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Delivery</td>
                         <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
                       </tr>
                       <tr style={{ borderTop: '1px solid #e5e7eb' }}>
-                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Subtotal</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Subtotal</td>
                         <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.subtotal)}</td>
                       </tr>
                       <tr>
-                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Tax ({proposal.taxRate || 9.75}%)</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Tax ({proposal.taxRate || 9.75}%)</td>
                         <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.tax)}</td>
                       </tr>
-                      <tr style={{ borderTop: '2px solid #2C2C2C', borderBottom: '2px solid #2C2C2C' }}>
-                        <td style={{ padding: '12px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>TOTAL</td>
+                      <tr style={{ borderTop: '2px solid #2C2C2C' }}>
+                        <td style={{ padding: '12px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>TOTAL</td>
                         <td style={{ padding: '12px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.total)}</td>
                       </tr>
                     </tbody>
@@ -1703,11 +1703,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 </div>
               </div>
               
-              {/* Project Details Section */}
-              <div style={{ marginTop: 'auto', paddingTop: '30px', borderTop: '1px solid #e5e7eb' }}>
-                <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>
-                  Project Details
-                </h2>
+                {/* Project Details Section */}
+                <div style={{ marginTop: 'auto', paddingTop: '30px', borderTop: '1px solid #e5e7eb' }}>
+                  <h2 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: "'Domaine Text', serif" }}>
+                    Project Details
+                  </h2>
                 <p style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                   The delivery fee quoted is based on the current scope of rentals, as well as the below delivery details. If your project needs change, we're happy to accommodate where possible, but delivery fees may adjust accordingly:
                 </p>
@@ -1720,7 +1720,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 </ul>
                 
                 {/* Confirmation & Payment Section */}
-                <h2 style={{ fontSize: '18px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Domaine Text', serif" }}>
+                <h2 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', marginTop: '30px', textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: "'Domaine Text', serif" }}>
                   Confirmation & Payment
                 </h2>
                 <p style={{ marginBottom: '20px', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
