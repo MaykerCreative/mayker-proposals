@@ -149,9 +149,14 @@ function calculateDetailedTotals(proposal) {
   }
   
   const rentalTotal = extendedProductTotal - standardRateDiscount;
-  const productCare = extendedProductTotal * 0.10;
+  
+  // Check if fees are waived
+  const waiveProductCare = proposal.waiveProductCare === true || proposal.waiveProductCare === 'true';
+  const waiveServiceFee = proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true';
+  
+  const productCare = waiveProductCare ? 0 : extendedProductTotal * 0.10;
   const delivery = parseFloat(proposal.deliveryFee) || 0;
-  const serviceFee = (rentalTotal + productCare + delivery) * 0.05;
+  const serviceFee = waiveServiceFee ? 0 : (rentalTotal + productCare + delivery) * 0.05;
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
   const tax = subtotal * 0.0975;
   const total = subtotal + tax;
@@ -166,7 +171,9 @@ function calculateDetailedTotals(proposal) {
     subtotal,
     tax,
     total,
-    rentalMultiplier
+    rentalMultiplier,
+    waiveProductCare,
+    waiveServiceFee
   };
 }
 
@@ -468,6 +475,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     discountType: 'percentage', // 'percentage' or 'dollar'
     discountValue: '0',
     discountName: '',
+    waiveProductCare: false,
+    waiveServiceFee: false,
     clientFolderURL: '',
     salesLead: '',
     status: 'Pending',
@@ -688,6 +697,30 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Discount Name</label>
               <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} placeholder="e.g., Industry Discount" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
+            </div>
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  name="waiveProductCare" 
+                  checked={formData.waiveProductCare || false} 
+                  onChange={(e) => handleInputChange({ target: { name: 'waiveProductCare', value: e.target.checked } })} 
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
+                />
+                Waive Product Care Fee
+              </label>
+            </div>
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151', cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  name="waiveServiceFee" 
+                  checked={formData.waiveServiceFee || false} 
+                  onChange={(e) => handleInputChange({ target: { name: 'waiveServiceFee', value: e.target.checked } })} 
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
+                />
+                Waive Service Fee
+              </label>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
@@ -1274,11 +1307,15 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Product Care (10%)</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.productCare)}</td>
+                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                            {totals.waiveProductCare ? 'Waived' : `$${formatNumber(totals.productCare)}`}
+                          </td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Service Fee (5%)</td>
-                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.serviceFee)}</td>
+                          <td style={{ padding: '8px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                            {totals.waiveServiceFee ? 'Waived' : `$${formatNumber(totals.serviceFee)}`}
+                          </td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>Delivery</td>
@@ -1410,6 +1447,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       }
       return proposal.discountName || '';
     })(),
+    waiveProductCare: proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || false,
+    waiveServiceFee: proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || false,
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
     status: proposal.status || 'Pending',
@@ -2003,6 +2042,30 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Discount Name</label>
               <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} />
+            </div>
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif", cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  name="waiveProductCare" 
+                  checked={formData.waiveProductCare || false} 
+                  onChange={(e) => handleInputChange({ target: { name: 'waiveProductCare', value: e.target.checked } })} 
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
+                />
+                Waive Product Care Fee
+              </label>
+            </div>
+            <div>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif", cursor: 'pointer' }}>
+                <input 
+                  type="checkbox" 
+                  name="waiveServiceFee" 
+                  checked={formData.waiveServiceFee || false} 
+                  onChange={(e) => handleInputChange({ target: { name: 'waiveServiceFee', value: e.target.checked } })} 
+                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
+                />
+                Waive Service Fee
+              </label>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Client Folder URL</label>
