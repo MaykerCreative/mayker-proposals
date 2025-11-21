@@ -121,17 +121,31 @@ function calculateDetailedTotals(proposal) {
   // Check for custom rental multiplier (stored in dedicated field)
   let rentalMultiplier = null;
   const customMultiplierValue = proposal.customRentalMultiplier;
+  
+  // Debug logging
+  console.log('calculateDetailedTotals - customRentalMultiplier:', customMultiplierValue, 'type:', typeof customMultiplierValue);
+  console.log('Full proposal object keys:', Object.keys(proposal));
+  
   if (customMultiplierValue && String(customMultiplierValue).trim() !== '') {
     const parsed = parseFloat(customMultiplierValue);
+    console.log('Parsed multiplier:', parsed, 'isNaN:', isNaN(parsed));
     if (!isNaN(parsed) && parsed > 0) {
       rentalMultiplier = parsed;
+      console.log('✓ Using custom rental multiplier:', rentalMultiplier);
+    } else {
+      console.log('✗ Parsed value invalid:', parsed);
     }
+  } else {
+    console.log('✗ No custom multiplier value or empty string');
   }
   
   // Use custom multiplier if provided, otherwise calculate from duration
   if (!rentalMultiplier || isNaN(rentalMultiplier) || rentalMultiplier <= 0) {
     rentalMultiplier = getRentalMultiplier(duration);
+    console.log('Using duration-based rental multiplier:', rentalMultiplier, 'for duration:', duration);
   }
+  
+  console.log('Final rentalMultiplier:', rentalMultiplier);
   
   let baseProductTotal = 0;
   sections.forEach(section => {
