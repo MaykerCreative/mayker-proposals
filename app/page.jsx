@@ -261,10 +261,10 @@ function getProposalExceptions(proposal) {
   }
   
   if (waiveProductCare) {
-    exceptions.push('Waived Product Care Fee');
+    exceptions.push('Waived product care fee');
   }
   if (waiveServiceFee) {
-    exceptions.push('Waived Service Fee');
+    exceptions.push('Waived service fee');
   }
   
   // Check for custom rental multiplier
@@ -282,32 +282,34 @@ function getProposalExceptions(proposal) {
   }
   
   if (customMultiplier && !isNaN(customMultiplier) && customMultiplier > 0 && customMultiplier !== standardMultiplier) {
-    exceptions.push(`Custom Rental: ${customMultiplier}x (standard: ${standardMultiplier}x)`);
+    exceptions.push(`Custom rental: ${customMultiplier}x (standard: ${standardMultiplier}x)`);
   }
   
   return exceptions;
 }
 
-// Helper function to extract clean discount name
+// Helper function to get discount amount/percentage for display
 function getDiscountApplied(proposal) {
-  let discountName = proposal.discountName || '';
+  // Extract discountType from discountName if stored there
+  let discountType = proposal.discountType || 'percentage';
+  if (!proposal.discountType && proposal.discountName && proposal.discountName.startsWith('TYPE:')) {
+    const match = proposal.discountName.match(/^TYPE:(\w+)(?:\|(.+))?$/);
+    if (match) {
+      discountType = match[1];
+    }
+  }
   
-  // Remove TYPE: prefix
-  if (discountName.includes('TYPE:')) {
-    discountName = discountName.replace(/TYPE:\w+\|?/, '');
-  }
-  // Remove WAIVE: prefix
-  if (discountName.includes('WAIVE:')) {
-    discountName = discountName.replace(/WAIVE:[^|]+\|?/, '');
-  }
-  // Remove MULT: prefix
-  if (discountName.includes('MULT:')) {
-    discountName = discountName.replace(/MULT:[\d.]+\|?/, '');
-  }
-  // Clean up any remaining leading pipes
-  discountName = discountName.replace(/^\|+/, '').trim();
+  const discountValue = parseFloat(proposal.discountValue || proposal.discount || 0) || 0;
   
-  return discountName || '-';
+  if (discountValue === 0) {
+    return '-';
+  }
+  
+  if (discountType === 'dollar') {
+    return `$${discountValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  } else {
+    return `${discountValue}%`;
+  }
 }
 
 function formatNumber(num) {
@@ -585,18 +587,18 @@ export default function ProposalApp() {
                     </span>
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{getDiscountApplied(proposal)}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '12px', color: '#666', lineHeight: '1.4' }}>
+                  <td style={{ padding: '12px 16px', fontSize: '12px', color: '#666', lineHeight: '1.6' }}>
                     {(() => {
                       const exceptions = getProposalExceptions(proposal);
                       if (exceptions.length === 0) {
                         return <span style={{ color: '#999', fontStyle: 'italic' }}>None</span>;
                       }
                       return (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <ul style={{ margin: 0, paddingLeft: '20px', listStyleType: 'disc' }}>
                           {exceptions.map((exc, idx) => (
-                            <span key={idx} style={{ display: 'block', fontSize: '11px' }}>{exc}</span>
+                            <li key={idx} style={{ marginBottom: '4px', fontSize: '12px', paddingLeft: '4px' }}>{exc}</li>
                           ))}
-                        </div>
+                        </ul>
                       );
                     })()}
                   </td>
