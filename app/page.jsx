@@ -1199,10 +1199,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   // Footer component
   const PageFooter = ({ pageNum, isDark = false }) => (
     <div style={{
-      position: 'absolute',
-      bottom: '20px',
-      left: '60px',
-      right: '60px',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
@@ -1210,7 +1206,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       color: isDark ? 'rgba(255,255,255,0.8)' : '#666',
       fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
       pageBreakInside: 'avoid',
-      breakInside: 'avoid'
+      breakInside: 'avoid',
+      marginTop: 'auto',
+      paddingTop: '20px'
     }}>
       <div>EVENTS@MAYKER.COM</div>
       <div>{pageNum}</div>
@@ -1385,11 +1383,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             sectionPages.push(
               <div 
                 key={`${sectionIndex}-${pageIndex}`} 
-                style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid', boxSizing: 'border-box' }}
+                style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid', boxSizing: 'border-box', display: 'flex', flexDirection: 'column' }}
               >
                 <PageHeader sectionName={isFirstPageOfSection ? section.name : null} showSectionName={isFirstPageOfSection} />
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', width: '100%', boxSizing: 'border-box' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', width: '100%', boxSizing: 'border-box', flex: '1 1 auto' }}>
                   {pageProducts.map((product, productIndex) => (
                     <div key={productIndex} style={{ backgroundColor: '#f9f9f9', padding: '10px', borderRadius: '4px', display: 'flex', flexDirection: 'column', pageBreakInside: 'avoid', breakInside: 'avoid', height: 'fit-content' }}>
                       <div style={{ aspectRatio: '1', backgroundColor: '#e5e5e5', marginBottom: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', color: '#999', overflow: 'hidden', borderRadius: '2px' }}>
@@ -1686,9 +1684,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </div>
                 </>
               )}
-              <div style={{ flex: '0 0 auto', marginTop: 'auto' }}>
-                <PageFooter pageNum={currentPageNum} />
-              </div>
+              <PageFooter pageNum={currentPageNum} />
             </div>
           );
         }
@@ -1698,20 +1694,22 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
 
       {(() => {
         return (
-          <div key="project-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden' }}>
+          <div key="project-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <PageHeader sectionName="Project Details" showSectionName={true} />
             
-            <p style={{ marginBottom: '24px', fontSize: '12px', lineHeight: '1.6', color: '#444' }}>
-              The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
-            </p>
-            
-            <ul style={{ fontSize: '12px', lineHeight: '1.8', marginBottom: '20px', color: '#222', listStyle: 'none', padding: 0 }}>
-              <li style={{ marginBottom: '8px' }}><strong>Project Location:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
-              <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-              <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
-              <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-              <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
-            </ul>
+            <div style={{ flex: '1 1 auto' }}>
+              <p style={{ marginBottom: '24px', fontSize: '12px', lineHeight: '1.6', color: '#444' }}>
+                The project fee quoted is based on the current scope of rentals, as well as the delivery details below. If your requirements change, delivery fees may adjust accordingly:
+              </p>
+              
+              <ul style={{ fontSize: '12px', lineHeight: '1.8', marginBottom: '20px', color: '#222', listStyle: 'none', padding: 0 }}>
+                <li style={{ marginBottom: '8px' }}><strong>Project Location:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
+                <li style={{ marginBottom: '8px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+                <li style={{ marginBottom: '8px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
+                <li style={{ marginBottom: '8px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+                <li style={{ marginBottom: '8px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
+              </ul>
+            </div>
             <PageFooter pageNum={getNextPageNumber()} />
           </div>
         );
