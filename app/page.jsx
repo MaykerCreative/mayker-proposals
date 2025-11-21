@@ -150,7 +150,7 @@ function calculateDetailedTotals(proposal) {
   
   const rentalTotal = extendedProductTotal - standardRateDiscount;
   
-  // Check if fees are waived
+  // Check if fees are waived (handle boolean, string 'true', or truthy values)
   const waiveProductCare = proposal.waiveProductCare === true || proposal.waiveProductCare === 'true';
   const waiveServiceFee = proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true';
   
@@ -485,8 +485,10 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   const [sections, setSections] = useState([{ name: '', products: [], type: 'products' }]);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    // Handle checkboxes differently - use checked instead of value
+    const fieldValue = type === 'checkbox' ? checked : value;
+    setFormData(prev => ({ ...prev, [name]: fieldValue }));
   };
 
   const handleAddSection = () => {
@@ -591,7 +593,10 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       // Store discountType in discountName for persistence (format: "TYPE:dollar|Discount Name" or just "Discount Name")
       discountName: formData.discountType && formData.discountType !== 'percentage' 
         ? `TYPE:${formData.discountType}|${formData.discountName || ''}`.replace(/^\|/, '')
-        : formData.discountName || ''
+        : formData.discountName || '',
+      // Explicitly include waiver flags
+      waiveProductCare: formData.waiveProductCare || false,
+      waiveServiceFee: formData.waiveServiceFee || false
     };
     
     if (!finalData.projectNumber || finalData.projectNumber.trim() === '') {
@@ -704,7 +709,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                   type="checkbox" 
                   name="waiveProductCare" 
                   checked={formData.waiveProductCare || false} 
-                  onChange={(e) => handleInputChange({ target: { name: 'waiveProductCare', value: e.target.checked } })} 
+                  onChange={handleInputChange} 
                   style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
                 />
                 Waive Product Care Fee
@@ -716,7 +721,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                   type="checkbox" 
                   name="waiveServiceFee" 
                   checked={formData.waiveServiceFee || false} 
-                  onChange={(e) => handleInputChange({ target: { name: 'waiveServiceFee', value: e.target.checked } })} 
+                  onChange={handleInputChange} 
                   style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
                 />
                 Waive Service Fee
@@ -1520,8 +1525,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   }, []);
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    // Handle checkboxes differently - use checked instead of value
+    const fieldValue = type === 'checkbox' ? checked : value;
+    setFormData(prev => ({ ...prev, [name]: fieldValue }));
   };
 
   const handleRemoveSection = (idx) => {
@@ -1884,7 +1891,10 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       // Store discountType in discountName for persistence (format: "TYPE:dollar|Discount Name" or just "Discount Name")
       discountName: formData.discountType && formData.discountType !== 'percentage' 
         ? `TYPE:${formData.discountType}|${formData.discountName || ''}`.replace(/^\|/, '')
-        : formData.discountName || ''
+        : formData.discountName || '',
+      // Explicitly include waiver flags
+      waiveProductCare: formData.waiveProductCare || false,
+      waiveServiceFee: formData.waiveServiceFee || false
     };
     
     // Debug: log to check if image data is included
@@ -2049,7 +2059,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                   type="checkbox" 
                   name="waiveProductCare" 
                   checked={formData.waiveProductCare || false} 
-                  onChange={(e) => handleInputChange({ target: { name: 'waiveProductCare', value: e.target.checked } })} 
+                  onChange={handleInputChange} 
                   style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
                 />
                 Waive Product Care Fee
@@ -2061,7 +2071,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                   type="checkbox" 
                   name="waiveServiceFee" 
                   checked={formData.waiveServiceFee || false} 
-                  onChange={(e) => handleInputChange({ target: { name: 'waiveServiceFee', value: e.target.checked } })} 
+                  onChange={handleInputChange} 
                   style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
                 />
                 Waive Service Fee
