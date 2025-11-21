@@ -151,8 +151,8 @@ function calculateDetailedTotals(proposal) {
   const rentalTotal = extendedProductTotal - standardRateDiscount;
   
   // Check if fees are waived (handle boolean, string 'true', or truthy values)
-  const waiveProductCare = proposal.waiveProductCare === true || proposal.waiveProductCare === 'true';
-  const waiveServiceFee = proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true';
+  const waiveProductCare = proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || String(proposal.waiveProductCare).toLowerCase() === 'true';
+  const waiveServiceFee = proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || String(proposal.waiveServiceFee).toLowerCase() === 'true';
   
   const productCare = waiveProductCare ? 0 : extendedProductTotal * 0.10;
   const delivery = parseFloat(proposal.deliveryFee) || 0;
@@ -704,28 +704,18 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
               <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} placeholder="e.g., Industry Discount" style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} />
             </div>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  name="waiveProductCare" 
-                  checked={formData.waiveProductCare || false} 
-                  onChange={handleInputChange} 
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
-                />
-                Waive Product Care Fee
-              </label>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Product Care Fee</label>
+              <select name="waiveProductCare" value={formData.waiveProductCare ? 'true' : 'false'} onChange={(e) => handleInputChange({ target: { name: 'waiveProductCare', value: e.target.value === 'true' } })} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
+                <option value="false">Apply (10%)</option>
+                <option value="true">Waive</option>
+              </select>
             </div>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151', cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  name="waiveServiceFee" 
-                  checked={formData.waiveServiceFee || false} 
-                  onChange={handleInputChange} 
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
-                />
-                Waive Service Fee
-              </label>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Service Fee</label>
+              <select name="waiveServiceFee" value={formData.waiveServiceFee ? 'true' : 'false'} onChange={(e) => handleInputChange({ target: { name: 'waiveServiceFee', value: e.target.value === 'true' } })} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
+                <option value="false">Apply (5%)</option>
+                <option value="true">Waive</option>
+              </select>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Client Folder URL</label>
@@ -1452,8 +1442,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       }
       return proposal.discountName || '';
     })(),
-    waiveProductCare: proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || false,
-    waiveServiceFee: proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || false,
+    waiveProductCare: proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || String(proposal.waiveProductCare || '').toLowerCase() === 'true' || false,
+    waiveServiceFee: proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || String(proposal.waiveServiceFee || '').toLowerCase() === 'true' || false,
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
     status: proposal.status || 'Pending',
@@ -2054,28 +2044,18 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               <input type="text" name="discountName" value={formData.discountName} onChange={handleInputChange} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} />
             </div>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif", cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  name="waiveProductCare" 
-                  checked={formData.waiveProductCare || false} 
-                  onChange={handleInputChange} 
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
-                />
-                Waive Product Care Fee
-              </label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Product Care Fee</label>
+              <select name="waiveProductCare" value={formData.waiveProductCare ? 'true' : 'false'} onChange={(e) => handleInputChange({ target: { name: 'waiveProductCare', value: e.target.value === 'true' } })} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }}>
+                <option value="false">Apply (10%)</option>
+                <option value="true">Waive</option>
+              </select>
             </div>
             <div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif", cursor: 'pointer' }}>
-                <input 
-                  type="checkbox" 
-                  name="waiveServiceFee" 
-                  checked={formData.waiveServiceFee || false} 
-                  onChange={handleInputChange} 
-                  style={{ width: '16px', height: '16px', cursor: 'pointer' }} 
-                />
-                Waive Service Fee
-              </label>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Service Fee</label>
+              <select name="waiveServiceFee" value={formData.waiveServiceFee ? 'true' : 'false'} onChange={(e) => handleInputChange({ target: { name: 'waiveServiceFee', value: e.target.value === 'true' } })} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }}>
+                <option value="false">Apply (5%)</option>
+                <option value="true">Waive</option>
+              </select>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Client Folder URL</label>
