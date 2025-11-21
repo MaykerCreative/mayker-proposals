@@ -112,36 +112,10 @@ function getDuration(proposal) {
 }
 
 // ============================================
-// Helper: Parse sectionsJSON and extract metadata
-// ============================================
-function parseSectionsJSON(sectionsJSON) {
-  try {
-    const parsed = JSON.parse(sectionsJSON || '[]');
-    // Check if it's the new format with metadata
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.sections) {
-      return {
-        sections: parsed.sections,
-        metadata: parsed.metadata || {}
-      };
-    }
-    // Old format - just an array
-    return {
-      sections: Array.isArray(parsed) ? parsed : [],
-      metadata: {}
-    };
-  } catch (e) {
-    return {
-      sections: [],
-      metadata: {}
-    };
-  }
-}
-
-// ============================================
 // FIXED: calculateDetailedTotals
 // ============================================
 function calculateDetailedTotals(proposal) {
-  const { sections, metadata } = parseSectionsJSON(proposal.sectionsJSON);
+  const sections = JSON.parse(proposal.sectionsJSON || '[]');
   const duration = getDuration(proposal); // Now uses fixed getDuration
   const rentalMultiplier = getRentalMultiplier(duration);
   
@@ -155,9 +129,15 @@ function calculateDetailedTotals(proposal) {
   const extendedProductTotal = baseProductTotal * rentalMultiplier;
   
   // Support both percentage and dollar value discounts
-  // Check metadata first, then proposal fields, then default to percentage
-  const discountType = metadata.discountType || proposal.discountType || 'percentage'; // 'percentage' or 'dollar'
-  const discountValue = parseFloat(metadata.discountValue || proposal.discountValue || proposal.discount || 0) || 0;
+  // Extract discountType from discountName if stored there (format: "TYPE:dollar|Discount Name")
+  let discountType = proposal.discountType || 'percentage';
+  if (!proposal.discountType && proposal.discountName && proposal.discountName.startsWith('TYPE:')) {
+    const match = proposal.discountName.match(/^TYPE:(\w+)(?:\|(.+))?$/);
+    if (match) {
+      discountType = match[1];
+    }
+  }
+  const discountValue = parseFloat(proposal.discountValue || proposal.discount || 0) || 0;
   
   let standardRateDiscount = 0;
   if (discountType === 'dollar') {
@@ -590,25 +570,19 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       return `${displayHour}:${minutes} ${ampm}`;
     };
 
-    // Store discountType and discountValue in sectionsJSON metadata
-    const sectionsWithMetadata = sections.map(s => ({ ...s }));
-    const sectionsJSONWithMetadata = JSON.stringify({
-      sections: sectionsWithMetadata,
-      metadata: {
-        discountType: formData.discountType || 'percentage',
-        discountValue: formData.discountValue || formData.discount || '0'
-      }
-    });
-    
     const finalData = {
       ...formData,
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
-      sectionsJSON: sectionsJSONWithMetadata,
+      sectionsJSON: JSON.stringify(sections),
       // Sync discountValue to discount for backward compatibility
       discount: formData.discountValue || formData.discount || '0',
       discountType: formData.discountType || 'percentage',
-      discountValue: formData.discountValue || formData.discount || '0'
+      discountValue: formData.discountValue || formData.discount || '0',
+      // Store discountType in discountName for persistence (format: "TYPE:dollar|Discount Name" or just "Discount Name")
+      discountName: formData.discountType && formData.discountType !== 'percentage' 
+        ? `TYPE:${formData.discountType}|${formData.discountName || ''}`.replace(/^\|/, '')
+        : formData.discountName || ''
     };
     
     if (!finalData.projectNumber || finalData.projectNumber.trim() === '') {
@@ -867,7 +841,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
 }
 
 function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
-  const { sections: rawSections, metadata } = parseSectionsJSON(proposal.sectionsJSON);
+  const rawSections = JSON.parse(proposal.sectionsJSON || '[]');
   
   // Ensure all products have note field for backward compatibility
   const sections = rawSections.map(section => {
@@ -1397,8 +1371,6 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
 }
 
 function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
-  const { sections: initialSections, metadata: sectionsMetadata } = parseSectionsJSON(proposal.sectionsJSON);
-  
   const [formData, setFormData] = useState({
     clientName: proposal.clientName || '',
     venueName: proposal.venueName || '',
@@ -1410,17 +1382,33 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     strikeTime: proposal.strikeTime || '',
     deliveryFee: proposal.deliveryFee || '',
     discount: proposal.discount || '',
-    discountType: sectionsMetadata?.discountType || proposal.discountType || 'percentage',
-    discountValue: sectionsMetadata?.discountValue || proposal.discountValue || proposal.discount || '0',
-    discountName: proposal.discountName || '',
+    // Extract discountType from discountName if stored there
+    discountType: (() => {
+      if (proposal.discountType) return proposal.discountType;
+      if (proposal.discountName && proposal.discountName.startsWith('TYPE:')) {
+        const match = proposal.discountName.match(/^TYPE:(\w+)(?:\|(.+))?$/);
+        if (match) return match[1];
+      }
+      return 'percentage';
+    })(),
+    discountValue: proposal.discountValue || proposal.discount || '0',
+    // Extract actual discountName (remove TYPE: prefix if present)
+    discountName: (() => {
+      if (proposal.discountName && proposal.discountName.startsWith('TYPE:')) {
+        const match = proposal.discountName.match(/^TYPE:\w+\|?(.+)?$/);
+        return match && match[1] ? match[1] : '';
+      }
+      return proposal.discountName || '';
+    })(),
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
     status: proposal.status || 'Pending',
     projectNumber: proposal.projectNumber || ''
   });
   const [sections, setSections] = useState(() => {
+    const parsed = JSON.parse(proposal.sectionsJSON || '[]');
     // Ensure all sections have a type field for backward compatibility
-    return initialSections.map(section => {
+    return parsed.map(section => {
       if (!section.type) {
         // If it has imageData or imageUrl but no products, it's an image page
         if ((section.imageData || section.imageUrl) && (!section.products || section.products.length === 0)) {
@@ -1833,26 +1821,21 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       };
     });
     
-    // Store discountType and discountValue in sectionsJSON metadata
-    const sectionsJSONWithMetadata = JSON.stringify({
-      sections: sectionsToSave,
-      metadata: {
-        discountType: formData.discountType || 'percentage',
-        discountValue: formData.discountValue || formData.discount || '0'
-      }
-    });
-    
     const finalData = {
       ...formData,
       clientName: clientNameWithoutVersion,
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
-      sectionsJSON: sectionsJSONWithMetadata,
+      sectionsJSON: JSON.stringify(sectionsToSave),
       generatePDF: true,
       // Sync discountValue to discount for backward compatibility
       discount: formData.discountValue || formData.discount || '0',
       discountType: formData.discountType || 'percentage',
-      discountValue: formData.discountValue || formData.discount || '0'
+      discountValue: formData.discountValue || formData.discount || '0',
+      // Store discountType in discountName for persistence (format: "TYPE:dollar|Discount Name" or just "Discount Name")
+      discountName: formData.discountType && formData.discountType !== 'percentage' 
+        ? `TYPE:${formData.discountType}|${formData.discountName || ''}`.replace(/^\|/, '')
+        : formData.discountName || ''
     };
     
     // Debug: log to check if image data is included
