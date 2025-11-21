@@ -112,10 +112,36 @@ function getDuration(proposal) {
 }
 
 // ============================================
+// Helper: Parse sectionsJSON and extract metadata
+// ============================================
+function parseSectionsJSON(sectionsJSON) {
+  try {
+    const parsed = JSON.parse(sectionsJSON || '[]');
+    // Check if it's the new format with metadata
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed) && parsed.sections) {
+      return {
+        sections: parsed.sections,
+        metadata: parsed.metadata || {}
+      };
+    }
+    // Old format - just an array
+    return {
+      sections: Array.isArray(parsed) ? parsed : [],
+      metadata: {}
+    };
+  } catch (e) {
+    return {
+      sections: [],
+      metadata: {}
+    };
+  }
+}
+
+// ============================================
 // FIXED: calculateDetailedTotals
 // ============================================
 function calculateDetailedTotals(proposal) {
-  const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  const { sections, metadata } = parseSectionsJSON(proposal.sectionsJSON);
   const duration = getDuration(proposal); // Now uses fixed getDuration
   const rentalMultiplier = getRentalMultiplier(duration);
   
@@ -129,8 +155,9 @@ function calculateDetailedTotals(proposal) {
   const extendedProductTotal = baseProductTotal * rentalMultiplier;
   
   // Support both percentage and dollar value discounts
-  const discountType = proposal.discountType || 'percentage'; // 'percentage' or 'dollar'
-  const discountValue = parseFloat(proposal.discount || proposal.discountValue || 0) || 0;
+  // Check metadata first, then proposal fields, then default to percentage
+  const discountType = metadata.discountType || proposal.discountType || 'percentage'; // 'percentage' or 'dollar'
+  const discountValue = parseFloat(metadata.discountValue || proposal.discountValue || proposal.discount || 0) || 0;
   
   let standardRateDiscount = 0;
   if (discountType === 'dollar') {
@@ -563,13 +590,25 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       return `${displayHour}:${minutes} ${ampm}`;
     };
 
+    // Store discountType and discountValue in sectionsJSON metadata
+    const sectionsWithMetadata = sections.map(s => ({ ...s }));
+    const sectionsJSONWithMetadata = JSON.stringify({
+      sections: sectionsWithMetadata,
+      metadata: {
+        discountType: formData.discountType || 'percentage',
+        discountValue: formData.discountValue || formData.discount || '0'
+      }
+    });
+    
     const finalData = {
       ...formData,
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
-      sectionsJSON: JSON.stringify(sections),
+      sectionsJSON: sectionsJSONWithMetadata,
       // Sync discountValue to discount for backward compatibility
-      discount: formData.discountValue || formData.discount || '0'
+      discount: formData.discountValue || formData.discount || '0',
+      discountType: formData.discountType || 'percentage',
+      discountValue: formData.discountValue || formData.discount || '0'
     };
     
     if (!finalData.projectNumber || finalData.projectNumber.trim() === '') {
@@ -828,7 +867,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
 }
 
 function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
-  const rawSections = JSON.parse(proposal.sectionsJSON || '[]');
+  const { sections: rawSections, metadata } = parseSectionsJSON(proposal.sectionsJSON);
   
   // Ensure all products have note field for backward compatibility
   const sections = rawSections.map(section => {
@@ -1358,6 +1397,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
 }
 
 function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
+  const { sections: initialSections, metadata: sectionsMetadata } = parseSectionsJSON(proposal.sectionsJSON);
+  
   const [formData, setFormData] = useState({
     clientName: proposal.clientName || '',
     venueName: proposal.venueName || '',
@@ -1369,8 +1410,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     strikeTime: proposal.strikeTime || '',
     deliveryFee: proposal.deliveryFee || '',
     discount: proposal.discount || '',
-    discountType: proposal.discountType || 'percentage',
-    discountValue: proposal.discountValue || proposal.discount || '0',
+    discountType: sectionsMetadata?.discountType || proposal.discountType || 'percentage',
+    discountValue: sectionsMetadata?.discountValue || proposal.discountValue || proposal.discount || '0',
     discountName: proposal.discountName || '',
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
@@ -1378,9 +1419,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     projectNumber: proposal.projectNumber || ''
   });
   const [sections, setSections] = useState(() => {
-    const parsed = JSON.parse(proposal.sectionsJSON || '[]');
     // Ensure all sections have a type field for backward compatibility
-    return parsed.map(section => {
+    return initialSections.map(section => {
       if (!section.type) {
         // If it has imageData or imageUrl but no products, it's an image page
         if ((section.imageData || section.imageUrl) && (!section.products || section.products.length === 0)) {
@@ -1793,15 +1833,26 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       };
     });
     
+    // Store discountType and discountValue in sectionsJSON metadata
+    const sectionsJSONWithMetadata = JSON.stringify({
+      sections: sectionsToSave,
+      metadata: {
+        discountType: formData.discountType || 'percentage',
+        discountValue: formData.discountValue || formData.discount || '0'
+      }
+    });
+    
     const finalData = {
       ...formData,
       clientName: clientNameWithoutVersion,
       deliveryTime: convertTimeFormat(formData.deliveryTime),
       strikeTime: convertTimeFormat(formData.strikeTime),
-      sectionsJSON: JSON.stringify(sectionsToSave),
+      sectionsJSON: sectionsJSONWithMetadata,
       generatePDF: true,
       // Sync discountValue to discount for backward compatibility
-      discount: formData.discountValue || formData.discount || '0'
+      discount: formData.discountValue || formData.discount || '0',
+      discountType: formData.discountType || 'percentage',
+      discountValue: formData.discountValue || formData.discount || '0'
     };
     
     // Debug: log to check if image data is included
