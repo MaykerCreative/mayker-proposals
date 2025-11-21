@@ -278,7 +278,7 @@ export default function ProposalApp() {
     }
   }, []);
 
-  const fetchProposals = async () => {
+  const fetchProposals = async (updateSelected = false) => {
     try {
       const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
         method: 'GET',
@@ -295,6 +295,17 @@ export default function ProposalApp() {
         const sortedProposals = data.proposals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setProposals(sortedProposals);
         setCatalog(data.catalog || []);
+        
+        // If we have a selected proposal, update it with the fresh data
+        if (updateSelected && selectedProposal) {
+          const updatedProposal = sortedProposals.find(p => 
+            p.projectNumber === selectedProposal.projectNumber && 
+            p.version === selectedProposal.version
+          );
+          if (updatedProposal) {
+            setSelectedProposal(updatedProposal);
+          }
+        }
       }
       setLoading(false);
     } catch (err) {
@@ -355,7 +366,7 @@ export default function ProposalApp() {
   }
   
   if (selectedProposal) {
-    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={fetchProposals} />;
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={() => fetchProposals(true)} />;
   }
 
   return (
