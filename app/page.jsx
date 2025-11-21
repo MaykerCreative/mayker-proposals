@@ -150,9 +150,19 @@ function calculateDetailedTotals(proposal) {
   
   const rentalTotal = extendedProductTotal - standardRateDiscount;
   
-  // Check if fees are waived (handle boolean, string 'true', or truthy values)
-  const waiveProductCare = proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || String(proposal.waiveProductCare).toLowerCase() === 'true';
-  const waiveServiceFee = proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || String(proposal.waiveServiceFee).toLowerCase() === 'true';
+  // Check if fees are waived - check proposal fields first, then extract from discountName
+  let waiveProductCare = proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || String(proposal.waiveProductCare || '').toLowerCase() === 'true';
+  let waiveServiceFee = proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || String(proposal.waiveServiceFee || '').toLowerCase() === 'true';
+  
+  // Extract waiver flags from discountName if stored there (format: "WAIVE:PC,SF|..." or "TYPE:dollar|WAIVE:PC|...")
+  if (proposal.discountName && proposal.discountName.includes('WAIVE:')) {
+    const waiveMatch = proposal.discountName.match(/WAIVE:([^|]+)/);
+    if (waiveMatch) {
+      const waivedItems = waiveMatch[1].split(',');
+      waiveProductCare = waiveProductCare || waivedItems.includes('PC');
+      waiveServiceFee = waiveServiceFee || waivedItems.includes('SF');
+    }
+  }
   
   const productCare = waiveProductCare ? 0 : extendedProductTotal * 0.10;
   const delivery = parseFloat(proposal.deliveryFee) || 0;
@@ -590,11 +600,28 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       discount: formData.discountValue || formData.discount || '0',
       discountType: formData.discountType || 'percentage',
       discountValue: formData.discountValue || formData.discount || '0',
-      // Store discountType in discountName for persistence (format: "TYPE:dollar|Discount Name" or just "Discount Name")
-      discountName: formData.discountType && formData.discountType !== 'percentage' 
-        ? `TYPE:${formData.discountType}|${formData.discountName || ''}`.replace(/^\|/, '')
-        : formData.discountName || '',
-      // Explicitly include waiver flags
+      // Store discountType and waiver flags in discountName for persistence
+      // Format: "TYPE:dollar|WAIVE:PC,SF|Discount Name" or "WAIVE:PC|Discount Name" or just "Discount Name"
+      discountName: (() => {
+        let name = formData.discountName || '';
+        let prefix = '';
+        
+        // Add discount type prefix if not percentage
+        if (formData.discountType && formData.discountType !== 'percentage') {
+          prefix += `TYPE:${formData.discountType}|`;
+        }
+        
+        // Add waiver flags if any are waived
+        const waivers = [];
+        if (formData.waiveProductCare) waivers.push('PC');
+        if (formData.waiveServiceFee) waivers.push('SF');
+        if (waivers.length > 0) {
+          prefix += `WAIVE:${waivers.join(',')}|`;
+        }
+        
+        return prefix ? `${prefix}${name}`.replace(/\|$/, '') : name;
+      })(),
+      // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
       waiveServiceFee: formData.waiveServiceFee || false
     };
@@ -1275,12 +1302,18 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                           <tr>
                             <td style={{ padding: '8px 0', fontSize: '11px', color: '#059669', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'right' }}>
                               {(() => {
-                                // Extract clean discount name (remove TYPE: prefix if present)
+                                // Extract clean discount name (remove TYPE: and WAIVE: prefixes if present)
                                 let displayName = proposal.discountName || '';
-                                if (displayName && displayName.startsWith('TYPE:')) {
-                                  const match = displayName.match(/^TYPE:\w+\|?(.+)?$/);
-                                  displayName = match && match[1] ? match[1] : '';
+                                // Remove TYPE: prefix
+                                if (displayName.includes('TYPE:')) {
+                                  displayName = displayName.replace(/^TYPE:\w+\|?/, '');
                                 }
+                                // Remove WAIVE: prefix
+                                if (displayName.includes('WAIVE:')) {
+                                  displayName = displayName.replace(/WAIVE:[^|]+\|?/, '');
+                                }
+                                // Clean up any remaining leading pipes
+                                displayName = displayName.replace(/^\|+/, '').trim();
                                 
                                 if (displayName && displayName.trim()) {
                                   return displayName;
@@ -1434,16 +1467,49 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       return 'percentage';
     })(),
     discountValue: proposal.discountValue || proposal.discount || '0',
-    // Extract actual discountName (remove TYPE: prefix if present)
+    // Extract actual discountName and waiver flags (remove TYPE: and WAIVE: prefixes if present)
     discountName: (() => {
-      if (proposal.discountName && proposal.discountName.startsWith('TYPE:')) {
-        const match = proposal.discountName.match(/^TYPE:\w+\|?(.+)?$/);
-        return match && match[1] ? match[1] : '';
+      let name = proposal.discountName || '';
+      // Remove TYPE: prefix
+      if (name.includes('TYPE:')) {
+        name = name.replace(/^TYPE:\w+\|?/, '');
       }
-      return proposal.discountName || '';
+      // Remove WAIVE: prefix
+      if (name.includes('WAIVE:')) {
+        name = name.replace(/WAIVE:[^|]+\|?/, '');
+      }
+      // Clean up any remaining leading pipes
+      name = name.replace(/^\|+/, '');
+      return name;
     })(),
-    waiveProductCare: proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || String(proposal.waiveProductCare || '').toLowerCase() === 'true' || false,
-    waiveServiceFee: proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || String(proposal.waiveServiceFee || '').toLowerCase() === 'true' || false,
+    waiveProductCare: (() => {
+      // Check proposal fields first
+      if (proposal.waiveProductCare === true || proposal.waiveProductCare === 'true' || String(proposal.waiveProductCare || '').toLowerCase() === 'true') {
+        return true;
+      }
+      // Extract from discountName if stored there
+      if (proposal.discountName && proposal.discountName.includes('WAIVE:')) {
+        const waiveMatch = proposal.discountName.match(/WAIVE:([^|]+)/);
+        if (waiveMatch && waiveMatch[1].includes('PC')) {
+          return true;
+        }
+      }
+      return false;
+    })(),
+    waiveServiceFee: (() => {
+      // Check proposal fields first
+      if (proposal.waiveServiceFee === true || proposal.waiveServiceFee === 'true' || String(proposal.waiveServiceFee || '').toLowerCase() === 'true') {
+        return true;
+      }
+      // Extract from discountName if stored there
+      if (proposal.discountName && proposal.discountName.includes('WAIVE:')) {
+        const waiveMatch = proposal.discountName.match(/WAIVE:([^|]+)/);
+        if (waiveMatch && waiveMatch[1].includes('SF')) {
+          return true;
+        }
+      }
+      return false;
+    })(),
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
     status: proposal.status || 'Pending',
@@ -1878,11 +1944,28 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       discount: formData.discountValue || formData.discount || '0',
       discountType: formData.discountType || 'percentage',
       discountValue: formData.discountValue || formData.discount || '0',
-      // Store discountType in discountName for persistence (format: "TYPE:dollar|Discount Name" or just "Discount Name")
-      discountName: formData.discountType && formData.discountType !== 'percentage' 
-        ? `TYPE:${formData.discountType}|${formData.discountName || ''}`.replace(/^\|/, '')
-        : formData.discountName || '',
-      // Explicitly include waiver flags
+      // Store discountType and waiver flags in discountName for persistence
+      // Format: "TYPE:dollar|WAIVE:PC,SF|Discount Name" or "WAIVE:PC|Discount Name" or just "Discount Name"
+      discountName: (() => {
+        let name = formData.discountName || '';
+        let prefix = '';
+        
+        // Add discount type prefix if not percentage
+        if (formData.discountType && formData.discountType !== 'percentage') {
+          prefix += `TYPE:${formData.discountType}|`;
+        }
+        
+        // Add waiver flags if any are waived
+        const waivers = [];
+        if (formData.waiveProductCare) waivers.push('PC');
+        if (formData.waiveServiceFee) waivers.push('SF');
+        if (waivers.length > 0) {
+          prefix += `WAIVE:${waivers.join(',')}|`;
+        }
+        
+        return prefix ? `${prefix}${name}`.replace(/\|$/, '') : name;
+      })(),
+      // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
       waiveServiceFee: formData.waiveServiceFee || false
     };
