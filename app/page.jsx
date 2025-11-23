@@ -712,7 +712,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     clientFolderURL: '',
     salesLead: '',
     status: 'Pending',
-    projectNumber: ''
+    projectNumber: '',
+    taxExempt: false
   });
   const [sections, setSections] = useState([{ name: '', products: [], type: 'products' }]);
 
@@ -871,7 +872,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       })(),
       // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
-      waiveServiceFee: formData.waiveServiceFee || false
+      waiveServiceFee: formData.waiveServiceFee || false,
+      taxExempt: formData.taxExempt || false
     };
     
     // Debug: Log the customRentalMultiplier being saved
@@ -996,6 +998,18 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                 <option value="false">Apply (5%)</option>
                 <option value="true">Waive</option>
               </select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '8px' }}>
+              <input 
+                type="checkbox" 
+                name="taxExempt" 
+                checked={formData.taxExempt === true || formData.taxExempt === 'true'} 
+                onChange={handleInputChange}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
+              <label style={{ fontSize: '14px', fontWeight: '500', color: '#374151', cursor: 'pointer' }}>
+                Tax Exempt
+              </label>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Custom Rental Multiplier</label>
@@ -2550,7 +2564,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     clientFolderURL: proposal.clientFolderURL || '',
     salesLead: proposal.salesLead || '',
     status: proposal.status || 'Pending',
-    projectNumber: proposal.projectNumber || ''
+    projectNumber: proposal.projectNumber || '',
+    taxExempt: proposal.taxExempt === true || proposal.taxExempt === 'true'
   });
   const [sections, setSections] = useState(() => {
     const parsed = JSON.parse(proposal.sectionsJSON || '[]');
@@ -2573,17 +2588,32 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           imageUploading: false
         };
       }
-      // Ensure products have note field for backward compatibility
+      // Ensure products have note field and profitability fields for backward compatibility
       if (section.products && Array.isArray(section.products)) {
         return {
           ...section,
           products: section.products.map(product => {
-            // Ensure note field exists - check if it's undefined vs empty string
-            const productWithNote = { ...product };
-            if (!('note' in productWithNote)) {
-              productWithNote.note = '';
+            // Ensure all fields exist - check if they're undefined vs empty string
+            const productWithFields = { ...product };
+            if (!('note' in productWithFields)) {
+              productWithFields.note = '';
             }
-            return productWithNote;
+            if (!('needsPurchase' in productWithFields)) {
+              productWithFields.needsPurchase = false;
+            }
+            if (!('purchaseQuantity' in productWithFields)) {
+              productWithFields.purchaseQuantity = 0;
+            }
+            if (!('oopCost' in productWithFields)) {
+              productWithFields.oopCost = 0;
+            }
+            if (!('supplier' in productWithFields)) {
+              productWithFields.supplier = '';
+            }
+            if (!('productUrl' in productWithFields)) {
+              productWithFields.productUrl = '';
+            }
+            return productWithFields;
           })
         };
       }
@@ -3035,7 +3065,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       })(),
       // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
-      waiveServiceFee: formData.waiveServiceFee || false
+      waiveServiceFee: formData.waiveServiceFee || false,
+      taxExempt: formData.taxExempt || false
     };
     
     // Debug: Log the customRentalMultiplier being saved
@@ -3221,6 +3252,18 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 <option value="false">Apply (5%)</option>
                 <option value="true">Waive</option>
               </select>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '8px' }}>
+              <input 
+                type="checkbox" 
+                name="taxExempt" 
+                checked={formData.taxExempt === true || formData.taxExempt === 'true'} 
+                onChange={handleInputChange}
+                style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+              />
+              <label style={{ fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif", cursor: 'pointer' }}>
+                Tax Exempt
+              </label>
             </div>
             <div>
               <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Custom Rental Multiplier</label>
