@@ -739,7 +739,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
 
   const handleAddProduct = (sectionIdx) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0 });
+    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0, supplier: '', productUrl: '' });
     setSections(newSections);
   };
 
@@ -757,7 +757,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
         note: existingProduct.note || '', // Keep existing note
         needsPurchase: existingProduct.needsPurchase || false,
         purchaseQuantity: existingProduct.purchaseQuantity || 0,
-        oopCost: existingProduct.oopCost || 0
+        oopCost: existingProduct.oopCost || 0,
+        supplier: existingProduct.supplier || '',
+        productUrl: existingProduct.productUrl || ''
       };
     } else {
       // Different product - preserve note and profitability fields from existing product
@@ -767,7 +769,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
         note: existingProduct?.note || '', // Preserve note if it exists
         needsPurchase: existingProduct?.needsPurchase || false,
         purchaseQuantity: existingProduct?.purchaseQuantity || 0,
-        oopCost: existingProduct?.oopCost || 0
+        oopCost: existingProduct?.oopCost || 0,
+        supplier: existingProduct?.supplier || '',
+        productUrl: existingProduct?.productUrl || ''
       };
     }
     setSections(newSections);
@@ -1085,6 +1089,88 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                       placeholder="Optional note..."
                       style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
                     />
+                  </div>
+                  {/* Purchase Tracking Fields */}
+                  <div style={{ gridColumn: '1 / -1', marginTop: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={product.needsPurchase === true || product.needsPurchase === 'true'}
+                        onChange={(e) => {
+                          const newSections = JSON.parse(JSON.stringify(sections));
+                          newSections[sectionIdx].products[productIdx].needsPurchase = e.target.checked;
+                          setSections(newSections);
+                        }}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <label style={{ fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif", cursor: 'pointer' }}>
+                        Needs Purchase
+                      </label>
+                    </div>
+                    {(product.needsPurchase === true || product.needsPurchase === 'true') && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Purchase Qty</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              value={product.purchaseQuantity || 0} 
+                              onChange={(e) => {
+                                const newSections = JSON.parse(JSON.stringify(sections));
+                                newSections[sectionIdx].products[productIdx].purchaseQuantity = parseFloat(e.target.value) || 0;
+                                setSections(newSections);
+                              }}
+                              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: '#111827', fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>OOP Cost (per unit)</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              step="0.01"
+                              value={product.oopCost || 0} 
+                              onChange={(e) => {
+                                const newSections = JSON.parse(JSON.stringify(sections));
+                                newSections[sectionIdx].products[productIdx].oopCost = parseFloat(e.target.value) || 0;
+                                setSections(newSections);
+                              }}
+                              placeholder="$0.00"
+                              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: '#111827', fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Supplier</label>
+                          <input 
+                            type="text" 
+                            value={product.supplier || ''} 
+                            onChange={(e) => {
+                              const newSections = JSON.parse(JSON.stringify(sections));
+                              newSections[sectionIdx].products[productIdx].supplier = e.target.value;
+                              setSections(newSections);
+                            }}
+                            placeholder="e.g., Amazon, Wayfair, etc."
+                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: '#111827', fontFamily: "'Inter', sans-serif" }} 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Product URL</label>
+                          <input 
+                            type="url" 
+                            value={product.productUrl || ''} 
+                            onChange={(e) => {
+                              const newSections = JSON.parse(JSON.stringify(sections));
+                              newSections[sectionIdx].products[productIdx].productUrl = e.target.value;
+                              setSections(newSections);
+                            }}
+                            placeholder="https://..."
+                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: '#111827', fontFamily: "'Inter', sans-serif" }} 
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -2180,7 +2266,11 @@ function ProfitabilityView({ proposal, onBack }) {
           .profitability-table th:nth-child(9),
           .profitability-table td:nth-child(9) { width: 9% !important; }
           .profitability-table th:nth-child(10),
-          .profitability-table td:nth-child(10) { width: 9% !important; }
+          .profitability-table td:nth-child(10) { width: 8% !important; }
+          .profitability-table th:nth-child(11),
+          .profitability-table td:nth-child(11) { width: 10% !important; }
+          .profitability-table th:nth-child(12),
+          .profitability-table td:nth-child(12) { width: 12% !important; }
           h1 {
             font-size: 14px !important;
             margin-bottom: 15px !important;
@@ -2307,6 +2397,8 @@ function ProfitabilityView({ proposal, onBack }) {
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Investment</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Profit</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Profit Margin</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Supplier</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Product URL</th>
                 </tr>
               </thead>
               <tbody>
@@ -2332,6 +2424,16 @@ function ProfitabilityView({ proposal, onBack }) {
                     <td style={{ padding: '10px 12px', fontSize: '11px', color: product.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right', fontWeight: '500', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                       {product.profitMargin.toFixed(2)}%
                     </td>
+                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase ? brandCharcoal : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                      {product.needsPurchase && product.supplier ? product.supplier : '-'}
+                    </td>
+                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase && product.productUrl ? '#2563eb' : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                      {product.needsPurchase && product.productUrl ? (
+                        <a href={product.productUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>
+                          Link
+                        </a>
+                      ) : '-'}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -2351,6 +2453,7 @@ function ProfitabilityView({ proposal, onBack }) {
                   <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                     {profitability.profitMargin.toFixed(2)}%
                   </td>
+                  <td colSpan="2" style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
                 </tr>
               </tfoot>
             </table>
@@ -2527,7 +2630,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
 
   const handleAddProduct = (sectionIdx) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0 });
+    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0, supplier: '', productUrl: '' });
     setSections(newSections);
   };
 
@@ -2545,7 +2648,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         note: existingProduct.note || '', // Keep existing note
         needsPurchase: existingProduct.needsPurchase || false,
         purchaseQuantity: existingProduct.purchaseQuantity || 0,
-        oopCost: existingProduct.oopCost || 0
+        oopCost: existingProduct.oopCost || 0,
+        supplier: existingProduct.supplier || '',
+        productUrl: existingProduct.productUrl || ''
       };
     } else {
       // Different product - preserve note and profitability fields from existing product
@@ -2555,7 +2660,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         note: existingProduct?.note || '', // Preserve note if it exists
         needsPurchase: existingProduct?.needsPurchase || false,
         purchaseQuantity: existingProduct?.purchaseQuantity || 0,
-        oopCost: existingProduct?.oopCost || 0
+        oopCost: existingProduct?.oopCost || 0,
+        supplier: existingProduct?.supplier || '',
+        productUrl: existingProduct?.productUrl || ''
       };
     }
     setSections(newSections);
@@ -2881,7 +2988,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             note: product.note || '', // Explicitly include note field
             needsPurchase: product.needsPurchase || false,
             purchaseQuantity: product.purchaseQuantity || 0,
-            oopCost: product.oopCost || 0
+            oopCost: product.oopCost || 0,
+            supplier: product.supplier || '',
+            productUrl: product.productUrl || ''
           };
         })
       };
@@ -3444,29 +3553,53 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                       </label>
                     </div>
                     {(product.needsPurchase === true || product.needsPurchase === 'true') && (
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Purchase Qty</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              value={product.purchaseQuantity || 0} 
+                              onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'purchaseQuantity', e.target.value)} 
+                              onMouseDown={(e) => e.stopPropagation()}
+                              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>OOP Cost (per unit)</label>
+                            <input 
+                              type="number" 
+                              min="0" 
+                              step="0.01"
+                              value={product.oopCost || 0} 
+                              onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'oopCost', e.target.value)} 
+                              onMouseDown={(e) => e.stopPropagation()}
+                              placeholder="$0.00"
+                              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
+                            />
+                          </div>
+                        </div>
                         <div>
-                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Purchase Qty</label>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Supplier</label>
                           <input 
-                            type="number" 
-                            min="0" 
-                            value={product.purchaseQuantity || 0} 
-                            onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'purchaseQuantity', e.target.value)} 
+                            type="text" 
+                            value={product.supplier || ''} 
+                            onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'supplier', e.target.value)} 
                             onMouseDown={(e) => e.stopPropagation()}
-                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
+                            placeholder="e.g., Amazon, Wayfair, etc."
+                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
                           />
                         </div>
                         <div>
-                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>OOP Cost (per unit)</label>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Product URL</label>
                           <input 
-                            type="number" 
-                            min="0" 
-                            step="0.01"
-                            value={product.oopCost || 0} 
-                            onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'oopCost', e.target.value)} 
+                            type="url" 
+                            value={product.productUrl || ''} 
+                            onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'productUrl', e.target.value)} 
                             onMouseDown={(e) => e.stopPropagation()}
-                            placeholder="$0.00"
-                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
+                            placeholder="https://..."
+                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
                           />
                         </div>
                       </div>
