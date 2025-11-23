@@ -1609,18 +1609,18 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       {(() => {
         const currentPageNum = getNextPageNumber();
         return (
-          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '25px 35px 15px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '25px 80px 15px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Template-style header - logo only */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px' }}>
-              <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '50px', width: 'auto', maxWidth: '200px' }} />
+              <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '80px', width: 'auto', maxWidth: '300px' }} />
             </div>
             
             {/* Content container with border */}
-            <div style={{ flex: '1', border: '1px solid #e5e7eb', padding: '30px 35px', backgroundColor: 'white', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div style={{ flex: '1', border: '1px solid #e5e7eb', padding: '30px 35px', backgroundColor: 'white', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* Totals Section - Two Column Layout */}
               <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
-                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
+                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
                     Total
                   </h2>
                 </div>
@@ -1716,7 +1716,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               {/* Project Description Section - Two Column Layout */}
               <div style={{ paddingTop: '30px', borderTop: '1px solid #e5e7eb', marginBottom: '30px', display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
-                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
+                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
                     Project Description
                   </h2>
                 </div>
@@ -1737,7 +1737,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
               {/* Confirmation and Payment Section - Two Column Layout */}
               <div style={{ paddingTop: '30px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
-                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
+                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
                     Confirmation and Payment
                   </h2>
                 </div>
