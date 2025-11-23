@@ -3,6 +3,23 @@
 import React, { useState, useEffect } from 'react';
 
 // ============================================
+// LOGO PATH HELPER - Tries multiple paths to find logos
+// ============================================
+function getLogoPath(filename) {
+  // Try assets folder first (if files are there)
+  // Then try root public folder (if files are there)
+  // This handles different deployment scenarios
+  const basePath = window.location.origin;
+  const paths = [
+    `/assets/${filename}`,  // If in public/assets/
+    `/${filename}`,          // If in public/ root
+    `${basePath}/assets/${filename}`,  // Absolute with assets
+    `${basePath}/${filename}`          // Absolute root
+  ];
+  return paths[0]; // Start with /assets/ - will fallback via onError handler
+}
+
+// ============================================
 // HELPER FUNCTIONS - Date & Timezone Fixes
 // ============================================
 
@@ -562,7 +579,7 @@ export default function ProposalApp() {
 
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <img src="/assets/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
+          <img src="/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '600', color: '#2C2C2C', margin: '0' }}>Mayker Proposals</h1>
             <p style={{ marginTop: '4px', color: '#888888', fontSize: '13px', margin: '0' }}>Manage and view all event proposals</p>
@@ -1542,7 +1559,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
             <div>{formatDateRange(proposal)}</div>
             <div>{proposal.venueName}</div>
           </div>
-          <img src="/assets/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+          <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
         </div>
       </div>
       {/* Separator line */}
@@ -2023,36 +2040,16 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 className="no-print"
               >
                 <img 
-                  src="/assets/mayker_primary-w-tag-date-black.png" 
+                  src="/mayker_primary-w-tag-date-black.png" 
                   alt="Mayker" 
-                  onError={(e) => { 
-                    console.error('Logo failed to load:', e.target.src);
-                    // Try CDN as fallback
-                    if (!e.target.src.includes('cdn.jsdelivr.net')) {
-                      e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/mayker_primary-w-tag-date-black.png';
-                    } else {
-                      console.error('All logo paths failed, hiding image');
-                      e.target.style.display = 'none';
-                    }
-                  }} 
                   style={{ height: '120px', width: 'auto', maxWidth: '400px' }} 
                 />
               </div>
               {/* Print version - non-clickable */}
               <div className="print-only">
                 <img 
-                  src="/assets/mayker_primary-w-tag-date-black.png" 
+                  src="/mayker_primary-w-tag-date-black.png" 
                   alt="Mayker" 
-                  onError={(e) => { 
-                    console.error('Logo failed to load:', e.target.src);
-                    // Try CDN as fallback
-                    if (!e.target.src.includes('cdn.jsdelivr.net')) {
-                      e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/mayker_primary-w-tag-date-black.png';
-                    } else {
-                      console.error('All logo paths failed, hiding image');
-                      e.target.style.display = 'none';
-                    }
-                  }} 
                   style={{ height: '120px', width: 'auto', maxWidth: '400px' }} 
                 />
               </div>
@@ -2583,20 +2580,7 @@ function ProfitabilityView({ proposal, onBack }) {
       <div style={{ padding: '40px', paddingTop: '80px', maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header with Logo */}
         <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '15px' }}>
-          <img 
-            src="/assets/mayker_wordmark-events-black.svg" 
-            alt="Mayker Events" 
-            onError={(e) => { 
-              console.error('Logo SVG failed to load:', e.target.src);
-              // Try CDN as fallback
-              if (!e.target.src.includes('cdn.jsdelivr.net')) {
-                e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/mayker_wordmark-events-black.svg';
-              } else {
-                e.target.style.display = 'none';
-              }
-            }} 
-            style={{ height: '32px', width: 'auto' }} 
-          />
+          <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '32px', width: 'auto' }} />
         </div>
         
         <h1 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '25px', fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', textTransform: 'uppercase' }}>
@@ -3413,7 +3397,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <img src="/assets/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
+            <img src="/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
             <div>
               <h1 style={{ fontSize: '32px', fontWeight: '600', color: brandCharcoal, margin: '0 0 4px 0', fontFamily: "'Inter', sans-serif" }}>Edit Proposal</h1>
               <p style={{ fontSize: '14px', color: '#888888', margin: '0', fontFamily: "'Inter', sans-serif" }}>Make changes and save as a new version</p>
