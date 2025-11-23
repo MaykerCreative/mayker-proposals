@@ -1494,12 +1494,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
   };
   
   // Shared header component for all pages
-  const PageHeader = ({ sectionName, showSectionName = false }) => (
+  const PageHeader = ({ sectionName, showSectionName = false, onBack }) => (
     <div style={{ marginBottom: '20px' }}>
       {/* Top header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <div>
-          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
+          <a href="#" onClick={(e) => { e.preventDefault(); if (onBack) onBack(); }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
             <div style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2' }}>MAYKER EVENTS</div>
           </a>
         </div>
@@ -1683,7 +1683,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 key={`image-${sectionIndex}`} 
                 style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: sectionIndex === 0 ? 'auto' : 'always', boxSizing: 'border-box', overflow: 'hidden' }}
               >
-                <PageHeader />
+                <PageHeader onBack={onBack} />
                 
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 'calc(100vh - 200px)', flexDirection: 'column' }}>
                   <img 
@@ -1732,7 +1732,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 key={`${sectionIndex}-${pageIndex}`} 
                 style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 60px 40px', position: 'relative', pageBreakBefore: isFirstProductPage ? 'auto' : 'always', pageBreakAfter: 'auto', pageBreakInside: 'avoid', breakInside: 'avoid', boxSizing: 'border-box' }}
               >
-                <PageHeader sectionName={isFirstPageOfSection ? section.name : null} showSectionName={isFirstPageOfSection} />
+                <PageHeader sectionName={isFirstPageOfSection ? section.name : null} showSectionName={isFirstPageOfSection} onBack={onBack} />
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: 'min-content', gap: '14px', pageBreakInside: 'avoid', breakInside: 'avoid', width: '100%', boxSizing: 'border-box' }}>
                   {pageProducts.map((product, productIndex) => (
@@ -2101,7 +2101,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
             {/* Template-style footer - outside the bordered container */}
             <div style={{ marginTop: '30px', paddingTop: '0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                <div style={{ fontWeight: '400', color: brandCharcoal, fontSize: '14px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
+                <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
+                  <div style={{ fontWeight: '400', color: brandCharcoal, fontSize: '14px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
+                </a>
                 <div style={{ fontSize: '11px', color: brandCharcoal }}>events@mayker.com | (615) 970.1244</div>
               </div>
             </div>
