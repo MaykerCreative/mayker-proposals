@@ -204,6 +204,7 @@ function calculateDetailedTotals(proposal) {
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
   // Check if tax exempt - handle boolean, string 'true'/'false', or undefined
   const taxExempt = proposal.taxExempt === true || proposal.taxExempt === 'true' || String(proposal.taxExempt || '').toLowerCase() === 'true';
+  console.log('Tax Exempt Debug:', { taxExempt, proposalTaxExempt: proposal.taxExempt, proposalKeys: Object.keys(proposal) });
   const tax = taxExempt ? 0 : subtotal * 0.0975;
   const total = subtotal + tax;
   
@@ -2279,33 +2280,53 @@ function ProfitabilityView({ proposal, onBack }) {
           .profitability-table td {
             padding: 6px 8px !important;
             font-size: 10px !important;
-            word-wrap: break-word !important;
-            overflow: hidden !important;
+            white-space: nowrap !important;
+            overflow: visible !important;
+            text-overflow: clip !important;
+          }
+          .profitability-table td {
+            white-space: nowrap !important;
           }
           .profitability-table th:nth-child(1),
-          .profitability-table td:nth-child(1) { width: 12% !important; }
+          .profitability-table td:nth-child(1) { width: 10% !important; }
           .profitability-table th:nth-child(2),
-          .profitability-table td:nth-child(2) { width: 18% !important; }
+          .profitability-table td:nth-child(2) { width: 16% !important; }
           .profitability-table th:nth-child(3),
-          .profitability-table td:nth-child(3) { width: 6% !important; }
+          .profitability-table td:nth-child(3) { width: 5% !important; }
           .profitability-table th:nth-child(4),
-          .profitability-table td:nth-child(4) { width: 8% !important; }
+          .profitability-table td:nth-child(4) { width: 9% !important; }
           .profitability-table th:nth-child(5),
-          .profitability-table td:nth-child(5) { width: 9% !important; }
+          .profitability-table td:nth-child(5) { width: 10% !important; }
           .profitability-table th:nth-child(6),
           .profitability-table td:nth-child(6) { width: 8% !important; }
           .profitability-table th:nth-child(7),
-          .profitability-table td:nth-child(7) { width: 8% !important; }
+          .profitability-table td:nth-child(7) { width: 9% !important; }
           .profitability-table th:nth-child(8),
-          .profitability-table td:nth-child(8) { width: 9% !important; }
+          .profitability-table td:nth-child(8) { width: 10% !important; }
           .profitability-table th:nth-child(9),
-          .profitability-table td:nth-child(9) { width: 9% !important; }
+          .profitability-table td:nth-child(9) { width: 10% !important; }
           .profitability-table th:nth-child(10),
-          .profitability-table td:nth-child(10) { width: 8% !important; }
+          .profitability-table td:nth-child(10) { width: 9% !important; }
           .profitability-table th:nth-child(11),
-          .profitability-table td:nth-child(11) { width: 10% !important; }
+          .profitability-table td:nth-child(11) { width: 9% !important; }
           .profitability-table th:nth-child(12),
-          .profitability-table td:nth-child(12) { width: 12% !important; }
+          .profitability-table td:nth-child(12) { width: 10% !important; }
+          .profitability-table tfoot {
+            display: table-footer-group !important;
+          }
+          .profitability-table tfoot tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          /* Prevent tfoot from repeating on each page - only show at end */
+          thead { display: table-header-group !important; }
+          tfoot { display: table-footer-group !important; }
+          tbody { display: table-row-group !important; }
+          /* Ensure totals row doesn't break across pages */
+          .profitability-table tfoot tr {
+            page-break-before: auto !important;
+            page-break-after: auto !important;
+          }
           h1 {
             font-size: 14px !important;
             margin-bottom: 15px !important;
