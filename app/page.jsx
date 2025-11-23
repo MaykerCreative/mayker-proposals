@@ -2857,6 +2857,15 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
         * { font-family: 'Inter', sans-serif; }
+        /* Hide number input spinners */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+        }
+        input[type="number"] {
+          -moz-appearance: textfield;
+        }
         input:focus, select:focus {
           outline: none;
           border-color: #545142 !important;
@@ -3314,7 +3323,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                             value={product.purchaseQuantity || 0} 
                             onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'purchaseQuantity', e.target.value)} 
                             onMouseDown={(e) => e.stopPropagation()}
-                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
+                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
                           />
                         </div>
                         <div>
@@ -3327,7 +3336,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                             onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'oopCost', e.target.value)} 
                             onMouseDown={(e) => e.stopPropagation()}
                             placeholder="$0.00"
-                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
+                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
                           />
                         </div>
                       </div>
