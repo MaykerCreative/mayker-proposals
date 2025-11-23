@@ -2039,19 +2039,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 className="no-print"
               >
-                <img 
-                  src="/mayker_primary-w-tag-date-black.png" 
-                  alt="Mayker" 
-                  style={{ height: '120px', width: 'auto', maxWidth: '400px' }} 
-                />
+                <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
               </div>
               {/* Print version - non-clickable */}
               <div className="print-only">
-                <img 
-                  src="/mayker_primary-w-tag-date-black.png" 
-                  alt="Mayker" 
-                  style={{ height: '120px', width: 'auto', maxWidth: '400px' }} 
-                />
+                <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
               </div>
             </div>
             
@@ -2580,7 +2572,7 @@ function ProfitabilityView({ proposal, onBack }) {
       <div style={{ padding: '40px', paddingTop: '80px', maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header with Logo */}
         <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '15px' }}>
-          <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" style={{ height: '32px', width: 'auto' }} />
+          <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" onError={(e) => { e.target.src = '/mayker_wordmark-events-black.svg'; }} style={{ height: '32px', width: 'auto' }} />
         </div>
         
         <h1 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '25px', fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', textTransform: 'uppercase' }}>
