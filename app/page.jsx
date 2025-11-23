@@ -1178,7 +1178,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       <div style={{ borderBottom: '1px solid #e5e7eb', marginBottom: showSectionName ? '15px' : '0' }}></div>
       {/* Section name below separator if provided */}
       {showSectionName && sectionName && (
-        <div style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginTop: '15px', fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em' }}>{sectionName}</div>
+        <div style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginTop: '15px', fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', textAlign: 'center' }}>{sectionName}</div>
       )}
     </div>
   );
