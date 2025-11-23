@@ -1542,7 +1542,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
             <div>{formatDateRange(proposal)}</div>
             <div>{proposal.venueName}</div>
           </div>
-          <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+          <img src="/assets/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
         </div>
       </div>
       {/* Separator line */}
