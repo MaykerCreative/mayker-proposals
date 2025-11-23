@@ -494,7 +494,7 @@ export default function ProposalApp() {
         }
       }
     };
-    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={handleRefresh} />;
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={handleRefresh} onRefreshProposalsList={fetchProposals} />;
   }
 
   return (
@@ -1104,7 +1104,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   );
 }
 
-function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
+function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefreshProposalsList }) {
   const [isEditing, setIsEditing] = useState(proposal._isEditing || false);
   const [editData, setEditData] = useState(null);
   const [showProfitability, setShowProfitability] = useState(false);
@@ -1142,8 +1142,10 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
       const successMsg = 'Proposal saved successfully. Use the "Print / Export as PDF" button to download the PDF.';
       alert(successMsg);
       setIsEditing(false);
-      // Don't auto-refresh - let user go back to dashboard manually
-      // onRefresh();
+      // Refresh proposals list but don't auto-select the proposal
+      if (onRefreshProposalsList) {
+        onRefreshProposalsList();
+      }
     } catch (err) {
       alert('Error saving proposal: ' + err.message);
     } finally {
