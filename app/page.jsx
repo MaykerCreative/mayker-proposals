@@ -1499,9 +1499,26 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
       {/* Top header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <div>
-          <a href="#" onClick={(e) => { e.preventDefault(); if (onBack) onBack(); }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
+          <div 
+            onClick={(e) => { 
+              e.preventDefault(); 
+              e.stopPropagation();
+              if (onBack) {
+                onBack();
+              }
+            }} 
+            style={{ 
+              textDecoration: 'none', 
+              cursor: 'pointer',
+              display: 'inline-block',
+              userSelect: 'none'
+            }}
+            className="no-print"
+          >
             <div style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2' }}>MAYKER EVENTS</div>
-          </a>
+          </div>
+          {/* Print version - non-clickable */}
+          <div className="print-only" style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2' }}>MAYKER EVENTS</div>
         </div>
         <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
@@ -1620,8 +1637,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
           max-width: 100%;
         }
         
+        .print-only { display: none !important; }
         @media print { 
           .no-print { display: none !important; } 
+          .print-only { display: block !important; }
           .print-break-after { page-break-after: always; } 
           body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
           @page { size: letter; margin: 0; } 
@@ -1955,9 +1974,28 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
           <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '50px 80px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Template-style header - logo only */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '35px' }}>
-              <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
-                <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
-              </a>
+              <div 
+                onClick={(e) => { 
+                  e.preventDefault(); 
+                  e.stopPropagation();
+                  if (onBack) {
+                    onBack();
+                  }
+                }} 
+                style={{ 
+                  textDecoration: 'none', 
+                  cursor: 'pointer',
+                  display: 'inline-block',
+                  userSelect: 'none'
+                }}
+                className="no-print"
+              >
+                <img src="/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
+              </div>
+              {/* Print version - non-clickable */}
+              <div className="print-only">
+                <img src="/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
+              </div>
             </div>
             
             {/* Content container with border */}
