@@ -562,7 +562,7 @@ export default function ProposalApp() {
 
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <img src="/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
+          <img src="/assets/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '600', color: '#2C2C2C', margin: '0' }}>Mayker Proposals</h1>
             <p style={{ marginTop: '4px', color: '#888888', fontSize: '13px', margin: '0' }}>Manage and view all event proposals</p>
@@ -1504,11 +1504,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
               console.log('PageHeader logo clicked, onBack:', onBack);
               e.preventDefault(); 
               e.stopPropagation();
-              if (onBack && typeof onBack === 'function') {
-                console.log('Calling onBack()');
-                onBack();
-              } else {
-                console.error('onBack is not a function:', typeof onBack);
+              try {
+                if (onBack && typeof onBack === 'function') {
+                  console.log('Calling onBack()');
+                  onBack();
+                } else {
+                  console.log('onBack not available, using window navigation');
+                  // Fallback: navigate to dashboard
+                  window.location.href = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/') || '/';
+                }
+              } catch (error) {
+                console.error('Error in logo click handler:', error);
+                // Fallback navigation
+                window.location.href = window.location.origin;
               }
             }} 
             style={{ 
@@ -1516,8 +1524,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
               cursor: 'pointer',
               display: 'inline-block',
               userSelect: 'none',
-              pointerEvents: 'auto'
+              pointerEvents: 'auto',
+              transition: 'opacity 0.2s'
             }}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
             className="no-print"
           >
             <div style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2' }}>MAYKER EVENTS</div>
@@ -1984,11 +1995,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                   console.log('Project details logo clicked, onBack:', onBack);
                   e.preventDefault(); 
                   e.stopPropagation();
-                  if (onBack && typeof onBack === 'function') {
-                    console.log('Calling onBack()');
-                    onBack();
-                  } else {
-                    console.error('onBack is not a function:', typeof onBack);
+                  try {
+                    if (onBack && typeof onBack === 'function') {
+                      console.log('Calling onBack()');
+                      onBack();
+                    } else {
+                      console.log('onBack not available, using window navigation');
+                      // Fallback: navigate to dashboard
+                      window.location.href = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/') || '/';
+                    }
+                  } catch (error) {
+                    console.error('Error in project details logo click handler:', error);
+                    // Fallback navigation
+                    window.location.href = window.location.origin;
                   }
                 }} 
                 style={{ 
@@ -1996,24 +2015,21 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                   cursor: 'pointer',
                   display: 'inline-block',
                   userSelect: 'none',
-                  pointerEvents: 'auto'
+                  pointerEvents: 'auto',
+                  transition: 'opacity 0.2s'
                 }}
+                onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 className="no-print"
               >
                 <img 
-                  src="/mayker_primary-w-tag-date-black.png" 
+                  src="/assets/mayker_primary-w-tag-date-black.png" 
                   alt="Mayker" 
                   onError={(e) => { 
                     console.error('Logo failed to load:', e.target.src);
-                    // Try alternative paths
-                    const currentSrc = e.target.src;
-                    if (currentSrc.includes('.PNG')) {
-                      e.target.src = '/mayker_primary-w-tag-date-black.png';
-                    } else if (currentSrc.includes('.png') && !currentSrc.includes('/assets/')) {
-                      e.target.src = '/assets/mayker_primary-w-tag-date-black.png';
-                    } else if (currentSrc.includes('/assets/')) {
-                      // Try CDN as fallback
-                      e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_primary-w-tag-date-black.png';
+                    // Try CDN as fallback
+                    if (!e.target.src.includes('cdn.jsdelivr.net')) {
+                      e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/mayker_primary-w-tag-date-black.png';
                     } else {
                       console.error('All logo paths failed, hiding image');
                       e.target.style.display = 'none';
@@ -2025,19 +2041,13 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
               {/* Print version - non-clickable */}
               <div className="print-only">
                 <img 
-                  src="/mayker_primary-w-tag-date-black.png" 
+                  src="/assets/mayker_primary-w-tag-date-black.png" 
                   alt="Mayker" 
                   onError={(e) => { 
                     console.error('Logo failed to load:', e.target.src);
-                    // Try alternative paths
-                    const currentSrc = e.target.src;
-                    if (currentSrc.includes('.PNG')) {
-                      e.target.src = '/mayker_primary-w-tag-date-black.png';
-                    } else if (currentSrc.includes('.png') && !currentSrc.includes('/assets/')) {
-                      e.target.src = '/assets/mayker_primary-w-tag-date-black.png';
-                    } else if (currentSrc.includes('/assets/')) {
-                      // Try CDN as fallback
-                      e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_primary-w-tag-date-black.png';
+                    // Try CDN as fallback
+                    if (!e.target.src.includes('cdn.jsdelivr.net')) {
+                      e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/mayker_primary-w-tag-date-black.png';
                     } else {
                       console.error('All logo paths failed, hiding image');
                       e.target.style.display = 'none';
@@ -2194,11 +2204,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                     console.log('Footer logo clicked, onBack:', onBack);
                     e.preventDefault(); 
                     e.stopPropagation();
-                    if (onBack && typeof onBack === 'function') {
-                      console.log('Calling onBack()');
-                      onBack();
-                    } else {
-                      console.error('onBack is not a function:', typeof onBack);
+                    try {
+                      if (onBack && typeof onBack === 'function') {
+                        console.log('Calling onBack()');
+                        onBack();
+                      } else {
+                        console.log('onBack not available, using window navigation');
+                        // Fallback: navigate to dashboard
+                        window.location.href = window.location.origin + window.location.pathname.split('/').slice(0, -1).join('/') || '/';
+                      }
+                    } catch (error) {
+                      console.error('Error in footer logo click handler:', error);
+                      // Fallback navigation
+                      window.location.href = window.location.origin;
                     }
                   }} 
                   style={{ 
@@ -2206,8 +2224,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                     cursor: 'pointer',
                     display: 'inline-block',
                     userSelect: 'none',
-                    pointerEvents: 'auto'
+                    pointerEvents: 'auto',
+                    transition: 'opacity 0.2s'
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = '0.7'}
+                  onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                   className="no-print"
                 >
                   <div style={{ fontWeight: '400', color: brandCharcoal, fontSize: '14px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
@@ -2563,15 +2584,13 @@ function ProfitabilityView({ proposal, onBack }) {
         {/* Header with Logo */}
         <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '15px' }}>
           <img 
-            src="/mayker_wordmark-events-black.svg" 
+            src="/assets/mayker_wordmark-events-black.svg" 
             alt="Mayker Events" 
             onError={(e) => { 
               console.error('Logo SVG failed to load:', e.target.src);
-              const currentSrc = e.target.src;
-              if (!currentSrc.includes('/assets/')) {
-                e.target.src = '/assets/mayker_wordmark-events-black.svg';
-              } else if (!currentSrc.includes('cdn.jsdelivr.net')) {
-                e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_wordmark-events-black.svg';
+              // Try CDN as fallback
+              if (!e.target.src.includes('cdn.jsdelivr.net')) {
+                e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/mayker_wordmark-events-black.svg';
               } else {
                 e.target.style.display = 'none';
               }
@@ -3394,7 +3413,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <img src="/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
+            <img src="/assets/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
             <div>
               <h1 style={{ fontSize: '32px', fontWeight: '600', color: brandCharcoal, margin: '0 0 4px 0', fontFamily: "'Inter', sans-serif" }}>Edit Proposal</h1>
               <p style={{ fontSize: '14px', color: '#888888', margin: '0', fontFamily: "'Inter', sans-serif" }}>Make changes and save as a new version</p>
@@ -3916,3 +3935,4 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     </div>
   );
 }
+
