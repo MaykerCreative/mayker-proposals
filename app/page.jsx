@@ -1990,11 +1990,43 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 }}
                 className="no-print"
               >
-                <img src="/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
+                <img 
+                  src="/mayker_primary-w-tag-date-black.png" 
+                  alt="Mayker" 
+                  onError={(e) => { 
+                    console.error('Logo failed to load:', e.target.src);
+                    // Try alternative paths
+                    if (e.target.src.includes('/mayker_primary')) {
+                      e.target.src = '/mayker_primary-w-tag-date-black.PNG';
+                    } else if (e.target.src.includes('.PNG')) {
+                      e.target.src = '/assets/mayker_primary-w-tag-date-black.png';
+                    } else {
+                      e.target.style.display = 'none';
+                    }
+                  }} 
+                  onLoad={() => console.log('Logo loaded successfully:', '/mayker_primary-w-tag-date-black.png')}
+                  style={{ height: '120px', width: 'auto', maxWidth: '400px' }} 
+                />
               </div>
               {/* Print version - non-clickable */}
               <div className="print-only">
-                <img src="/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
+                <img 
+                  src="/mayker_primary-w-tag-date-black.png" 
+                  alt="Mayker" 
+                  onError={(e) => { 
+                    console.error('Logo failed to load:', e.target.src);
+                    // Try alternative paths
+                    if (e.target.src.includes('/mayker_primary')) {
+                      e.target.src = '/mayker_primary-w-tag-date-black.PNG';
+                    } else if (e.target.src.includes('.PNG')) {
+                      e.target.src = '/assets/mayker_primary-w-tag-date-black.png';
+                    } else {
+                      e.target.style.display = 'none';
+                    }
+                  }} 
+                  onLoad={() => console.log('Logo loaded successfully:', '/mayker_primary-w-tag-date-black.png')}
+                  style={{ height: '120px', width: 'auto', maxWidth: '400px' }} 
+                />
               </div>
             </div>
             
