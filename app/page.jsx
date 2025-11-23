@@ -202,8 +202,8 @@ function calculateDetailedTotals(proposal) {
   const serviceFeeAmount = (rentalTotal + productCare + delivery) * 0.05;
   
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
-  // Check if tax exempt
-  const taxExempt = proposal.taxExempt === true || proposal.taxExempt === 'true';
+  // Check if tax exempt - handle boolean, string 'true'/'false', or undefined
+  const taxExempt = proposal.taxExempt === true || proposal.taxExempt === 'true' || String(proposal.taxExempt || '').toLowerCase() === 'true';
   const tax = taxExempt ? 0 : subtotal * 0.0975;
   const total = subtotal + tax;
   
