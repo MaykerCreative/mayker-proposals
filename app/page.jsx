@@ -1142,7 +1142,8 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
       const successMsg = 'Proposal saved successfully. Use the "Print / Export as PDF" button to download the PDF.';
       alert(successMsg);
       setIsEditing(false);
-      onRefresh();
+      // Don't auto-refresh - let user go back to dashboard manually
+      // onRefresh();
     } catch (err) {
       alert('Error saving proposal: ' + err.message);
     } finally {
@@ -2178,16 +2179,33 @@ function ProfitabilityView({ proposal, onBack }) {
           .profitability-table td:nth-child(9) { width: 9% !important; }
           .profitability-table th:nth-child(10),
           .profitability-table td:nth-child(10) { width: 9% !important; }
+          h1 {
+            font-size: 12px !important;
+            margin-bottom: 15px !important;
+          }
           .profitability-cards {
             page-break-inside: avoid;
             grid-template-columns: repeat(2, 1fr) !important;
-            gap: 15px !important;
+            gap: 10px !important;
+            margin-bottom: 20px !important;
           }
           .profitability-cards > div {
-            padding: 15px !important;
+            padding: 10px !important;
           }
-          .profitability-cards > div > div:last-child {
-            font-size: 18px !important;
+          .profitability-cards > div > div:first-child {
+            font-size: 8px !important;
+            margin-bottom: 4px !important;
+            white-space: nowrap !important;
+          }
+          .profitability-cards > div > div:nth-child(2) {
+            font-size: 12px !important;
+          }
+          .profitability-cards > div > div:nth-child(3) {
+            font-size: 9px !important;
+          }
+          [data-profitability-view] img {
+            height: 40px !important;
+            max-width: 200px !important;
           }
         }
       ` }} />
@@ -2207,15 +2225,11 @@ function ProfitabilityView({ proposal, onBack }) {
       
       <div style={{ padding: '40px', paddingTop: '80px', maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header with Logo */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid #e5e7eb', paddingBottom: '20px' }}>
-          <div>
-            <div style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", marginBottom: '4px' }}>MAYKER EVENTS</div>
-            <div style={{ fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em' }}>Profitability Analysis</div>
-          </div>
-          <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '15px' }}>
+          <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '60px', width: 'auto', maxWidth: '300px' }} />
         </div>
         
-        <h1 style={{ fontSize: '24px', fontWeight: '400', color: brandCharcoal, marginBottom: '30px', fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', textTransform: 'uppercase' }}>
+        <h1 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '25px', fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', textTransform: 'uppercase' }}>
           Profitability Analysis
         </h1>
         
@@ -2238,27 +2252,27 @@ function ProfitabilityView({ proposal, onBack }) {
         </div>
         
         {/* Summary Cards */}
-        <div className="profitability-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px' }}>
-          <div style={{ padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-            <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Total Revenue</div>
-            <div style={{ fontSize: '22px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(profitability.totalRevenue)}</div>
+        <div className="profitability-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px', marginBottom: '30px' }}>
+          <div style={{ padding: '15px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+            <div style={{ fontSize: '9px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Total Revenue</div>
+            <div style={{ fontSize: '16px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(profitability.totalRevenue)}</div>
           </div>
-          <div style={{ padding: '20px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
-            <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Total Investment</div>
-            <div style={{ fontSize: '22px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(profitability.totalCOGS)}</div>
-            <div style={{ fontSize: '11px', color: '#666', marginTop: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+          <div style={{ padding: '15px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
+            <div style={{ fontSize: '9px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Total Investment</div>
+            <div style={{ fontSize: '16px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(profitability.totalCOGS)}</div>
+            <div style={{ fontSize: '9px', color: '#666', marginTop: '4px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
               OOP: ${formatNumber(profitability.totalOOP)} | Freight: ${formatNumber(profitability.freight)}
             </div>
           </div>
-          <div style={{ padding: '20px', backgroundColor: '#d1fae5', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-            <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Profit</div>
-            <div style={{ fontSize: '22px', fontWeight: '500', color: profitability.profit >= 0 ? '#059669' : '#dc2626', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+          <div style={{ padding: '15px', backgroundColor: '#d1fae5', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
+            <div style={{ fontSize: '9px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Profit</div>
+            <div style={{ fontSize: '16px', fontWeight: '400', color: profitability.profit >= 0 ? '#059669' : '#dc2626', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
               ${formatNumber(profitability.profit)}
             </div>
           </div>
-          <div style={{ padding: '20px', backgroundColor: '#dbeafe', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-            <div style={{ fontSize: '10px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>Profit Margin</div>
-            <div style={{ fontSize: '22px', fontWeight: '500', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+          <div style={{ padding: '15px', backgroundColor: '#dbeafe', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+            <div style={{ fontSize: '9px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '6px', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Profit Margin</div>
+            <div style={{ fontSize: '16px', fontWeight: '400', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
               {profitability.profitMargin.toFixed(2)}%
             </div>
           </div>
