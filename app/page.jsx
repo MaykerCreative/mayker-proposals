@@ -1609,26 +1609,22 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       {(() => {
         const currentPageNum = getNextPageNumber();
         return (
-          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '30px 40px 20px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            {/* Template-style header */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '30px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', marginBottom: '12px' }}>
-                <span style={{ fontSize: '9px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", letterSpacing: '0.05em' }}>ESTD 2013</span>
-                <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '45px', width: 'auto', maxWidth: '120px' }} />
-                <span style={{ fontSize: '9px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", letterSpacing: '0.05em' }}>ESTD 2013</span>
-              </div>
-              <div style={{ fontSize: '36px', fontWeight: '700', color: brandCharcoal, fontFamily: "'Inter', sans-serif", letterSpacing: '0.02em', marginBottom: '6px' }}>MAYKER</div>
-              <div style={{ fontSize: '10px', color: '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", letterSpacing: '0.1em', textTransform: 'uppercase' }}>A DESIGN RESOURCE COMPANY</div>
+          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '25px 35px 15px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {/* Template-style header - logo only */}
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px' }}>
+              <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '50px', width: 'auto', maxWidth: '200px' }} />
             </div>
             
             {/* Content container with border */}
-            <div style={{ flex: '1', border: '1px solid #e5e7eb', padding: '35px 40px', backgroundColor: 'white', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
-              {/* Totals Section */}
-              <div style={{ marginBottom: '35px' }}>
-                <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, marginBottom: '18px', fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em' }}>
-                  Total
-                </h2>
-                <div className="no-page-break" style={{ width: '100%' }}>
+            <div style={{ flex: '1', border: '1px solid #e5e7eb', padding: '30px 35px', backgroundColor: 'white', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+              {/* Totals Section - Two Column Layout */}
+              <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'flex-start' }}>
+                <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
+                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
+                    Total
+                  </h2>
+                </div>
+                <div className="no-page-break" style={{ flex: '1', minWidth: 0 }}>
                   <table className="no-page-break" style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <tbody>
                       <tr>
@@ -1717,45 +1713,53 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                 </div>
               </div>
               
-              {/* Project Description Section */}
-              <div style={{ paddingTop: '35px', borderTop: '1px solid #e5e7eb', marginBottom: '35px' }}>
-                <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: "'Domaine Text', serif" }}>
-                  Project Description
-                </h2>
-                <p style={{ marginBottom: '15px', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  The delivery fee quoted is based on the current scope of rentals, as well as the below delivery details. If your project needs change, we're happy to accommodate where possible, but delivery fees may adjust accordingly:
-                </p>
-                <ul style={{ fontSize: '12px', lineHeight: '1.6', marginBottom: '0', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  <li style={{ marginBottom: '6px' }}><strong>Project Address:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
-                  <li style={{ marginBottom: '6px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-                  <li style={{ marginBottom: '6px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
-                  <li style={{ marginBottom: '6px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-                  <li style={{ marginBottom: '6px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
-                </ul>
+              {/* Project Description Section - Two Column Layout */}
+              <div style={{ paddingTop: '30px', borderTop: '1px solid #e5e7eb', marginBottom: '30px', display: 'flex', alignItems: 'flex-start' }}>
+                <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
+                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
+                    Project Description
+                  </h2>
+                </div>
+                <div style={{ flex: '1', minWidth: 0 }}>
+                  <p style={{ marginBottom: '12px', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    The delivery fee quoted is based on the current scope of rentals, as well as the below delivery details. If your project needs change, we're happy to accommodate where possible, but delivery fees may adjust accordingly:
+                  </p>
+                  <ul style={{ fontSize: '12px', lineHeight: '1.6', marginBottom: '0', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    <li style={{ marginBottom: '5px' }}><strong>Project Address:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
+                    <li style={{ marginBottom: '5px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+                    <li style={{ marginBottom: '5px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
+                    <li style={{ marginBottom: '5px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+                    <li style={{ marginBottom: '5px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
+                  </ul>
+                </div>
               </div>
               
-              {/* Confirmation and Payment Section */}
-              <div style={{ paddingTop: '35px', borderTop: '1px solid #e5e7eb' }}>
-                <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '0.02em', fontFamily: "'Domaine Text', serif" }}>
-                  Confirmation and Payment
-                </h2>
-                <p style={{ marginBottom: '15px', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  Projects are confirmed with a signed service agreement and corresponding deposit payment. Payment can be made via wire, ACH, credit card, or check. If paying by check, please remit payment to the address below:
-                </p>
-                <div style={{ marginBottom: '15px', fontSize: '12px', lineHeight: '1.6', color: '#222', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  <div>Mayker</div>
-                  <div>Attn: Accounting Department</div>
-                  <div>1206 4th Ave. N</div>
-                  <div>Nashville, TN 37208</div>
+              {/* Confirmation and Payment Section - Two Column Layout */}
+              <div style={{ paddingTop: '30px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
+                <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
+                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", textTransform: 'uppercase', letterSpacing: '0.02em', margin: 0 }}>
+                    Confirmation and Payment
+                  </h2>
                 </div>
-                <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                  A 3% processing fee is applied to all credit card payments.
-                </p>
+                <div style={{ flex: '1', minWidth: 0 }}>
+                  <p style={{ marginBottom: '12px', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    Projects are confirmed with a signed service agreement and corresponding deposit payment. Payment can be made via wire, ACH, credit card, or check. If paying by check, please remit payment to the address below:
+                  </p>
+                  <div style={{ marginBottom: '12px', fontSize: '12px', lineHeight: '1.6', color: '#222', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    <div>Mayker</div>
+                    <div>Attn: Accounting Department</div>
+                    <div>1206 4th Ave. N</div>
+                    <div>Nashville, TN 37208</div>
+                  </div>
+                  <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    A 3% processing fee is applied to all credit card payments.
+                  </p>
+                </div>
               </div>
             </div>
             
             {/* Template-style footer - outside the bordered container */}
-            <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid #2C2C2C' }}>
+            <div style={{ marginTop: '15px', paddingTop: '12px', borderTop: '1px solid #2C2C2C' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                 <div style={{ fontWeight: '600', color: brandCharcoal, fontSize: '10px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
                 <div style={{ fontSize: '10px' }}>events@mayker.com | (615) 970.1244</div>
