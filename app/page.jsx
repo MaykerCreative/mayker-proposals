@@ -1616,7 +1616,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             </div>
             
             {/* Content container with border */}
-            <div style={{ flex: '1', border: '1px solid #2C2C2C', padding: '30px 35px', backgroundColor: 'white', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div style={{ flex: '1', border: '1px solid #2C2C2C', padding: '40px 35px 30px', backgroundColor: 'white', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* Totals Section - Two Column Layout */}
               <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
@@ -1752,7 +1752,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             {/* Template-style footer - outside the bordered container */}
             <div style={{ marginTop: '30px', paddingTop: '0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                <div style={{ fontWeight: '400', color: brandCharcoal, fontSize: '12px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
+                <div style={{ fontWeight: '400', color: brandCharcoal, fontSize: '14px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
                 <div style={{ fontSize: '11px', color: brandCharcoal }}>events@mayker.com | (615) 970.1244</div>
               </div>
             </div>
