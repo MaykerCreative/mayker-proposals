@@ -2122,6 +2122,18 @@ function ProfitabilityView({ proposal, onBack }) {
     sections.forEach(section => {
       if (section.products && Array.isArray(section.products)) {
         section.products.forEach(product => {
+          // Debug: Log product data to check supplier and productUrl
+          if (product.needsPurchase === true || product.needsPurchase === 'true') {
+            console.log('Product with purchase:', {
+              name: product.name,
+              supplier: product.supplier,
+              productUrl: product.productUrl,
+              hasSupplier: 'supplier' in product,
+              hasProductUrl: 'productUrl' in product,
+              allKeys: Object.keys(product)
+            });
+          }
+          
           const quantity = parseFloat(product.quantity) || 0;
           const price = parseFloat(product.price) || 0;
           const revenue = quantity * price;
@@ -2447,11 +2459,11 @@ function ProfitabilityView({ proposal, onBack }) {
                     <td style={{ padding: '10px 12px', fontSize: '11px', color: product.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right', fontWeight: '500', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                       {product.profitMargin.toFixed(2)}%
                     </td>
-                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase ? brandCharcoal : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                      {product.needsPurchase && product.supplier ? product.supplier : '-'}
+                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase && product.supplier && product.supplier.trim() ? brandCharcoal : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                      {product.needsPurchase && product.supplier && product.supplier.trim() ? product.supplier : '-'}
                     </td>
-                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase && product.productUrl ? '#2563eb' : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                      {product.needsPurchase && product.productUrl ? (
+                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase && product.productUrl && product.productUrl.trim() ? '#2563eb' : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                      {product.needsPurchase && product.productUrl && product.productUrl.trim() ? (
                         <a href={product.productUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>
                           Link
                         </a>
