@@ -1499,7 +1499,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
       {/* Top header row */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
         <div>
-          <div style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2' }}>MAYKER EVENTS</div>
+          <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
+            <div style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2' }}>MAYKER EVENTS</div>
+          </a>
         </div>
         <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
@@ -2311,17 +2313,17 @@ function ProfitabilityView({ proposal, onBack }) {
           .profitability-table th:nth-child(5),
           .profitability-table td:nth-child(5) { width: 9% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(6),
-          .profitability-table td:nth-child(6) { width: 7% !important; white-space: nowrap !important; }
+          .profitability-table td:nth-child(6) { width: 8% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(7),
-          .profitability-table td:nth-child(7) { width: 8% !important; white-space: nowrap !important; }
+          .profitability-table td:nth-child(7) { width: 9% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(8),
           .profitability-table td:nth-child(8) { width: 9% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(9),
           .profitability-table td:nth-child(9) { width: 9% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(10),
-          .profitability-table td:nth-child(10) { width: 8% !important; white-space: nowrap !important; }
+          .profitability-table td:nth-child(10) { width: 9% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(11),
-          .profitability-table td:nth-child(11) { width: 8% !important; white-space: normal !important; word-wrap: break-word !important; }
+          .profitability-table td:nth-child(11) { width: 9% !important; white-space: normal !important; word-wrap: break-word !important; }
           .profitability-table th:nth-child(12),
           .profitability-table td:nth-child(12) { width: 9% !important; white-space: normal !important; word-wrap: break-word !important; }
           /* Totals row styling - ensure it only appears once */
@@ -2349,12 +2351,12 @@ function ProfitabilityView({ proposal, onBack }) {
           .profitability-totals-row > div > div:nth-child(3) { width: 5% !important; }
           .profitability-totals-row > div > div:nth-child(4) { width: 8% !important; }
           .profitability-totals-row > div > div:nth-child(5) { width: 9% !important; }
-          .profitability-totals-row > div > div:nth-child(6) { width: 7% !important; }
-          .profitability-totals-row > div > div:nth-child(7) { width: 8% !important; }
+          .profitability-totals-row > div > div:nth-child(6) { width: 8% !important; }
+          .profitability-totals-row > div > div:nth-child(7) { width: 9% !important; }
           .profitability-totals-row > div > div:nth-child(8) { width: 9% !important; }
           .profitability-totals-row > div > div:nth-child(9) { width: 9% !important; }
-          .profitability-totals-row > div > div:nth-child(10) { width: 8% !important; }
-          .profitability-totals-row > div > div:nth-child(11) { width: 8% !important; }
+          .profitability-totals-row > div > div:nth-child(10) { width: 9% !important; }
+          .profitability-totals-row > div > div:nth-child(11) { width: 9% !important; }
           .profitability-totals-row > div > div:nth-child(12) { width: 9% !important; }
           /* Ensure table doesn't break before totals */
           .profitability-table {
@@ -2538,8 +2540,8 @@ function ProfitabilityView({ proposal, onBack }) {
                 <div style={{ display: 'table-cell', width: '5%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}></div>
                 <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>TOTALS:</div>
                 <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>${formatNumber(profitability.totalRevenue)}</div>
-                <div style={{ display: 'table-cell', width: '7%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}></div>
-                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}>
+                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}></div>
+                <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}>
                   ${formatNumber(profitability.totalOOP)}
                 </div>
                 <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}>
@@ -2548,10 +2550,10 @@ function ProfitabilityView({ proposal, onBack }) {
                 <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: profitability.profit >= 0 ? '#059669' : '#dc2626', textAlign: 'right' }}>
                   ${formatNumber(profitability.profit)}
                 </div>
-                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right' }}>
+                <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right' }}>
                   {profitability.profitMargin.toFixed(2)}%
                 </div>
-                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px' }}></div>
+                <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px' }}></div>
                 <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px' }}></div>
               </div>
             </div>
