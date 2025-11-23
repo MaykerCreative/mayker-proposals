@@ -1609,10 +1609,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
       {(() => {
         const currentPageNum = getNextPageNumber();
         return (
-          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '25px 80px 15px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+          <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '50px 80px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Template-style header - logo only */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '25px' }}>
-              <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '80px', width: 'auto', maxWidth: '300px' }} />
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '35px' }}>
+              <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
             </div>
             
             {/* Content container with border */}
@@ -1742,24 +1742,15 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                   </h2>
                 </div>
                 <div style={{ flex: '1', minWidth: 0 }}>
-                  <p style={{ marginBottom: '12px', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    Projects are confirmed with a signed service agreement and corresponding deposit payment. Payment can be made via wire, ACH, credit card, or check. If paying by check, please remit payment to the address below:
-                  </p>
-                  <div style={{ marginBottom: '12px', fontSize: '12px', lineHeight: '1.6', color: '#222', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    <div>Mayker</div>
-                    <div>Attn: Accounting Department</div>
-                    <div>1206 4th Ave. N</div>
-                    <div>Nashville, TN 37208</div>
-                  </div>
                   <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    A 3% processing fee is applied to all credit card payments.
+                    Projects are confirmed with a signed service agreement and corresponding deposit payment. Payment can be made via wire, ACH, credit card, or check. A 3% processing fee is applied to all credit card payments.
                   </p>
                 </div>
               </div>
             </div>
             
             {/* Template-style footer - outside the bordered container */}
-            <div style={{ marginTop: '15px', paddingTop: '12px', borderTop: '1px solid #2C2C2C' }}>
+            <div style={{ marginTop: '30px', paddingTop: '0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                 <div style={{ fontWeight: '600', color: brandCharcoal, fontSize: '10px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
                 <div style={{ fontSize: '10px' }}>events@mayker.com | (615) 970.1244</div>
