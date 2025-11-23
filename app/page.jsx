@@ -1574,15 +1574,13 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 } else if (!e.target.src.includes('cdn')) {
                   e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_wordmark-events-black.svg';
                 } else {
-                  console.error('All logo paths failed, showing text fallback');
+                  console.error('All logo paths failed');
                   e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'block';
                 }
               }}
               onLoad={() => console.log('PageHeader logo loaded successfully')}
               style={{ height: '32px', width: 'auto', maxWidth: '300px', display: 'block' }} 
             />
-            <div style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2', display: 'none' }}>MAYKER EVENTS</div>
           </div>
           {/* Print version - non-clickable */}
           <img 
@@ -1594,12 +1592,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 e.target.src = '/assets/mayker_wordmark-events-black.svg';
               } else {
                 e.target.style.display = 'none';
-                e.target.nextSibling.style.display = 'block';
               }
             }}
             style={{ height: '32px', width: 'auto', maxWidth: '300px', display: 'block' }} 
           />
-          <div className="print-only" style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif", marginBottom: '0', lineHeight: '1.2', display: 'none' }}>MAYKER EVENTS</div>
         </div>
         <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '20px' }}>
           <div style={{ fontSize: '9px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", lineHeight: '1.4', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
@@ -2326,15 +2322,13 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                       } else if (!e.target.src.includes('cdn')) {
                         e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_wordmark-events-black.svg';
                       } else {
-                        console.error('All logo paths failed, showing text fallback');
+                        console.error('All logo paths failed');
                         e.target.style.display = 'none';
-                        e.target.nextSibling.style.display = 'block';
                       }
                     }}
                     onLoad={() => console.log('Footer logo loaded successfully')}
                     style={{ height: '24px', width: 'auto', maxWidth: '250px', display: 'block' }} 
                   />
-                  <div style={{ fontWeight: '400', color: brandCharcoal, fontSize: '14px', letterSpacing: '0.02em', display: 'none' }}>MAYKER EVENTS</div>
                 </div>
                 {/* Print version - non-clickable */}
                 <img 
@@ -2346,12 +2340,10 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                       e.target.src = '/assets/mayker_wordmark-events-black.svg';
                     } else {
                       e.target.style.display = 'none';
-                      e.target.nextSibling.style.display = 'block';
                     }
                   }}
                   style={{ height: '24px', width: 'auto', maxWidth: '250px', display: 'block' }} 
                 />
-                <div className="print-only" style={{ fontWeight: '400', color: brandCharcoal, fontSize: '14px', letterSpacing: '0.02em', display: 'none' }}>MAYKER EVENTS</div>
                 <div style={{ fontSize: '11px', color: brandCharcoal }}>events@mayker.com | (615) 970.1244</div>
               </div>
             </div>
