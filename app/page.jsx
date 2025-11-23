@@ -242,6 +242,41 @@ function calculateTotal(proposal) {
   return totals.total;
 }
 
+// Helper function to calculate profitability for a proposal
+function calculateProposalProfitability(proposal) {
+  const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  let totalOOP = 0;
+  let totalRevenue = 0;
+  
+  sections.forEach(section => {
+    if (section.products && Array.isArray(section.products)) {
+      section.products.forEach(product => {
+        const quantity = parseFloat(product.quantity) || 0;
+        const price = parseFloat(product.price) || 0;
+        const revenue = quantity * price;
+        totalRevenue += revenue;
+        
+        const needsPurchase = product.needsPurchase === true || product.needsPurchase === 'true';
+        if (needsPurchase) {
+          const purchaseQuantity = parseFloat(product.purchaseQuantity) || 0;
+          const oopCost = parseFloat(product.oopCost) || 0;
+          totalOOP += purchaseQuantity * oopCost;
+        }
+      });
+    }
+  });
+  
+  const freight = totalOOP * 0.15;
+  const totalCOGS = totalOOP + freight;
+  const profit = totalRevenue - totalCOGS;
+  const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+  
+  return {
+    profit,
+    profitMargin
+  };
+}
+
 // Helper function to extract exceptions from a proposal
 function getProposalExceptions(proposal) {
   const exceptions = [];
@@ -578,6 +613,8 @@ export default function ProposalApp() {
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', minWidth: '200px', width: '200px' }}>Exceptions</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Last Edited</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Total</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Profit</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Profit Margin</th>
               </tr>
             </thead>
             <tbody>
@@ -624,6 +661,19 @@ export default function ProposalApp() {
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#888888' }}>{proposal.lastUpdated || '-'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', fontWeight: '500' }}>${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  {(() => {
+                    const profitability = calculateProposalProfitability(proposal);
+                    return (
+                      <>
+                        <td style={{ padding: '12px 16px', fontSize: '13px', color: profitability.profit >= 0 ? '#059669' : '#dc2626', fontWeight: '500', textAlign: 'right' }}>
+                          ${profitability.profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                        <td style={{ padding: '12px 16px', fontSize: '13px', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', fontWeight: '500', textAlign: 'right' }}>
+                          {profitability.profitMargin.toFixed(2)}%
+                        </td>
+                      </>
+                    );
+                  })()}
                 </tr>
               ))}
             </tbody>
@@ -1098,6 +1148,7 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
             onBack={() => {}} 
             onPrint={() => {}} 
             onEdit={() => {}} 
+            onViewProfitability={() => {}}
           />
         </div>
       </>
@@ -1108,10 +1159,10 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
     return <ProfitabilityView proposal={proposal} onBack={() => setShowProfitability(false)} />;
   }
 
-  return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={() => setIsEditing(true)} />;
+  return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={() => setIsEditing(true)} onViewProfitability={() => setShowProfitability(true)} />;
 }
 
-function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
+function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitability }) {
   // Debug: Check if customRentalMultiplier is in the proposal
   console.log('ViewProposalView - proposal.customRentalMultiplier:', proposal.customRentalMultiplier);
   console.log('ViewProposalView - All proposal keys:', Object.keys(proposal));
@@ -1467,9 +1518,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Edit
             </button>
-            <button onClick={() => setShowProfitability(true)} style={{ padding: '8px 20px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
-              View Profitability
-            </button>
+            {onViewProfitability && (
+              <button onClick={onViewProfitability} style={{ padding: '8px 20px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+                View Profitability
+              </button>
+            )}
             <button onClick={handlePrintDownload} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Print / Export as PDF
             </button>
