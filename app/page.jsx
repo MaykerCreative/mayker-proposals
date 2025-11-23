@@ -579,7 +579,23 @@ export default function ProposalApp() {
 
       <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
         <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-          <img src="/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
+          <img 
+            src="/mayker_icon-black.svg" 
+            alt="Mayker" 
+            style={{ height: '40px' }}
+            onError={(e) => {
+              console.log('Dashboard logo failed, trying alternatives:', e.target.src);
+              if (!e.target.src.includes('/assets/')) {
+                e.target.src = '/assets/mayker_icon-black.svg';
+              } else if (!e.target.src.includes('cdn')) {
+                e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_icon-black.svg';
+              } else {
+                console.error('All logo paths failed');
+                e.target.style.display = 'none';
+              }
+            }}
+            onLoad={() => console.log('Dashboard logo loaded successfully:', '/mayker_icon-black.svg')}
+          />
           <div>
             <h1 style={{ fontSize: '28px', fontWeight: '600', color: '#2C2C2C', margin: '0' }}>Mayker Proposals</h1>
             <p style={{ marginTop: '4px', color: '#888888', fontSize: '13px', margin: '0' }}>Manage and view all event proposals</p>
@@ -1559,7 +1575,23 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
             <div>{formatDateRange(proposal)}</div>
             <div>{proposal.venueName}</div>
           </div>
-          <img src="/mayker_icon-black.svg" alt="M" style={{ height: '38px' }} />
+          <img 
+            src="/mayker_icon-black.svg" 
+            alt="M" 
+            style={{ height: '38px' }}
+            onError={(e) => {
+              console.log('Page header logo failed, trying alternatives:', e.target.src);
+              if (!e.target.src.includes('/assets/')) {
+                e.target.src = '/assets/mayker_icon-black.svg';
+              } else if (!e.target.src.includes('cdn')) {
+                e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_icon-black.svg';
+              } else {
+                console.error('All logo paths failed');
+                e.target.style.display = 'none';
+              }
+            }}
+            onLoad={() => console.log('Page header logo loaded successfully')}
+          />
         </div>
       </div>
       {/* Separator line */}
@@ -2039,11 +2071,43 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
                 className="no-print"
               >
-                <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
+                <img 
+                  src="/assets/mayker_primary-w-tag-date-black.png" 
+                  alt="Mayker" 
+                  onError={(e) => {
+                    console.log('Project details logo failed, trying alternatives:', e.target.src);
+                    if (e.target.src.includes('/assets/')) {
+                      e.target.src = '/mayker_primary-w-tag-date-black.png';
+                    } else if (!e.target.src.includes('cdn')) {
+                      e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/mayker_primary-w-tag-date-black.png';
+                    } else {
+                      console.error('All logo paths failed');
+                      e.target.style.display = 'none';
+                    }
+                  }}
+                  onLoad={() => console.log('Project details logo loaded successfully')}
+                  style={{ height: '120px', width: 'auto', maxWidth: '400px' }} 
+                />
               </div>
               {/* Print version - non-clickable */}
               <div className="print-only">
-                <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
+                <img 
+                  src="/assets/mayker_primary-w-tag-date-black.png" 
+                  alt="Mayker" 
+                  onError={(e) => {
+                    console.log('Project details logo failed, trying alternatives:', e.target.src);
+                    if (e.target.src.includes('/assets/')) {
+                      e.target.src = '/mayker_primary-w-tag-date-black.png';
+                    } else if (!e.target.src.includes('cdn')) {
+                      e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/assets/mayker_primary-w-tag-date-black.png';
+                    } else {
+                      console.error('All logo paths failed');
+                      e.target.style.display = 'none';
+                    }
+                  }}
+                  onLoad={() => console.log('Project details logo loaded successfully')}
+                  style={{ height: '120px', width: 'auto', maxWidth: '400px' }} 
+                />
               </div>
             </div>
             
@@ -2572,7 +2636,23 @@ function ProfitabilityView({ proposal, onBack }) {
       <div style={{ padding: '40px', paddingTop: '80px', maxWidth: '1400px', margin: '0 auto' }}>
         {/* Header with Logo */}
         <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', marginBottom: '20px', borderBottom: '1px solid #e5e7eb', paddingBottom: '15px' }}>
-          <img src="/mayker_wordmark-events-black.svg" alt="Mayker Events" onError={(e) => { e.target.src = '/mayker_wordmark-events-black.svg'; }} style={{ height: '32px', width: 'auto' }} />
+          <img 
+            src="/mayker_wordmark-events-black.svg" 
+            alt="Mayker Events" 
+            onError={(e) => {
+              console.log('Profitability logo failed, trying alternatives:', e.target.src);
+              if (!e.target.src.includes('/assets/')) {
+                e.target.src = '/assets/mayker_wordmark-events-black.svg';
+              } else if (!e.target.src.includes('cdn')) {
+                e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_wordmark-events-black.svg';
+              } else {
+                console.error('All logo paths failed');
+                e.target.style.display = 'none';
+              }
+            }}
+            onLoad={() => console.log('Profitability logo loaded successfully')}
+            style={{ height: '32px', width: 'auto' }} 
+          />
         </div>
         
         <h1 style={{ fontSize: '14px', fontWeight: '400', color: brandCharcoal, marginBottom: '25px', fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', textTransform: 'uppercase' }}>
@@ -3389,7 +3469,23 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '24px', borderBottom: '1px solid #e5e7eb' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <img src="/mayker_icon-black.svg" alt="Mayker" style={{ height: '40px' }} />
+            <img 
+            src="/mayker_icon-black.svg" 
+            alt="Mayker" 
+            style={{ height: '40px' }}
+            onError={(e) => {
+              console.log('Dashboard logo failed, trying alternatives:', e.target.src);
+              if (!e.target.src.includes('/assets/')) {
+                e.target.src = '/assets/mayker_icon-black.svg';
+              } else if (!e.target.src.includes('cdn')) {
+                e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_icon-black.svg';
+              } else {
+                console.error('All logo paths failed');
+                e.target.style.display = 'none';
+              }
+            }}
+            onLoad={() => console.log('Dashboard logo loaded successfully:', '/mayker_icon-black.svg')}
+          />
             <div>
               <h1 style={{ fontSize: '32px', fontWeight: '600', color: brandCharcoal, margin: '0 0 4px 0', fontFamily: "'Inter', sans-serif" }}>Edit Proposal</h1>
               <p style={{ fontSize: '14px', color: '#888888', margin: '0', fontFamily: "'Inter', sans-serif" }}>Make changes and save as a new version</p>
