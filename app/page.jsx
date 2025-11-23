@@ -202,7 +202,9 @@ function calculateDetailedTotals(proposal) {
   const serviceFeeAmount = (rentalTotal + productCare + delivery) * 0.05;
   
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
-  const tax = subtotal * 0.0975;
+  // Check if tax exempt
+  const taxExempt = proposal.taxExempt === true || proposal.taxExempt === 'true';
+  const tax = taxExempt ? 0 : subtotal * 0.0975;
   const total = subtotal + tax;
   
   return {
@@ -220,7 +222,8 @@ function calculateDetailedTotals(proposal) {
     total,
     rentalMultiplier,
     waiveProductCare,
-    waiveServiceFee
+    waiveServiceFee,
+    taxExempt
   };
 }
 
@@ -2038,8 +2041,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                         <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.subtotal)}</td>
                       </tr>
                       <tr>
-                        <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Tax ({proposal.taxRate || 9.75}%)</td>
-                        <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.tax)}</td>
+                        <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                          {totals.taxExempt ? 'Tax' : `Tax (${proposal.taxRate || 9.75}%)`}
+                        </td>
+                        <td style={{ padding: '6px 0', fontSize: '11px', color: totals.taxExempt ? '#059669' : brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                          {totals.taxExempt ? 'Exempt' : `$${formatNumber(totals.tax)}`}
+                        </td>
                       </tr>
                       <tr style={{ borderTop: '1px solid #2C2C2C' }}>
                         <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Total</td>
@@ -2150,7 +2157,9 @@ function ProfitabilityView({ proposal, onBack }) {
             revenue: revenue,
             profit: productProfit,
             profitMargin: productProfitMargin,
-            needsPurchase: needsPurchase
+            needsPurchase: needsPurchase,
+            supplier: (product.supplier && product.supplier.trim()) || '',
+            productUrl: (product.productUrl && product.productUrl.trim()) || ''
           });
         });
       }
