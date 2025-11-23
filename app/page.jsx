@@ -1955,7 +1955,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
           <div key="totals-and-details" style={{ minHeight: '100vh', width: '100%', maxWidth: '100%', padding: '50px 80px 40px', position: 'relative', pageBreakBefore: 'always', boxSizing: 'border-box', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
             {/* Template-style header - logo only */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '35px' }}>
-              <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
+              <a href="#" onClick={(e) => { e.preventDefault(); onBack(); }} style={{ textDecoration: 'none', cursor: 'pointer' }}>
+                <img src="/assets/mayker_primary-w-tag-date-black.png" alt="Mayker" onError={(e) => { e.target.src = '/mayker_primary-w-tag-date-black.png'; }} style={{ height: '120px', width: 'auto', maxWidth: '400px' }} />
+              </a>
             </div>
             
             {/* Content container with border */}
@@ -2259,7 +2261,35 @@ function ProfitabilityView({ proposal, onBack }) {
         }
         
         * { box-sizing: border-box; margin: 0; padding: 0; } 
-        body { font-family: 'Neue Haas Unica', 'Inter', sans-serif; } 
+        body { font-family: 'Neue Haas Unica', 'Inter', sans-serif; }
+        /* Regular (non-print) table column widths */
+        .profitability-table {
+          table-layout: fixed !important;
+        }
+        .profitability-table th:nth-child(1),
+        .profitability-table td:nth-child(1) { width: 8% !important; }
+        .profitability-table th:nth-child(2),
+        .profitability-table td:nth-child(2) { width: 14% !important; }
+        .profitability-table th:nth-child(3),
+        .profitability-table td:nth-child(3) { width: 5% !important; }
+        .profitability-table th:nth-child(4),
+        .profitability-table td:nth-child(4) { width: 8% !important; }
+        .profitability-table th:nth-child(5),
+        .profitability-table td:nth-child(5) { width: 9% !important; }
+        .profitability-table th:nth-child(6),
+        .profitability-table td:nth-child(6) { width: 8% !important; }
+        .profitability-table th:nth-child(7),
+        .profitability-table td:nth-child(7) { width: 9% !important; }
+        .profitability-table th:nth-child(8),
+        .profitability-table td:nth-child(8) { width: 9% !important; }
+        .profitability-table th:nth-child(9),
+        .profitability-table td:nth-child(9) { width: 9% !important; }
+        .profitability-table th:nth-child(10),
+        .profitability-table td:nth-child(10) { width: 9% !important; }
+        .profitability-table th:nth-child(11),
+        .profitability-table td:nth-child(11) { width: 9% !important; }
+        .profitability-table th:nth-child(12),
+        .profitability-table td:nth-child(12) { width: 9% !important; }
         
         @media print { 
           .no-print { display: none !important; } 
@@ -2478,21 +2508,21 @@ function ProfitabilityView({ proposal, onBack }) {
             Product Profitability Breakdown
           </h2>
           <div style={{ overflowX: 'auto' }}>
-            <table className="profitability-table" style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+            <table className="profitability-table" style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", tableLayout: 'fixed' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Section</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Product</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Qty</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Rental Price</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Revenue</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Purchase #</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>OOP Cost</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Investment</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Profit</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Profit Margin</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word' }}>Supplier</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word' }}>Product URL</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word', width: '8%' }}>Section</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word', width: '14%' }}>Product</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap', width: '5%' }}>Qty</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap', width: '8%' }}>Rental Price</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap', width: '9%' }}>Revenue</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap', width: '8%' }}>Purchase #</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap', width: '9%' }}>OOP Cost</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap', width: '9%' }}>Investment</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap', width: '9%' }}>Profit</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap', width: '9%' }}>Profit Margin</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word', width: '9%' }}>Supplier</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word', width: '9%' }}>Product URL</th>
                 </tr>
               </thead>
               <tbody>
