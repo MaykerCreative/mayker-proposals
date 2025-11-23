@@ -1616,7 +1616,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             </div>
             
             {/* Content container with border */}
-            <div style={{ flex: '1', border: '1px solid #e5e7eb', padding: '30px 35px', backgroundColor: 'white', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+            <div style={{ flex: '1', border: '1px solid #2C2C2C', padding: '30px 35px', backgroundColor: 'white', maxWidth: '700px', margin: '0 auto', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
               {/* Totals Section - Two Column Layout */}
               <div style={{ marginBottom: '30px', display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
@@ -1669,8 +1669,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         </tr>
                       )}
                       <tr style={{ borderTop: '1px solid #e5e7eb', borderBottom: '1px solid #e5e7eb' }}>
-                        <td style={{ padding: '8px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Rental Total</td>
-                        <td style={{ padding: '8px 0', fontSize: '11px', fontWeight: '500', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.rentalTotal)}</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Rental Total</td>
+                        <td style={{ padding: '8px 0', fontSize: '11px', fontWeight: '400', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.rentalTotal)}</td>
                       </tr>
                       <tr>
                         <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Product Care (10%)</td>
@@ -1704,9 +1704,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                         <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Tax ({proposal.taxRate || 9.75}%)</td>
                         <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.tax)}</td>
                       </tr>
-                      <tr style={{ borderTop: '2px solid #2C2C2C' }}>
-                        <td style={{ padding: '10px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Total</td>
-                        <td style={{ padding: '10px 0', fontSize: '13px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.total)}</td>
+                      <tr style={{ borderTop: '1px solid #2C2C2C' }}>
+                        <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Total</td>
+                        <td style={{ padding: '10px 0', fontSize: '11px', fontWeight: '400', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.total)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -1725,11 +1725,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
                     The delivery fee quoted is based on the current scope of rentals, as well as the below delivery details. If your project needs change, we're happy to accommodate where possible, but delivery fees may adjust accordingly:
                   </p>
                   <ul style={{ fontSize: '12px', lineHeight: '1.6', marginBottom: '0', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    <li style={{ marginBottom: '5px' }}><strong>Project Address:</strong> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
-                    <li style={{ marginBottom: '5px' }}><strong>Delivery Date:</strong> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-                    <li style={{ marginBottom: '5px' }}><strong>Preferred Delivery Window:</strong> {proposal.deliveryTime}</li>
-                    <li style={{ marginBottom: '5px' }}><strong>Pick-Up Date:</strong> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
-                    <li style={{ marginBottom: '5px' }}><strong>Preferred Pick-Up Window:</strong> {proposal.strikeTime}</li>
+                    <li style={{ marginBottom: '5px' }}><span style={{ fontWeight: '400' }}>Project Address:</span> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
+                    <li style={{ marginBottom: '5px' }}><span style={{ fontWeight: '400' }}>Delivery Date:</span> {parseDateSafely(proposal.startDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+                    <li style={{ marginBottom: '5px' }}><span style={{ fontWeight: '400' }}>Preferred Delivery Window:</span> {proposal.deliveryTime}</li>
+                    <li style={{ marginBottom: '5px' }}><span style={{ fontWeight: '400' }}>Pick-Up Date:</span> {parseDateSafely(proposal.endDate)?.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) || ''}</li>
+                    <li style={{ marginBottom: '5px' }}><span style={{ fontWeight: '400' }}>Preferred Pick-Up Window:</span> {proposal.strikeTime}</li>
                   </ul>
                 </div>
               </div>
@@ -1752,8 +1752,8 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
             {/* Template-style footer - outside the bordered container */}
             <div style={{ marginTop: '30px', paddingTop: '0' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '10px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                <div style={{ fontWeight: '600', color: brandCharcoal, fontSize: '10px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
-                <div style={{ fontSize: '10px' }}>events@mayker.com | (615) 970.1244</div>
+                <div style={{ fontWeight: '400', color: brandCharcoal, fontSize: '12px', letterSpacing: '0.02em' }}>MAYKER EVENTS</div>
+                <div style={{ fontSize: '11px', color: brandCharcoal }}>events@mayker.com | (615) 970.1244</div>
               </div>
             </div>
           </div>
