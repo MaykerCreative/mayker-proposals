@@ -683,7 +683,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
 
   const handleAddProduct = (sectionIdx) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '' });
+    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0 });
     setSections(newSections);
   };
 
@@ -726,6 +726,17 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
         note: newNote || ''
       };
       console.log('Note changed (CreateProposalView):', { sectionIdx, productIdx, newNote, product: newSections[sectionIdx].products[productIdx] });
+      setSections(newSections);
+    }
+  };
+  
+  const handleProductPurchaseChange = (sectionIdx, productIdx, field, value) => {
+    const newSections = JSON.parse(JSON.stringify(sections));
+    if (newSections[sectionIdx] && newSections[sectionIdx].products && newSections[sectionIdx].products[productIdx]) {
+      newSections[sectionIdx].products[productIdx] = {
+        ...newSections[sectionIdx].products[productIdx],
+        [field]: field === 'needsPurchase' ? value : (field === 'purchaseQuantity' || field === 'oopCost' ? parseFloat(value) || 0 : value)
+      };
       setSections(newSections);
     }
   };
@@ -1034,6 +1045,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
 function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
   const [isEditing, setIsEditing] = useState(proposal._isEditing || false);
   const [editData, setEditData] = useState(null);
+  const [showProfitability, setShowProfitability] = useState(false);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -1092,6 +1104,10 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh }) {
     );
   }
 
+  if (showProfitability) {
+    return <ProfitabilityView proposal={proposal} onBack={() => setShowProfitability(false)} />;
+  }
+
   return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={() => setIsEditing(true)} />;
 }
 
@@ -1102,14 +1118,17 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   const rawSections = JSON.parse(proposal.sectionsJSON || '[]');
   
-  // Ensure all products have note field for backward compatibility
+  // Ensure all products have note and purchase fields for backward compatibility
   const sections = rawSections.map(section => {
     if (section.products && Array.isArray(section.products)) {
       return {
         ...section,
         products: section.products.map(product => ({
           ...product,
-          note: product.note || ''
+          note: product.note || '',
+          needsPurchase: product.needsPurchase || false,
+          purchaseQuantity: product.purchaseQuantity || 0,
+          oopCost: product.oopCost || 0
         }))
       };
     }
@@ -1155,6 +1174,148 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   
   const handlePrintDownload = () => {
     window.print();
+  };
+  
+  // Calculate profitability metrics
+  const calculateProfitability = () => {
+    const sections = JSON.parse(proposal.sectionsJSON || '[]');
+    let totalOOP = 0;
+    let totalRevenue = 0;
+    const productsNeedingPurchase = [];
+    
+    sections.forEach(section => {
+      if (section.products && Array.isArray(section.products)) {
+        section.products.forEach(product => {
+          const quantity = parseFloat(product.quantity) || 0;
+          const price = parseFloat(product.price) || 0;
+          const revenue = quantity * price;
+          totalRevenue += revenue;
+          
+          // Check if product needs purchase
+          const needsPurchase = product.needsPurchase === true || product.needsPurchase === 'true';
+          if (needsPurchase) {
+            const purchaseQuantity = parseFloat(product.purchaseQuantity) || 0;
+            const oopCost = parseFloat(product.oopCost) || 0;
+            const oopTotal = purchaseQuantity * oopCost;
+            totalOOP += oopTotal;
+            
+            productsNeedingPurchase.push({
+              sectionName: section.name || '',
+              productName: product.name || '',
+              quantity: quantity,
+              purchaseQuantity: purchaseQuantity,
+              oopCost: oopCost,
+              oopTotal: oopTotal,
+              rentalPrice: price,
+              revenue: revenue
+            });
+          }
+        });
+      }
+    });
+    
+    const freight = totalOOP * 0.15;
+    const totalCOGS = totalOOP + freight;
+    const profit = totalRevenue - totalCOGS;
+    const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+    
+    return {
+      totalOOP,
+      freight,
+      totalCOGS,
+      totalRevenue,
+      profit,
+      profitMargin,
+      productsNeedingPurchase
+    };
+  };
+  
+  const profitability = calculateProfitability();
+  
+  // Generate profitability log (CSV format matching their spreadsheet)
+  const generateProfitabilityLog = () => {
+    const sections = JSON.parse(proposal.sectionsJSON || '[]');
+    const formatDateRange = (proposal) => {
+      const start = parseDateSafely(proposal.startDate);
+      const end = parseDateSafely(proposal.endDate);
+      if (!start || !end) return '';
+      const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+      const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+      const startDay = start.getDate();
+      const endDay = end.getDate();
+      const year = start.getFullYear();
+      if (startMonth === endMonth && startDay === endDay) {
+        return `${startMonth} ${startDay}, ${year}`;
+      } else if (startMonth === endMonth) {
+        return `${startMonth} ${startDay}-${endDay}, ${year}`;
+      } else {
+        return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+      }
+    };
+    
+    // Build CSV content
+    let csv = 'EVENTS PRODUCT PLAN\n';
+    csv += '\n';
+    csv += 'Instructions:\n';
+    csv += 'Columns or fields in yellow should be populated by the CST member.\n';
+    csv += 'Columns or fields in blue are auto-calculated. Do NOT touch.\n';
+    csv += '\n';
+    
+    // Header section
+    csv += `Client Name,${proposal.clientName || ''}\n`;
+    csv += `Project Date(s),${formatDateRange(proposal)}\n`;
+    csv += `Project Location,${proposal.venueName || ''}\n`;
+    csv += '\n';
+    
+    // COGS Summary
+    csv += 'Product COGS,$' + profitability.totalOOP.toFixed(2) + '\n';
+    csv += 'Freight,$' + profitability.freight.toFixed(2) + '\n';
+    csv += 'Delivery,\n';
+    csv += 'Total COGS,$' + profitability.totalCOGS.toFixed(2) + '\n';
+    csv += '\n';
+    
+    // Standard Total Summary
+    csv += 'Product Total,$' + profitability.totalRevenue.toFixed(2) + '\n';
+    csv += 'Product Maintenance,$' + (totals.productCare || 0).toFixed(2) + '\n';
+    csv += 'Delivery,$' + (totals.delivery || 0).toFixed(2) + '\n';
+    csv += 'Service,$' + (totals.serviceFee || 0).toFixed(2) + '\n';
+    csv += 'Subtotal,$' + (totals.subtotal || 0).toFixed(2) + '\n';
+    csv += 'Tax,$' + (totals.tax || 0).toFixed(2) + '\n';
+    csv += 'Total,$' + (totals.total || 0).toFixed(2) + '\n';
+    csv += '\n';
+    
+    // Profit Calculation
+    csv += 'Profit,$' + profitability.profit.toFixed(2) + '\n';
+    csv += 'Profit Margin,' + profitability.profitMargin.toFixed(2) + '%\n';
+    csv += '\n';
+    
+    // Product table header
+    csv += 'Category/Placement,Product Name,Product Link,Total #,Supplier,Finish,Size,# to Source,OOP Each,OOP Total,Rental Each,Rental Total\n';
+    
+    // Product rows
+    sections.forEach(section => {
+      if (section.products && Array.isArray(section.products)) {
+        section.products.forEach(product => {
+          const needsPurchase = product.needsPurchase === true || product.needsPurchase === 'true';
+          const purchaseQuantity = needsPurchase ? (parseFloat(product.purchaseQuantity) || 0) : '';
+          const oopCost = needsPurchase ? (parseFloat(product.oopCost) || 0) : '';
+          const oopTotal = needsPurchase ? (purchaseQuantity * oopCost) : '';
+          
+          csv += `"${section.name || ''}","${product.name || ''}","${product.imageUrl || ''}",${product.quantity || 0},,,"${product.dimensions || ''}",${purchaseQuantity},${oopCost ? '$' + oopCost.toFixed(2) : ''},${oopTotal ? '$' + oopTotal.toFixed(2) : ''},$${(parseFloat(product.price) || 0).toFixed(2)},$${((parseFloat(product.quantity) || 0) * (parseFloat(product.price) || 0)).toFixed(2)}\n`;
+        });
+      }
+    });
+    
+    // Download CSV
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `${proposal.clientName || 'Proposal'}_Profitability_Log_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   // Shared header component for all pages
@@ -1305,6 +1466,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Edit
+            </button>
+            <button onClick={() => setShowProfitability(true)} style={{ padding: '8px 20px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+              View Profitability
             </button>
             <button onClick={handlePrintDownload} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Print / Export as PDF
@@ -1763,6 +1927,251 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit }) {
   );
 }
 
+// Profitability View Component
+function ProfitabilityView({ proposal, onBack }) {
+  const sections = JSON.parse(proposal.sectionsJSON || '[]');
+  const totals = calculateDetailedTotals(proposal);
+  const brandCharcoal = '#2C2C2C';
+  
+  // Calculate profitability
+  const calculateProfitability = () => {
+    let totalOOP = 0;
+    let totalRevenue = 0;
+    const productsWithProfit = [];
+    
+    sections.forEach(section => {
+      if (section.products && Array.isArray(section.products)) {
+        section.products.forEach(product => {
+          const quantity = parseFloat(product.quantity) || 0;
+          const price = parseFloat(product.price) || 0;
+          const revenue = quantity * price;
+          totalRevenue += revenue;
+          
+          const needsPurchase = product.needsPurchase === true || product.needsPurchase === 'true';
+          let productOOP = 0;
+          let productInvestment = 0;
+          let productProfit = revenue;
+          let productProfitMargin = 100;
+          
+          if (needsPurchase) {
+            const purchaseQuantity = parseFloat(product.purchaseQuantity) || 0;
+            const oopCost = parseFloat(product.oopCost) || 0;
+            productOOP = purchaseQuantity * oopCost;
+            totalOOP += productOOP;
+            // Freight is calculated at proposal level, but for individual product display we can show proportional freight
+            const freight = productOOP * 0.15;
+            productInvestment = productOOP + freight;
+            productProfit = revenue - productInvestment;
+            productProfitMargin = revenue > 0 ? (productProfit / revenue) * 100 : 0;
+          }
+          
+          productsWithProfit.push({
+            sectionName: section.name || '',
+            productName: product.name || '',
+            quantity: quantity,
+            purchaseQuantity: needsPurchase ? (parseFloat(product.purchaseQuantity) || 0) : 0,
+            oopCost: needsPurchase ? (parseFloat(product.oopCost) || 0) : 0,
+            oopTotal: productOOP,
+            investment: productInvestment,
+            rentalPrice: price,
+            revenue: revenue,
+            profit: productProfit,
+            profitMargin: productProfitMargin,
+            needsPurchase: needsPurchase
+          });
+        });
+      }
+    });
+    
+    const freight = totalOOP * 0.15;
+    const totalCOGS = totalOOP + freight;
+    const profit = totalRevenue - totalCOGS;
+    const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
+    
+    return {
+      totalOOP,
+      freight,
+      totalCOGS,
+      totalRevenue,
+      profit,
+      profitMargin,
+      productsWithProfit
+    };
+  };
+  
+  const profitability = calculateProfitability();
+  
+  const formatDateRange = (proposal) => {
+    const start = parseDateSafely(proposal.startDate);
+    const end = parseDateSafely(proposal.endDate);
+    if (!start || !end) return '';
+    const startMonth = start.toLocaleDateString('en-US', { month: 'long' });
+    const endMonth = end.toLocaleDateString('en-US', { month: 'long' });
+    const startDay = start.getDate();
+    const endDay = end.getDate();
+    const year = start.getFullYear();
+    if (startMonth === endMonth && startDay === endDay) {
+      return `${startMonth} ${startDay}, ${year}`;
+    } else if (startMonth === endMonth) {
+      return `${startMonth} ${startDay}-${endDay}, ${year}`;
+    } else {
+      return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+    }
+  };
+  
+  const handlePrint = () => {
+    window.print();
+  };
+  
+  return (
+    <div data-profitability-view="true" style={{ minHeight: '100vh', backgroundColor: 'white', width: '100%' }}>
+      <style dangerouslySetInnerHTML={{ __html: `
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; } 
+        body { font-family: 'Inter', sans-serif; } 
+        @media print { 
+          .no-print { display: none !important; } 
+          @page { size: letter; margin: 0.5in; } 
+          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } 
+        }
+      ` }} />
+      
+      <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
+          <button onClick={onBack} style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
+            ← Back to Proposal
+          </button>
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button onClick={handlePrint} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+              Print / Export as PDF
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div style={{ padding: '40px', paddingTop: '80px', maxWidth: '1400px', margin: '0 auto' }}>
+        <h1 style={{ fontSize: '28px', fontWeight: '600', color: brandCharcoal, marginBottom: '30px', fontFamily: "'Inter', sans-serif" }}>
+          Profitability Analysis
+        </h1>
+        
+        {/* Header Info */}
+        <div style={{ marginBottom: '30px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+            <div>
+              <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Client Name</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{proposal.clientName || ''}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Project Date(s)</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{formatDateRange(proposal)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '4px' }}>Project Location</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{proposal.venueName || ''}</div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Summary Cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px' }}>
+          <div style={{ padding: '20px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+            <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Total Revenue</div>
+            <div style={{ fontSize: '24px', fontWeight: '600', color: brandCharcoal }}>${formatNumber(profitability.totalRevenue)}</div>
+          </div>
+          <div style={{ padding: '20px', backgroundColor: '#fef3c7', borderRadius: '8px', border: '1px solid #fde68a' }}>
+            <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Total Investment</div>
+            <div style={{ fontSize: '24px', fontWeight: '600', color: brandCharcoal }}>${formatNumber(profitability.totalCOGS)}</div>
+            <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+              OOP: ${formatNumber(profitability.totalOOP)} | Freight: ${formatNumber(profitability.freight)}
+            </div>
+          </div>
+          <div style={{ padding: '20px', backgroundColor: '#d1fae5', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
+            <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Profit</div>
+            <div style={{ fontSize: '24px', fontWeight: '600', color: profitability.profit >= 0 ? '#059669' : '#dc2626' }}>
+              ${formatNumber(profitability.profit)}
+            </div>
+          </div>
+          <div style={{ padding: '20px', backgroundColor: '#dbeafe', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
+            <div style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Profit Margin</div>
+            <div style={{ fontSize: '24px', fontWeight: '600', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626' }}>
+              {profitability.profitMargin.toFixed(2)}%
+            </div>
+          </div>
+        </div>
+        
+        {/* Product Table */}
+        <div style={{ marginTop: '40px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '20px', fontFamily: "'Inter', sans-serif" }}>
+            Product Profitability Breakdown
+          </h2>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', backgroundColor: 'white', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+              <thead>
+                <tr style={{ backgroundColor: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Section</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Product</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Qty</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Rental Price</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Revenue</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Purchase Qty</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>OOP Cost</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Investment</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Profit</th>
+                  <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Profit Margin</th>
+                </tr>
+              </thead>
+              <tbody>
+                {profitability.productsWithProfit.map((product, idx) => (
+                  <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: product.needsPurchase ? '#fef3c7' : 'white' }}>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: brandCharcoal }}>{product.sectionName}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: brandCharcoal, fontWeight: '500' }}>{product.productName}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: brandCharcoal, textAlign: 'right' }}>{product.quantity}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: brandCharcoal, textAlign: 'right' }}>${formatNumber(product.rentalPrice)}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: brandCharcoal, textAlign: 'right', fontWeight: '500' }}>${formatNumber(product.revenue)}</td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: product.needsPurchase ? '#92400e' : '#999', textAlign: 'right' }}>
+                      {product.needsPurchase ? product.purchaseQuantity : '-'}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: product.needsPurchase ? '#92400e' : '#999', textAlign: 'right' }}>
+                      {product.needsPurchase ? `$${formatNumber(product.oopCost)}` : '-'}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: product.needsPurchase ? '#92400e' : '#999', textAlign: 'right', fontWeight: '500' }}>
+                      {product.needsPurchase ? `$${formatNumber(product.investment)}` : '-'}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: product.profit >= 0 ? '#059669' : '#dc2626', textAlign: 'right', fontWeight: '600' }}>
+                      ${formatNumber(product.profit)}
+                    </td>
+                    <td style={{ padding: '12px 16px', fontSize: '13px', color: product.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right', fontWeight: '600' }}>
+                      {product.profitMargin.toFixed(2)}%
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr style={{ backgroundColor: '#f9fafb', borderTop: '2px solid #e5e7eb' }}>
+                  <td colSpan="4" style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>TOTALS:</td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>${formatNumber(profitability.totalRevenue)}</td>
+                  <td colSpan="2" style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}>
+                    ${formatNumber(profitability.totalOOP)}
+                  </td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}>
+                    ${formatNumber(profitability.totalCOGS)}
+                  </td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: profitability.profit >= 0 ? '#059669' : '#dc2626', textAlign: 'right' }}>
+                    ${formatNumber(profitability.profit)}
+                  </td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px', fontWeight: '600', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right' }}>
+                    {profitability.profitMargin.toFixed(2)}%
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   const [formData, setFormData] = useState({
     clientName: proposal.clientName || '',
@@ -1929,7 +2338,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
 
   const handleAddProduct = (sectionIdx) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '' });
+    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0 });
     setSections(newSections);
   };
 
@@ -1972,6 +2381,17 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         note: newNote || ''
       };
       console.log('Note changed (EditProposalView):', { sectionIdx, productIdx, newNote, product: newSections[sectionIdx].products[productIdx] });
+      setSections(newSections);
+    }
+  };
+  
+  const handleProductPurchaseChange = (sectionIdx, productIdx, field, value) => {
+    const newSections = JSON.parse(JSON.stringify(sections));
+    if (newSections[sectionIdx] && newSections[sectionIdx].products && newSections[sectionIdx].products[productIdx]) {
+      newSections[sectionIdx].products[productIdx] = {
+        ...newSections[sectionIdx].products[productIdx],
+        [field]: field === 'needsPurchase' ? value : (field === 'purchaseQuantity' || field === 'oopCost' ? parseFloat(value) || 0 : value)
+      };
       setSections(newSections);
     }
   };
@@ -2801,6 +3221,49 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                       placeholder="Optional note..."
                       style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }} 
                     />
+                  </div>
+                  {/* Purchase Tracking Fields */}
+                  <div style={{ gridColumn: '1 / -1', marginTop: '12px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={product.needsPurchase === true || product.needsPurchase === 'true'}
+                        onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'needsPurchase', e.target.checked)}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      <label style={{ fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif", cursor: 'pointer' }}>
+                        Needs Purchase
+                      </label>
+                    </div>
+                    {(product.needsPurchase === true || product.needsPurchase === 'true') && (
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Purchase Qty</label>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            value={product.purchaseQuantity || 0} 
+                            onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'purchaseQuantity', e.target.value)} 
+                            onMouseDown={(e) => e.stopPropagation()}
+                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
+                          />
+                        </div>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>OOP Cost (per unit)</label>
+                          <input 
+                            type="number" 
+                            min="0" 
+                            step="0.01"
+                            value={product.oopCost || 0} 
+                            onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'oopCost', e.target.value)} 
+                            onMouseDown={(e) => e.stopPropagation()}
+                            placeholder="$0.00"
+                            style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
