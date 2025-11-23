@@ -203,8 +203,8 @@ function calculateDetailedTotals(proposal) {
   
   const subtotal = rentalTotal + productCare + serviceFee + delivery;
   // Check if tax exempt - handle boolean, string 'true'/'false', or undefined
+  // Also check if it's stored as false/empty string (which means not exempt)
   const taxExempt = proposal.taxExempt === true || proposal.taxExempt === 'true' || String(proposal.taxExempt || '').toLowerCase() === 'true';
-  console.log('Tax Exempt Debug:', { taxExempt, proposalTaxExempt: proposal.taxExempt, proposalKeys: Object.keys(proposal) });
   const tax = taxExempt ? 0 : subtotal * 0.0975;
   const total = subtotal + tax;
   
@@ -2280,51 +2280,87 @@ function ProfitabilityView({ proposal, onBack }) {
           .profitability-table td {
             padding: 6px 8px !important;
             font-size: 10px !important;
-            white-space: nowrap !important;
             overflow: visible !important;
-            text-overflow: clip !important;
           }
-          .profitability-table td {
+          /* Section and Product columns can wrap */
+          .profitability-table th:nth-child(1),
+          .profitability-table td:nth-child(1),
+          .profitability-table th:nth-child(2),
+          .profitability-table td:nth-child(2),
+          .profitability-table th:nth-child(11),
+          .profitability-table td:nth-child(11),
+          .profitability-table th:nth-child(12),
+          .profitability-table td:nth-child(12) {
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            line-height: 1.3 !important;
+          }
+          /* All other columns should not wrap */
+          .profitability-table th:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(11)):not(:nth-child(12)),
+          .profitability-table td:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(11)):not(:nth-child(12)) {
             white-space: nowrap !important;
           }
           .profitability-table th:nth-child(1),
-          .profitability-table td:nth-child(1) { width: 10% !important; }
+          .profitability-table td:nth-child(1) { width: 8% !important; white-space: normal !important; word-wrap: break-word !important; }
           .profitability-table th:nth-child(2),
-          .profitability-table td:nth-child(2) { width: 16% !important; }
+          .profitability-table td:nth-child(2) { width: 14% !important; white-space: normal !important; word-wrap: break-word !important; }
           .profitability-table th:nth-child(3),
-          .profitability-table td:nth-child(3) { width: 5% !important; }
+          .profitability-table td:nth-child(3) { width: 5% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(4),
-          .profitability-table td:nth-child(4) { width: 9% !important; }
+          .profitability-table td:nth-child(4) { width: 8% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(5),
-          .profitability-table td:nth-child(5) { width: 10% !important; }
+          .profitability-table td:nth-child(5) { width: 9% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(6),
-          .profitability-table td:nth-child(6) { width: 8% !important; }
+          .profitability-table td:nth-child(6) { width: 7% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(7),
-          .profitability-table td:nth-child(7) { width: 9% !important; }
+          .profitability-table td:nth-child(7) { width: 8% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(8),
-          .profitability-table td:nth-child(8) { width: 10% !important; }
+          .profitability-table td:nth-child(8) { width: 9% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(9),
-          .profitability-table td:nth-child(9) { width: 10% !important; }
+          .profitability-table td:nth-child(9) { width: 9% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(10),
-          .profitability-table td:nth-child(10) { width: 9% !important; }
+          .profitability-table td:nth-child(10) { width: 8% !important; white-space: nowrap !important; }
           .profitability-table th:nth-child(11),
-          .profitability-table td:nth-child(11) { width: 9% !important; }
+          .profitability-table td:nth-child(11) { width: 8% !important; white-space: normal !important; word-wrap: break-word !important; }
           .profitability-table th:nth-child(12),
-          .profitability-table td:nth-child(12) { width: 10% !important; }
-          .profitability-table tfoot {
-            display: table-footer-group !important;
-          }
-          .profitability-table tfoot tr {
+          .profitability-table td:nth-child(12) { width: 9% !important; white-space: normal !important; word-wrap: break-word !important; }
+          /* Totals row styling - ensure it only appears once */
+          .profitability-totals-row {
             page-break-inside: avoid !important;
             break-inside: avoid !important;
-          }
-          /* Prevent tfoot from repeating on each page - only show at end */
-          thead { display: table-header-group !important; }
-          tfoot { display: table-footer-group !important; }
-          tbody { display: table-row-group !important; }
-          /* Ensure totals row doesn't break across pages */
-          .profitability-table tfoot tr {
             page-break-before: auto !important;
+            margin-top: 0 !important;
+            display: table !important;
+            width: 100% !important;
+            table-layout: fixed !important;
+          }
+          .profitability-totals-row > div {
+            display: table-row !important;
+          }
+          .profitability-totals-row > div > div {
+            display: table-cell !important;
+            padding: 8px 12px !important;
+            font-size: 11px !important;
+            font-weight: 600 !important;
+          }
+          /* Match column widths for totals row */
+          .profitability-totals-row > div > div:nth-child(1) { width: 8% !important; }
+          .profitability-totals-row > div > div:nth-child(2) { width: 14% !important; }
+          .profitability-totals-row > div > div:nth-child(3) { width: 5% !important; }
+          .profitability-totals-row > div > div:nth-child(4) { width: 8% !important; }
+          .profitability-totals-row > div > div:nth-child(5) { width: 9% !important; }
+          .profitability-totals-row > div > div:nth-child(6) { width: 7% !important; }
+          .profitability-totals-row > div > div:nth-child(7) { width: 8% !important; }
+          .profitability-totals-row > div > div:nth-child(8) { width: 9% !important; }
+          .profitability-totals-row > div > div:nth-child(9) { width: 9% !important; }
+          .profitability-totals-row > div > div:nth-child(10) { width: 8% !important; }
+          .profitability-totals-row > div > div:nth-child(11) { width: 8% !important; }
+          .profitability-totals-row > div > div:nth-child(12) { width: 9% !important; }
+          /* Ensure table doesn't break before totals */
+          .profitability-table {
+            page-break-after: auto !important;
+          }
+          .profitability-table tbody tr:last-child {
             page-break-after: auto !important;
           }
           h1 {
@@ -2448,20 +2484,20 @@ function ProfitabilityView({ proposal, onBack }) {
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Qty</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Rental Price</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Revenue</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Purchase Qty</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Purchase #</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>OOP Cost</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Investment</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Profit</th>
                   <th style={{ padding: '10px 12px', textAlign: 'right', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Profit Margin</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Supplier</th>
-                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'nowrap' }}>Product URL</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word' }}>Supplier</th>
+                  <th style={{ padding: '10px 12px', textAlign: 'left', fontSize: '10px', fontWeight: '500', color: '#666', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word' }}>Product URL</th>
                 </tr>
               </thead>
               <tbody>
                 {profitability.productsWithProfit.map((product, idx) => (
                   <tr key={idx} style={{ borderBottom: '1px solid #e5e7eb', backgroundColor: product.needsPurchase ? '#fef3c7' : 'white' }}>
-                    <td style={{ padding: '10px 12px', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.sectionName}</td>
-                    <td style={{ padding: '10px 12px', fontSize: '11px', color: brandCharcoal, fontWeight: '500', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.productName}</td>
+                    <td style={{ padding: '10px 12px', fontSize: '11px', color: brandCharcoal, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word', lineHeight: '1.3' }}>{product.sectionName}</td>
+                    <td style={{ padding: '10px 12px', fontSize: '11px', color: brandCharcoal, fontWeight: '500', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word', lineHeight: '1.3' }}>{product.productName}</td>
                     <td style={{ padding: '10px 12px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>{product.quantity}</td>
                     <td style={{ padding: '10px 12px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(product.rentalPrice)}</td>
                     <td style={{ padding: '10px 12px', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontWeight: '500', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(product.revenue)}</td>
@@ -2480,10 +2516,10 @@ function ProfitabilityView({ proposal, onBack }) {
                     <td style={{ padding: '10px 12px', fontSize: '11px', color: product.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right', fontWeight: '500', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                       {product.profitMargin.toFixed(2)}%
                     </td>
-                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase && product.supplier && product.supplier.trim() ? brandCharcoal : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase && product.supplier && product.supplier.trim() ? brandCharcoal : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word', lineHeight: '1.3' }}>
                       {product.needsPurchase && product.supplier && product.supplier.trim() ? product.supplier : '-'}
                     </td>
-                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase && product.productUrl && product.productUrl.trim() ? '#2563eb' : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    <td style={{ padding: '10px 12px', fontSize: '11px', color: product.needsPurchase && product.productUrl && product.productUrl.trim() ? '#2563eb' : '#999', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'normal', wordWrap: 'break-word', lineHeight: '1.3' }}>
                       {product.needsPurchase && product.productUrl && product.productUrl.trim() ? (
                         <a href={product.productUrl} target="_blank" rel="noopener noreferrer" style={{ color: '#2563eb', textDecoration: 'underline' }}>
                           Link
@@ -2493,26 +2529,32 @@ function ProfitabilityView({ proposal, onBack }) {
                   </tr>
                 ))}
               </tbody>
-              <tfoot>
-                <tr style={{ backgroundColor: '#f9fafb', borderTop: '2px solid #e5e7eb' }}>
-                  <td colSpan="4" style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>TOTALS:</td>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(profitability.totalRevenue)}</td>
-                  <td colSpan="2" style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    ${formatNumber(profitability.totalOOP)}
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    ${formatNumber(profitability.totalCOGS)}
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: profitability.profit >= 0 ? '#059669' : '#dc2626', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    ${formatNumber(profitability.profit)}
-                  </td>
-                  <td style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    {profitability.profitMargin.toFixed(2)}%
-                  </td>
-                  <td colSpan="2" style={{ padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'left', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}></td>
-                </tr>
-              </tfoot>
             </table>
+            {/* Totals row - moved outside tfoot to prevent repetition on multiple pages */}
+            <div className="profitability-totals-row" style={{ marginTop: '0', backgroundColor: '#f9fafb', borderTop: '2px solid #e5e7eb', display: 'table', width: '100%', tableLayout: 'fixed', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+              <div style={{ display: 'table-row' }}>
+                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'left' }}></div>
+                <div style={{ display: 'table-cell', width: '14%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'left' }}></div>
+                <div style={{ display: 'table-cell', width: '5%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}></div>
+                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>TOTALS:</div>
+                <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: brandCharcoal, textAlign: 'right' }}>${formatNumber(profitability.totalRevenue)}</div>
+                <div style={{ display: 'table-cell', width: '7%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}></div>
+                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}>
+                  ${formatNumber(profitability.totalOOP)}
+                </div>
+                <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: '#92400e', textAlign: 'right' }}>
+                  ${formatNumber(profitability.totalCOGS)}
+                </div>
+                <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: profitability.profit >= 0 ? '#059669' : '#dc2626', textAlign: 'right' }}>
+                  ${formatNumber(profitability.profit)}
+                </div>
+                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px', fontSize: '14px', fontWeight: '600', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', textAlign: 'right' }}>
+                  {profitability.profitMargin.toFixed(2)}%
+                </div>
+                <div style={{ display: 'table-cell', width: '8%', padding: '12px 16px' }}></div>
+                <div style={{ display: 'table-cell', width: '9%', padding: '12px 16px' }}></div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
