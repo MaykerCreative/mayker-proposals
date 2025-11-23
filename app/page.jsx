@@ -272,7 +272,7 @@ function calculateProposalProfitability(proposal) {
   const profitMargin = totalRevenue > 0 ? (profit / totalRevenue) * 100 : 0;
   
   return {
-    profit,
+    totalCOGS,
     profitMargin
   };
 }
@@ -613,7 +613,7 @@ export default function ProposalApp() {
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', minWidth: '200px', width: '200px' }}>Exceptions</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Last Edited</th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Total</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Profit</th>
+                <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>COGS</th>
                 <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Profit Margin</th>
               </tr>
             </thead>
@@ -665,8 +665,8 @@ export default function ProposalApp() {
                     const profitability = calculateProposalProfitability(proposal);
                     return (
                       <>
-                        <td style={{ padding: '12px 16px', fontSize: '13px', color: profitability.profit >= 0 ? '#059669' : '#dc2626', fontWeight: '500', textAlign: 'right' }}>
-                          ${profitability.profit.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        <td style={{ padding: '12px 16px', fontSize: '13px', color: '#92400e', fontWeight: '500', textAlign: 'right' }}>
+                          ${profitability.totalCOGS.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                         <td style={{ padding: '12px 16px', fontSize: '13px', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', fontWeight: '500', textAlign: 'right' }}>
                           {profitability.profitMargin.toFixed(2)}%
@@ -748,14 +748,20 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
         ...existingProduct,
         ...selectedProduct, // Update catalog properties (price, imageUrl, dimensions)
         quantity: existingProduct.quantity || 1,
-        note: existingProduct.note || '' // Keep existing note
+        note: existingProduct.note || '', // Keep existing note
+        needsPurchase: existingProduct.needsPurchase || false,
+        purchaseQuantity: existingProduct.purchaseQuantity || 0,
+        oopCost: existingProduct.oopCost || 0
       };
     } else {
-      // Different product - preserve note from existing product
+      // Different product - preserve note and profitability fields from existing product
       newSections[sectionIdx].products[productIdx] = { 
         ...selectedProduct,
         quantity: existingProduct?.quantity || 1,
-        note: existingProduct?.note || '' // Preserve note if it exists
+        note: existingProduct?.note || '', // Preserve note if it exists
+        needsPurchase: existingProduct?.needsPurchase || false,
+        purchaseQuantity: existingProduct?.purchaseQuantity || 0,
+        oopCost: existingProduct?.oopCost || 0
       };
     }
     setSections(newSections);
@@ -2406,14 +2412,20 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         ...existingProduct,
         ...selectedProduct, // Update catalog properties (price, imageUrl, dimensions)
         quantity: existingProduct.quantity || 1,
-        note: existingProduct.note || '' // Keep existing note
+        note: existingProduct.note || '', // Keep existing note
+        needsPurchase: existingProduct.needsPurchase || false,
+        purchaseQuantity: existingProduct.purchaseQuantity || 0,
+        oopCost: existingProduct.oopCost || 0
       };
     } else {
-      // Different product - preserve note from existing product
+      // Different product - preserve note and profitability fields from existing product
       newSections[sectionIdx].products[productIdx] = { 
         ...selectedProduct,
         quantity: existingProduct?.quantity || 1,
-        note: existingProduct?.note || '' // Preserve note if it exists
+        note: existingProduct?.note || '', // Preserve note if it exists
+        needsPurchase: existingProduct?.needsPurchase || false,
+        purchaseQuantity: existingProduct?.purchaseQuantity || 0,
+        oopCost: existingProduct?.oopCost || 0
       };
     }
     setSections(newSections);
@@ -2729,14 +2741,17 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         type: section.type || 'products',
         name: section.name || '',
         products: (section.products || []).map(product => {
-          // Explicitly preserve ALL product fields, ensuring note is included
+          // Explicitly preserve ALL product fields, including note and profitability fields
           return {
             name: product.name || '',
             quantity: product.quantity || 1,
             price: product.price || 0,
             imageUrl: product.imageUrl || '',
             dimensions: product.dimensions || '',
-            note: product.note || '' // Explicitly include note field
+            note: product.note || '', // Explicitly include note field
+            needsPurchase: product.needsPurchase || false,
+            purchaseQuantity: product.purchaseQuantity || 0,
+            oopCost: product.oopCost || 0
           };
         })
       };
