@@ -400,40 +400,91 @@ export default function ProposalApp() {
   });
 
   useEffect(() => {
-    fetchProposals();
-    const params = new URLSearchParams(window.location.search);
+    // Log URL on initial load for debugging
+    const initialParams = new URLSearchParams(window.location.search);
+    const initialProjectNumber = initialParams.get('projectNumber');
+    const initialVersion = initialParams.get('version');
+    console.log('🔍 Initial page load - URL params:', { 
+      projectNumber: initialProjectNumber, 
+      version: initialVersion,
+      fullURL: window.location.href 
+    });
     
-    if (params.get('page') === 'create') {
+    fetchProposals();
+    
+    if (initialParams.get('page') === 'create') {
       setIsCreatingNew(true);
     }
   }, []);
   
-  // Separate effect to handle URL parameters after proposals are loaded
+  // Handle URL parameters to open specific proposal - runs when proposals load and when loading completes
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const projectNumber = params.get('projectNumber');
-    const version = params.get('version');
+    // Only process URL params if we're not loading and have proposals
+    if (loading || proposals.length === 0) {
+      return;
+    }
     
-    if (projectNumber && proposals.length > 0) {
-      const proposal = proposals.find(p => 
-        p.projectNumber === projectNumber && 
-        (!version || p.version === parseInt(version))
-      );
+    const params = new URLSearchParams(window.location.search);
+    const projectNumberParam = params.get('projectNumber');
+    const versionParam = params.get('version');
+    
+    // Skip if we're creating a new proposal
+    if (isCreatingNew) {
+      return;
+    }
+    
+    if (projectNumberParam) {
+      // Convert projectNumber to string for comparison (handles both string and number formats)
+      const projectNumberStr = String(projectNumberParam).trim();
+      const versionNum = versionParam ? parseInt(versionParam, 10) : null;
+      
+      console.log('Checking URL for proposal:', { projectNumber: projectNumberStr, version: versionNum, proposalsCount: proposals.length });
+      
+      const proposal = proposals.find(p => {
+        // Compare projectNumber as strings (handles both string and number in data)
+        const pProjectNumber = String(p.projectNumber || '').trim();
+        const matchesProjectNumber = pProjectNumber === projectNumberStr;
+        
+        // If version is specified, must match; if not specified, any version is fine
+        const matchesVersion = versionNum === null || p.version === versionNum;
+        
+        return matchesProjectNumber && matchesVersion;
+      });
       
       if (proposal) {
         // Use functional update to check current state without adding to dependencies
         setSelectedProposal(current => {
           // Only update if no proposal is selected or the selected one doesn't match
           if (!current || 
-              current.projectNumber !== projectNumber || 
-              (version && current.version !== parseInt(version))) {
+              String(current.projectNumber || '').trim() !== projectNumberStr || 
+              (versionNum !== null && current.version !== versionNum)) {
+            console.log('✅ Opening proposal from URL:', projectNumberStr, versionNum, proposal);
+            
+            // Update URL to reflect the selected proposal (without page reload)
+            const urlParams = new URLSearchParams();
+            urlParams.set('projectNumber', projectNumberStr);
+            if (versionNum !== null) {
+              urlParams.set('version', versionNum.toString());
+            }
+            window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
+            
             return proposal;
           }
+          console.log('Proposal already selected, skipping update');
           return current;
+        });
+      } else {
+        console.warn('❌ Proposal not found in URL:', { 
+          projectNumber: projectNumberStr, 
+          version: versionNum, 
+          availableProposals: proposals.slice(0, 5).map(p => ({ 
+            projectNumber: String(p.projectNumber || '').trim(), 
+            version: p.version 
+          })) 
         });
       }
     }
-  }, [proposals]);
+  }, [proposals, loading, isCreatingNew]);
 
   const fetchProposals = async (updateSelected = false) => {
     try {
@@ -461,6 +512,65 @@ export default function ProposalApp() {
           );
           if (updatedProposal) {
             setSelectedProposal(updatedProposal);
+          }
+        }
+        
+        // After loading completes, check URL params if they exist (for direct links)
+        const params = new URLSearchParams(window.location.search);
+        const projectNumberParam = params.get('projectNumber');
+        const versionParam = params.get('version');
+        
+        console.log('📋 Proposals loaded, checking URL params:', { 
+          projectNumber: projectNumberParam, 
+          version: versionParam,
+          proposalsCount: sortedProposals.length,
+          hasSelectedProposal: !!selectedProposal,
+          isUpdateSelected: updateSelected
+        });
+        
+        if (projectNumberParam && !updateSelected) {
+          // Find proposal immediately
+          const projectNumberStr = String(projectNumberParam).trim();
+          const versionNum = versionParam ? parseInt(versionParam, 10) : null;
+          
+          console.log('🔍 Searching for proposal:', { 
+            lookingFor: { projectNumber: projectNumberStr, version: versionNum },
+            availableProposals: sortedProposals.slice(0, 3).map(p => ({ 
+              projectNumber: String(p.projectNumber || '').trim(), 
+              version: p.version 
+            }))
+          });
+          
+          const foundProposal = sortedProposals.find(p => {
+            const pProjNum = String(p.projectNumber || '').trim();
+            const matchesProj = pProjNum === projectNumberStr;
+            const matchesVer = versionNum === null || p.version === versionNum;
+            const result = matchesProj && matchesVer;
+            if (matchesProj && !matchesVer) {
+              console.log('⚠️ Project number matches but version differs:', { 
+                found: p.version, 
+                lookingFor: versionNum 
+              });
+            }
+            return result;
+          });
+          
+          if (foundProposal) {
+            console.log('✅ Found proposal! Opening:', foundProposal);
+            // Use setTimeout to ensure state is ready
+            setTimeout(() => {
+              setSelectedProposal(foundProposal);
+            }, 100);
+          } else {
+            console.error('❌ Proposal NOT FOUND after load:', { 
+              projectNumber: projectNumberStr, 
+              version: versionNum,
+              sampleProposals: sortedProposals.slice(0, 5).map(p => ({
+                projectNumber: String(p.projectNumber || '').trim(),
+                version: p.version,
+                clientName: p.clientName
+              }))
+            });
           }
         }
       }
