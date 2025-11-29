@@ -445,8 +445,21 @@ export default function ProposalApp() {
         const pProjectNumber = String(p.projectNumber || '').trim();
         const matchesProjectNumber = pProjectNumber === projectNumberStr;
         
-        // If version is specified, must match; if not specified, any version is fine
-        const matchesVersion = versionNum === null || p.version === versionNum;
+        // Version matching logic:
+        // - If no version in URL, match any version (or no version)
+        // - If version=1 in URL, match proposals with version=1 OR no version/null/undefined
+        // - If version > 1 in URL, must match exactly
+        let matchesVersion = true;
+        if (versionNum !== null) {
+          const pVersion = p.version;
+          // If URL has version=1, also match proposals with no version (treat as version 1)
+          if (versionNum === 1) {
+            matchesVersion = pVersion === 1 || pVersion === null || pVersion === undefined || pVersion === '';
+          } else {
+            // For other versions, must match exactly
+            matchesVersion = pVersion === versionNum;
+          }
+        }
         
         return matchesProjectNumber && matchesVersion;
       });
@@ -544,12 +557,29 @@ export default function ProposalApp() {
           const foundProposal = sortedProposals.find(p => {
             const pProjNum = String(p.projectNumber || '').trim();
             const matchesProj = pProjNum === projectNumberStr;
-            const matchesVer = versionNum === null || p.version === versionNum;
+            
+            // Version matching logic:
+            // - If no version in URL, match any version (or no version)
+            // - If version=1 in URL, match proposals with version=1 OR no version/null/undefined
+            // - If version > 1 in URL, must match exactly
+            let matchesVer = true;
+            if (versionNum !== null) {
+              const pVersion = p.version;
+              // If URL has version=1, also match proposals with no version (treat as version 1)
+              if (versionNum === 1) {
+                matchesVer = pVersion === 1 || pVersion === null || pVersion === undefined || pVersion === '';
+              } else {
+                // For other versions, must match exactly
+                matchesVer = pVersion === versionNum;
+              }
+            }
+            
             const result = matchesProj && matchesVer;
             if (matchesProj && !matchesVer) {
               console.log('⚠️ Project number matches but version differs:', { 
                 found: p.version, 
-                lookingFor: versionNum 
+                lookingFor: versionNum,
+                foundType: typeof p.version
               });
             }
             return result;
