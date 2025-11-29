@@ -402,10 +402,38 @@ export default function ProposalApp() {
   useEffect(() => {
     fetchProposals();
     const params = new URLSearchParams(window.location.search);
+    
     if (params.get('page') === 'create') {
       setIsCreatingNew(true);
     }
   }, []);
+  
+  // Separate effect to handle URL parameters after proposals are loaded
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const projectNumber = params.get('projectNumber');
+    const version = params.get('version');
+    
+    if (projectNumber && proposals.length > 0) {
+      const proposal = proposals.find(p => 
+        p.projectNumber === projectNumber && 
+        (!version || p.version === parseInt(version))
+      );
+      
+      if (proposal) {
+        // Use functional update to check current state without adding to dependencies
+        setSelectedProposal(current => {
+          // Only update if no proposal is selected or the selected one doesn't match
+          if (!current || 
+              current.projectNumber !== projectNumber || 
+              (version && current.version !== parseInt(version))) {
+            return proposal;
+          }
+          return current;
+        });
+      }
+    }
+  }, [proposals]);
 
   const fetchProposals = async (updateSelected = false) => {
     try {
@@ -515,7 +543,18 @@ export default function ProposalApp() {
         }
       }
     };
-    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={() => setSelectedProposal(null)} onPrint={() => window.print()} onRefresh={handleRefresh} onRefreshProposalsList={fetchProposals} />;
+    
+    // Check if this is a public view (for client sharing)
+    const params = new URLSearchParams(window.location.search);
+    const isPublicView = params.get('public') === 'true';
+    
+    const handleBack = () => {
+      setSelectedProposal(null);
+      // Clear URL parameters when going back
+      window.history.pushState({}, '', window.location.pathname);
+    };
+    
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={handleBack} onPrint={() => window.print()} onRefresh={handleRefresh} onRefreshProposalsList={fetchProposals} isPublicView={isPublicView} />;
   }
 
   return (
@@ -665,7 +704,16 @@ export default function ProposalApp() {
                 <tr key={index} style={{ borderBottom: '1px solid #f0ede5', backgroundColor: index % 2 === 0 ? 'white' : '#fafaf8' }}>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => setSelectedProposal(proposal)} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
+                      <button onClick={() => {
+                        setSelectedProposal(proposal);
+                        // Update URL with proposal parameters for sharing
+                        const params = new URLSearchParams();
+                        params.set('projectNumber', proposal.projectNumber || '');
+                        if (proposal.version) {
+                          params.set('version', proposal.version.toString());
+                        }
+                        window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
+                      }} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         View
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
@@ -1241,7 +1289,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   );
 }
 
-function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefreshProposalsList }) {
+function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefreshProposalsList, isPublicView = false }) {
   const [isEditing, setIsEditing] = useState(proposal._isEditing || false);
   const [editData, setEditData] = useState(null);
   const [showProfitability, setShowProfitability] = useState(false);
@@ -1307,14 +1355,14 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefresh
     );
   }
 
-  if (showProfitability) {
+  if (showProfitability && !isPublicView) {
     return <ProfitabilityView proposal={proposal} onBack={() => setShowProfitability(false)} />;
   }
 
-  return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={() => setIsEditing(true)} onViewProfitability={() => setShowProfitability(true)} />;
+  return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={isPublicView ? undefined : () => setIsEditing(true)} onViewProfitability={isPublicView ? undefined : () => setShowProfitability(true)} isPublicView={isPublicView} />;
 }
 
-function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitability }) {
+function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitability, isPublicView = false }) {
   // Debug: Check if customRentalMultiplier is in the proposal
   console.log('ViewProposalView - proposal.customRentalMultiplier:', proposal.customRentalMultiplier);
   console.log('ViewProposalView - All proposal keys:', Object.keys(proposal));
@@ -1749,13 +1797,50 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-          <button onClick={onBack} style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
-            ← Back to Dashboard
-          </button>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
-              Edit
+          {!isPublicView && (
+            <button onClick={onBack} style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
+              ← Back to Dashboard
             </button>
+          )}
+          {isPublicView && (
+            <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500' }}>
+              Proposal View
+            </div>
+          )}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            {!isPublicView && (
+              <button 
+                onClick={() => {
+                  const params = new URLSearchParams();
+                  params.set('projectNumber', proposal.projectNumber || '');
+                  if (proposal.version) {
+                    params.set('version', proposal.version.toString());
+                  }
+                  params.set('public', 'true');
+                  const shareableUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+                  navigator.clipboard.writeText(shareableUrl).then(() => {
+                    alert('Shareable link copied to clipboard!');
+                  }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = shareableUrl;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert('Shareable link copied to clipboard!');
+                  });
+                }}
+                style={{ padding: '8px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+              >
+                Copy Shareable Link
+              </button>
+            )}
+            {onEdit && (
+              <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+                Edit
+              </button>
+            )}
             {onViewProfitability && (
               <button onClick={onViewProfitability} style={{ padding: '8px 20px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
                 View Profitability
