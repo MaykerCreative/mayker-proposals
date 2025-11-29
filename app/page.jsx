@@ -3,6 +3,12 @@
 import React, { useState, useEffect } from 'react';
 
 // ============================================
+// CLIENT PORTAL CONFIGURATION
+// ============================================
+// URL for the client portal - update this to match your client portal deployment
+const CLIENT_PORTAL_URL = 'https://events-client-proposal.vercel.app'; // Update this with your actual client portal URL
+
+// ============================================
 // LOGO PATH HELPER - Tries multiple paths to find logos
 // ============================================
 function getLogoPath(filename) {
@@ -701,17 +707,23 @@ export default function ProposalApp() {
       }
     };
     
-    // Check if this is a public view (for client sharing)
+    // Check if this is a public view (for client sharing) or client portal view
     const params = new URLSearchParams(window.location.search);
     const isPublicView = params.get('public') === 'true';
+    const isClientView = params.get('fromClientPortal') === 'true' || document.referrer.includes('client') || document.referrer.includes('vercel.app');
     
     const handleBack = () => {
-      setSelectedProposal(null);
-      // Clear URL parameters when going back
-      window.history.pushState({}, '', window.location.pathname);
+      if (isClientView) {
+        // If coming from client portal, go back to client portal
+        window.location.href = CLIENT_PORTAL_URL;
+      } else {
+        setSelectedProposal(null);
+        // Clear URL parameters when going back
+        window.history.pushState({}, '', window.location.pathname);
+      }
     };
     
-    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={handleBack} onPrint={() => window.print()} onRefresh={handleRefresh} onRefreshProposalsList={fetchProposals} isPublicView={isPublicView} />;
+    return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={handleBack} onPrint={() => window.print()} onRefresh={handleRefresh} onRefreshProposalsList={fetchProposals} isPublicView={isPublicView} isClientView={isClientView} />;
   }
 
   // Show error page if proposal was requested from URL but not found
@@ -1522,7 +1534,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
   );
 }
 
-function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefreshProposalsList, isPublicView = false }) {
+function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefreshProposalsList, isPublicView = false, isClientView = false }) {
   const [isEditing, setIsEditing] = useState(proposal._isEditing || false);
   const [editData, setEditData] = useState(null);
   const [showProfitability, setShowProfitability] = useState(false);
@@ -1592,10 +1604,10 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefresh
     return <ProfitabilityView proposal={proposal} onBack={() => setShowProfitability(false)} />;
   }
 
-  return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={isPublicView ? undefined : () => setIsEditing(true)} onViewProfitability={isPublicView ? undefined : () => setShowProfitability(true)} isPublicView={isPublicView} />;
+  return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={isPublicView || isClientView ? undefined : () => setIsEditing(true)} onViewProfitability={isPublicView || isClientView ? undefined : () => setShowProfitability(true)} isPublicView={isPublicView} isClientView={isClientView} />;
 }
 
-function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitability, isPublicView = false }) {
+function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitability, isPublicView = false, isClientView = false }) {
   // Debug: Check if customRentalMultiplier is in the proposal
   console.log('ViewProposalView - proposal.customRentalMultiplier:', proposal.customRentalMultiplier);
   console.log('ViewProposalView - All proposal keys:', Object.keys(proposal));
@@ -2030,18 +2042,26 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-          {!isPublicView && (
+          {!isPublicView && !isClientView && (
             <button onClick={onBack} style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
               ← Back to Dashboard
             </button>
           )}
-          {isPublicView && (
+          {isClientView && (
+            <a 
+              href={CLIENT_PORTAL_URL}
+              style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', textDecoration: 'none' }}
+            >
+              ← Back to Dashboard
+            </a>
+          )}
+          {isPublicView && !isClientView && (
             <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500' }}>
               Proposal View
             </div>
           )}
           <div style={{ display: 'flex', gap: '12px' }}>
-            {!isPublicView && (
+            {!isPublicView && !isClientView && (
               <button 
                 onClick={() => {
                   const params = new URLSearchParams();
@@ -2069,12 +2089,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 Copy Shareable Link
               </button>
             )}
-            {onEdit && (
+            {onEdit && !isClientView && (
               <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
                 Edit
               </button>
             )}
-            {onViewProfitability && (
+            {onViewProfitability && !isClientView && (
               <button onClick={onViewProfitability} style={{ padding: '8px 20px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
                 View Profitability
               </button>
