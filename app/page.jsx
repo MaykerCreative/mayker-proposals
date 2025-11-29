@@ -392,6 +392,9 @@ export default function ProposalApp() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreatingNew, setIsCreatingNew] = useState(false);
+  const [proposalNotFoundFromURL, setProposalNotFoundFromURL] = useState(false);
+  const [urlProjectNumber, setUrlProjectNumber] = useState(null);
+  const [urlVersion, setUrlVersion] = useState(null);
   const [filters, setFilters] = useState({
     clientName: '',
     salesLead: '',
@@ -409,6 +412,13 @@ export default function ProposalApp() {
       version: initialVersion,
       fullURL: window.location.href 
     });
+    
+    // Store URL params to check later
+    if (initialProjectNumber) {
+      setUrlProjectNumber(initialProjectNumber);
+      setUrlVersion(initialVersion);
+      setProposalNotFoundFromURL(false); // Reset on new page load
+    }
     
     fetchProposals();
     
@@ -465,6 +475,9 @@ export default function ProposalApp() {
       });
       
       if (proposal) {
+        // Found the proposal - clear the "not found" state
+        setProposalNotFoundFromURL(false);
+        
         // Use functional update to check current state without adding to dependencies
         setSelectedProposal(current => {
           // Only update if no proposal is selected or the selected one doesn't match
@@ -487,6 +500,7 @@ export default function ProposalApp() {
           return current;
         });
       } else {
+        // Proposal not found - set flag to show error instead of dashboard
         console.warn('❌ Proposal not found in URL:', { 
           projectNumber: projectNumberStr, 
           version: versionNum, 
@@ -495,6 +509,7 @@ export default function ProposalApp() {
             version: p.version 
           })) 
         });
+        setProposalNotFoundFromURL(true);
       }
     }
   }, [proposals, loading, isCreatingNew]);
@@ -592,6 +607,7 @@ export default function ProposalApp() {
               setSelectedProposal(foundProposal);
             }, 100);
           } else {
+            // Proposal not found - set flag to show error instead of dashboard
             console.error('❌ Proposal NOT FOUND after load:', { 
               projectNumber: projectNumberStr, 
               version: versionNum,
@@ -601,6 +617,7 @@ export default function ProposalApp() {
                 clientName: p.clientName
               }))
             });
+            setProposalNotFoundFromURL(true);
           }
         }
       }
@@ -695,6 +712,82 @@ export default function ProposalApp() {
     };
     
     return <ProposalView proposal={selectedProposal} catalog={catalog} onBack={handleBack} onPrint={() => window.print()} onRefresh={handleRefresh} onRefreshProposalsList={fetchProposals} isPublicView={isPublicView} />;
+  }
+
+  // Show error page if proposal was requested from URL but not found
+  if (proposalNotFoundFromURL && urlProjectNumber) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        padding: '40px 20px',
+        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
+        backgroundColor: '#fafafa'
+      }}>
+        <div style={{
+          maxWidth: '600px',
+          textAlign: 'center',
+          backgroundColor: 'white',
+          padding: '60px 40px',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{
+            fontSize: '48px',
+            marginBottom: '24px'
+          }}>⚠️</div>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: '#2C2C2C',
+            marginBottom: '16px',
+            fontFamily: "'Domaine Text', serif"
+          }}>
+            Proposal Not Found
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#666',
+            marginBottom: '32px',
+            lineHeight: '1.6'
+          }}>
+            The proposal you're looking for (Project #{urlProjectNumber}{urlVersion ? `, Version ${urlVersion}` : ''}) could not be found.
+          </p>
+          <p style={{
+            fontSize: '14px',
+            color: '#999',
+            marginBottom: '32px'
+          }}>
+            This proposal may have been deleted, or the link may be incorrect.
+          </p>
+          <button
+            onClick={() => {
+              // Clear URL params and reset state
+              window.history.pushState({}, '', window.location.pathname);
+              setProposalNotFoundFromURL(false);
+              setUrlProjectNumber(null);
+              setUrlVersion(null);
+            }}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#545142',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
+            }}
+          >
+            Go to Dashboard
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
