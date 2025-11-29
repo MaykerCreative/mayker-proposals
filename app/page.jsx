@@ -707,10 +707,19 @@ export default function ProposalApp() {
       }
     };
     
-    // Check if this is a public view (for client sharing) or client portal view
+    // Check if this is a public view (for client sharing) or client-facing view
     const params = new URLSearchParams(window.location.search);
     const isPublicView = params.get('public') === 'true';
-    const isClientView = params.get('fromClientPortal') === 'true' || document.referrer.includes('client') || document.referrer.includes('vercel.app');
+    const isClientView = params.get('clientView') === 'true' || params.get('fromClientPortal') === 'true';
+    
+    // Debug logging
+    console.log('🔍 Client view detection:', {
+      clientViewParam: params.get('clientView'),
+      fromClientPortalParam: params.get('fromClientPortal'),
+      isClientView,
+      referrer: document.referrer,
+      fullURL: window.location.href
+    });
     
     const handleBack = () => {
       if (isClientView) {
@@ -951,7 +960,7 @@ export default function ProposalApp() {
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => {
                         setSelectedProposal(proposal);
-                        // Update URL with proposal parameters for sharing
+                        // Update URL with proposal parameters for internal view
                         const params = new URLSearchParams();
                         params.set('projectNumber', proposal.projectNumber || '');
                         if (proposal.version) {
@@ -960,6 +969,20 @@ export default function ProposalApp() {
                         window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
                       }} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         View
+                      </button>
+                      <span style={{ color: '#d1d5db' }}>|</span>
+                      <button onClick={() => {
+                        setSelectedProposal(proposal);
+                        // Update URL with client-facing view parameters
+                        const params = new URLSearchParams();
+                        params.set('projectNumber', proposal.projectNumber || '');
+                        if (proposal.version) {
+                          params.set('version', proposal.version.toString());
+                        }
+                        params.set('clientView', 'true');
+                        window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
+                      }} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
+                        Share
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
                       <button onClick={() => setSelectedProposal({ ...proposal, _isEditing: true })} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
@@ -1611,6 +1634,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
   // Debug: Check if customRentalMultiplier is in the proposal
   console.log('ViewProposalView - proposal.customRentalMultiplier:', proposal.customRentalMultiplier);
   console.log('ViewProposalView - All proposal keys:', Object.keys(proposal));
+  console.log('ViewProposalView - isClientView:', isClientView, 'isPublicView:', isPublicView);
   
   const rawSections = JSON.parse(proposal.sectionsJSON || '[]');
   
