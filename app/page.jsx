@@ -3143,7 +3143,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 </div>
                 <div style={{ flex: '1', minWidth: 0 }}>
                   <p style={{ marginBottom: '12px', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    The quoted delivery fee reflects the current rental scope and delivery details. If project needs change, we can adjust as needed, and delivery fees may be updated accordingly:
+                    The quoted delivery fee reflects the current rental scope and delivery details. If project needs change, we can adjust, but fees may be updated accordingly:
                   </p>
                   <ul style={{ fontSize: '12px', lineHeight: '1.6', marginBottom: '0', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                     <li style={{ marginBottom: '5px' }}><span style={{ fontWeight: '400' }}>Project Address:</span> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
@@ -3181,9 +3181,9 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                     </h2>
                   </div>
                   <div style={{ flex: '1', minWidth: 0 }}>
-                    <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                      Projects are confirmed once the service agreement is signed and the deposit is paid. We accept wire, ACH, credit card, and check. A 3% processing fee applies to credit card payments.
-                    </p>
+                  <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                    Projects are confirmed with a signed service agreement and deposit payment. We accept wire, ACH, credit card (3% processing fee), and check.
+                  </p>
                   </div>
                 </div>
               </div>
