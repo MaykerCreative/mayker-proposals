@@ -3772,7 +3772,19 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     projectNumber: proposal.projectNumber || '',
     taxExempt: proposal.taxExempt === true || proposal.taxExempt === 'true',
     chargeMiscFees: proposal.chargeMiscFees === true || proposal.chargeMiscFees === 'true' || false,
-    miscFees: proposal.miscFees ? JSON.parse(proposal.miscFees) : []
+    miscFees: (() => {
+      if (!proposal.miscFees) return [];
+      try {
+        if (typeof proposal.miscFees === 'string') {
+          const parsed = JSON.parse(proposal.miscFees);
+          return Array.isArray(parsed) ? parsed : [];
+        }
+        return Array.isArray(proposal.miscFees) ? proposal.miscFees : [];
+      } catch (e) {
+        console.warn('Error parsing miscFees:', e);
+        return [];
+      }
+    })()
   });
   const [sections, setSections] = useState(() => {
     const parsed = JSON.parse(proposal.sectionsJSON || '[]');
@@ -4490,6 +4502,76 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 <option value="true">Waive</option>
               </select>
             </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Charge Miscellaneous Fees</label>
+              <select name="chargeMiscFees" value={formData.chargeMiscFees ? 'true' : 'false'} onChange={(e) => {
+                const value = e.target.value === 'true';
+                setFormData({ ...formData, chargeMiscFees: value, miscFees: value ? (formData.miscFees || []) : [] });
+              }} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }}>
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            {formData.chargeMiscFees && (
+              <div style={{ gridColumn: '1 / -1', marginTop: '12px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Miscellaneous Fees</label>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newFees = [...(formData.miscFees || []), { name: '', amount: 0 }];
+                      setFormData({ ...formData, miscFees: newFees });
+                    }}
+                    style={{ padding: '6px 12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
+                  >
+                    + Add Fee
+                  </button>
+                </div>
+                {(formData.miscFees || []).map((fee, idx) => (
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '4px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Fee Name</label>
+                      <input 
+                        type="text" 
+                        value={fee.name || ''} 
+                        onChange={(e) => {
+                          const newFees = [...formData.miscFees];
+                          newFees[idx].name = e.target.value;
+                          setFormData({ ...formData, miscFees: newFees });
+                        }}
+                        placeholder="e.g., Setup Fee, Rush Fee"
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '4px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Amount ($)</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        step="0.01"
+                        value={fee.amount || 0} 
+                        onChange={(e) => {
+                          const newFees = [...formData.miscFees];
+                          newFees[idx].amount = parseFloat(e.target.value) || 0;
+                          setFormData({ ...formData, miscFees: newFees });
+                        }}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
+                      />
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newFees = formData.miscFees.filter((_, i) => i !== idx);
+                        setFormData({ ...formData, miscFees: newFees });
+                      }}
+                      style={{ padding: '8px 12px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '8px' }}>
               <input 
                 type="checkbox" 
