@@ -1344,7 +1344,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     salesLead: '',
     status: 'Pending',
     projectNumber: '',
-    taxExempt: false
+    taxExempt: false,
+    chargeMiscFees: false,
+    miscFees: []
   });
   const [sections, setSections] = useState([{ name: '', products: [], type: 'products' }]);
 
@@ -1508,7 +1510,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
       waiveServiceFee: formData.waiveServiceFee || false,
-      taxExempt: formData.taxExempt || false
+      taxExempt: formData.taxExempt || false,
+      chargeMiscFees: formData.chargeMiscFees || false,
+      miscFees: formData.chargeMiscFees ? JSON.stringify(formData.miscFees || []) : '[]'
     };
     
     // Debug: Log the customRentalMultiplier being saved
