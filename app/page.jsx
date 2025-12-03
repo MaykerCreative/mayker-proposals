@@ -1512,8 +1512,15 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       waiveServiceFee: formData.waiveServiceFee || false,
       taxExempt: formData.taxExempt || false,
       chargeMiscFees: formData.chargeMiscFees || false,
-      miscFees: formData.chargeMiscFees ? JSON.stringify(formData.miscFees || []) : '[]'
+      miscFees: formData.chargeMiscFees && formData.miscFees && formData.miscFees.length > 0 ? JSON.stringify(formData.miscFees) : '[]'
     };
+    
+    // Debug: Log miscFees being saved
+    console.log('CreateProposalView - Saving miscFees:', {
+      chargeMiscFees: formData.chargeMiscFees,
+      miscFees: formData.miscFees,
+      stringified: finalData.miscFees
+    });
     
     // Debug: Log the customRentalMultiplier being saved
     console.log('CreateProposalView - Saving customRentalMultiplier in discountName:', finalData.discountName, 'from formData:', formData.customRentalMultiplier);
@@ -3055,6 +3062,35 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                         <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Delivery</td>
                         <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
                       </tr>
+                      {totals.miscFees > 0 && (() => {
+                        try {
+                          const miscFees = typeof proposal.miscFees === 'string' ? JSON.parse(proposal.miscFees) : (proposal.miscFees || []);
+                          if (Array.isArray(miscFees) && miscFees.length > 0) {
+                            return (
+                              <>
+                                {miscFees.map((fee, idx) => (
+                                  <tr key={`misc-fee-${idx}`}>
+                                    <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                                      {fee.name || 'Miscellaneous Fee'}
+                                    </td>
+                                    <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                                      ${formatNumber(parseFloat(fee.amount) || 0)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </>
+                            );
+                          }
+                        } catch (e) {
+                          console.warn('Error parsing miscFees for display:', e);
+                        }
+                        return (
+                          <tr>
+                            <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Miscellaneous Fees</td>
+                            <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.miscFees)}</td>
+                          </tr>
+                        );
+                      })()}
                       <tr style={{ borderTop: '1px solid #e5e7eb' }}>
                         <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Subtotal</td>
                         <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.subtotal)}</td>
@@ -3775,17 +3811,20 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     status: proposal.status || 'Pending',
     projectNumber: proposal.projectNumber || '',
     taxExempt: proposal.taxExempt === true || proposal.taxExempt === 'true',
-    chargeMiscFees: proposal.chargeMiscFees === true || proposal.chargeMiscFees === 'true' || false,
+    chargeMiscFees: proposal.chargeMiscFees === true || proposal.chargeMiscFees === 'true' || (proposal.miscFees && proposal.miscFees !== '[]' && proposal.miscFees !== ''),
     miscFees: (() => {
-      if (!proposal.miscFees) return [];
+      if (!proposal.miscFees || proposal.miscFees === '[]' || proposal.miscFees === '') return [];
       try {
         if (typeof proposal.miscFees === 'string') {
           const parsed = JSON.parse(proposal.miscFees);
-          return Array.isArray(parsed) ? parsed : [];
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return parsed;
+          }
+          return [];
         }
         return Array.isArray(proposal.miscFees) ? proposal.miscFees : [];
       } catch (e) {
-        console.warn('Error parsing miscFees:', e);
+        console.warn('Error parsing miscFees:', e, 'Raw value:', proposal.miscFees);
         return [];
       }
     })()
