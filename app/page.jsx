@@ -3155,24 +3155,26 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 </div>
               </div>
               
-              {/* Custom Project Notes Section - Two Column Layout */}
-              {proposal.customProjectNotes && proposal.customProjectNotes.trim() && (
-                <div style={{ paddingTop: '30px', paddingBottom: '20px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
-                  <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
-                    <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
-                      Custom Project Notes
-                    </h2>
+              {/* Custom Project Notes and Confirmation Sections - Grouped to prevent page breaks */}
+              <div style={{ pageBreakInside: 'avoid', breakInside: 'avoid' }}>
+                {/* Custom Project Notes Section - Two Column Layout */}
+                {proposal.customProjectNotes && proposal.customProjectNotes.trim() && (
+                  <div style={{ paddingTop: '30px', paddingBottom: '15px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
+                    <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
+                      <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
+                        Custom Project Notes
+                      </h2>
+                    </div>
+                    <div style={{ flex: '1', minWidth: 0 }}>
+                      <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'pre-wrap' }}>
+                        {proposal.customProjectNotes}
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ flex: '1', minWidth: 0 }}>
-                    <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'pre-wrap' }}>
-                      {proposal.customProjectNotes}
-                    </p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Confirmation and Payment Section - Two Column Layout */}
-              <div style={{ paddingTop: '30px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
+                )}
+                
+                {/* Confirmation and Payment Section - Two Column Layout */}
+                <div style={{ paddingTop: proposal.customProjectNotes && proposal.customProjectNotes.trim() ? '15px' : '30px', borderTop: proposal.customProjectNotes && proposal.customProjectNotes.trim() ? 'none' : '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
                   <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
                     Confirmation and Payment
@@ -3182,6 +3184,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                   <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                     Projects are confirmed with a signed service agreement and corresponding deposit payment. Payment can be made via wire, ACH, credit card, or check. A 3% processing fee is applied to all credit card payments.
                   </p>
+                </div>
                 </div>
               </div>
             </div>
