@@ -8,6 +8,22 @@ import React, { useState, useEffect } from 'react';
 // URL for the client portal - update this to match your client portal deployment
 const CLIENT_PORTAL_URL = 'https://events-client-proposal.vercel.app'; // Update this with your actual client portal URL
 
+// Domain configuration
+const ADMIN_DOMAIN = 'app.maykerevents.com';
+const CLIENT_DOMAIN = 'clients.maykerevents.com';
+
+// Helper to detect if we're on admin domain
+const isAdminDomain = () => {
+  if (typeof window === 'undefined') return false;
+  return window.location.hostname === ADMIN_DOMAIN || window.location.hostname.includes(ADMIN_DOMAIN);
+};
+
+// Helper to detect if we're on client domain
+const isClientDomain = () => {
+  if (typeof window === 'undefined') return false;
+  return window.location.hostname === CLIENT_DOMAIN || window.location.hostname.includes(CLIENT_DOMAIN);
+};
+
 // ============================================
 // LOGO PATH HELPER - Tries multiple paths to find logos
 // ============================================
@@ -730,15 +746,15 @@ export default function ProposalApp() {
   // Only check on client-side to avoid SSR errors
   const clientRouteInfo = typeof window !== 'undefined' ? parseClientRoute() : { isClientRoute: false, projectNumber: null, version: null };
   
-  // PROTECT ROOT URL - Prevent unauthorized access to dashboard
+  // PROTECT CLIENT DOMAIN ROOT - Only block access on client domain root, not admin domain
   // Only check on client-side
   const isRootPath = typeof window !== 'undefined' ? (window.location.pathname === '/' || window.location.pathname === '') : false;
-  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const hasAdminAccess = typeof window !== 'undefined' ? (params.get('admin') === 'true' || params.get('admin') === '1') : false;
+  const onClientDomain = typeof window !== 'undefined' ? isClientDomain() : false;
+  const onAdminDomain = typeof window !== 'undefined' ? isAdminDomain() : false;
   
-  // If accessing root without admin access and not on a client route, block access
-  // Only enforce on client-side (after initial render)
-  if (typeof window !== 'undefined' && isRootPath && !hasAdminAccess && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
+  // If on client domain root (not a client route), block access
+  // Admin domain always allows access
+  if (typeof window !== 'undefined' && onClientDomain && isRootPath && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
     return (
       <div style={{ 
         minHeight: '100vh', 
@@ -988,12 +1004,12 @@ export default function ProposalApp() {
     return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading proposal...</p></div>;
   }
 
-  // Final check: If on root without admin access, block dashboard
+  // Final check: If on client domain root (not a client route), block access
+  // Admin domain
   // Only check on client-side
-  const finalCheckParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
-  const finalHasAdminAccess = typeof window !== 'undefined' ? (finalCheckParams.get('admin') === 'true' || finalCheckParams.get('admin') === '1') : false;
   const finalIsRootPath = typeof window !== 'undefined' ? (window.location.pathname === '/' || window.location.pathname === '') : false;
-  if (typeof window !== 'undefined' && finalIsRootPath && !finalHasAdminAccess && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
+  const finalOnClientDomain = typeof window !== 'undefined' ? isClientDomain() : false;
+  if (typeof window !== 'undefined' && finalOnClientDomain && finalIsRootPath && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
     return (
       <div style={{ 
         minHeight: '100vh', 
@@ -1207,9 +1223,11 @@ export default function ProposalApp() {
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
                       <button onClick={() => {
-                        // Generate client-specific URL: /client/:projectNumber/:version
+                        // Generate client-specific URL using client domain: maykerevents.com/client/:projectNumber/:version
                         const clientPath = `/client/${proposal.projectNumber || ''}${proposal.version ? `/${proposal.version}` : ''}`;
-                        const clientUrl = `${window.location.origin}${clientPath}`;
+                        // Use client domain for share links, regardless of which domain admin is on
+                        const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:';
+                        const clientUrl = `${protocol}//${CLIENT_DOMAIN}${clientPath}`;
                         
                         // Copy to clipboard
                         navigator.clipboard.writeText(clientUrl).then(() => {
@@ -2331,9 +2349,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
             {!isPublicView && !isClientView && (
               <button 
                 onClick={() => {
-                  // Generate client-specific URL: /client/:projectNumber/:version
+                  // Generate client-specific URL using client domain: maykerevents.com/client/:projectNumber/:version
                   const clientPath = `/client/${proposal.projectNumber || ''}${proposal.version ? `/${proposal.version}` : ''}`;
-                  const shareableUrl = `${window.location.origin}${clientPath}`;
+                  // Use client domain for share links, regardless of which domain admin is on
+                  const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:';
+                  const shareableUrl = `${protocol}//${CLIENT_DOMAIN}${clientPath}`;
                   navigator.clipboard.writeText(shareableUrl).then(() => {
                     alert('Client link copied to clipboard!');
                   }).catch(() => {
