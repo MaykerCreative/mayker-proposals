@@ -2039,6 +2039,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
   // Debug: Check if customRentalMultiplier is in the proposal
   console.log('ViewProposalView - proposal.customRentalMultiplier:', proposal.customRentalMultiplier);
   console.log('ViewProposalView - All proposal keys:', Object.keys(proposal));
+  console.log('ViewProposalView - proposal.miscFees:', proposal.miscFees);
   console.log('ViewProposalView - isClientView:', isClientView, 'isPublicView:', isPublicView, 'isOnClientRoute:', isOnClientRoute, 'actualIsClientView:', actualIsClientView);
   
   const rawSections = JSON.parse(proposal.sectionsJSON || '[]');
@@ -3064,34 +3065,35 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                         <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Delivery</td>
                         <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.delivery)}</td>
                       </tr>
-                      {totals.miscFees > 0 && (() => {
+                      {(() => {
+                        // Always try to display misc fees if they exist, regardless of totals.miscFees
                         try {
                           const miscFees = typeof proposal.miscFees === 'string' ? JSON.parse(proposal.miscFees) : (proposal.miscFees || []);
+                          console.log('Display miscFees check:', {
+                            proposalMiscFees: proposal.miscFees,
+                            parsedMiscFees: miscFees,
+                            totalsMiscFees: totals.miscFees,
+                            isArray: Array.isArray(miscFees),
+                            length: Array.isArray(miscFees) ? miscFees.length : 0
+                          });
+                          
                           if (Array.isArray(miscFees) && miscFees.length > 0) {
-                            // Filter to only show checked fees (or all if checked property doesn't exist for backward compatibility)
-                            const checkedFees = miscFees.filter(fee => {
-                              if (fee.hasOwnProperty('checked')) {
-                                return fee.checked !== false;
-                              }
-                              return true; // Backward compatibility - show all if no checked property
-                            });
-                            
-                            if (checkedFees.length > 0) {
-                              return (
-                                <>
-                                  {checkedFees.map((fee, idx) => (
-                                    <tr key={`misc-fee-${idx}`}>
-                                      <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-                                        {fee.name || 'Miscellaneous Fee'}
-                                      </td>
-                                      <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                                        ${formatNumber(parseFloat(fee.amount) || 0)}
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </>
-                              );
-                            }
+                            // Since we only save checked fees, all fees in the array should be displayed
+                            // (they all have checked: true when saved)
+                            return (
+                              <>
+                                {miscFees.map((fee, idx) => (
+                                  <tr key={`misc-fee-${idx}`}>
+                                    <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                                      {fee.name || 'Miscellaneous Fee'}
+                                    </td>
+                                    <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                                      ${formatNumber(parseFloat(fee.amount) || 0)}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </>
+                            );
                           }
                         } catch (e) {
                           console.warn('Error parsing miscFees for display:', e);
