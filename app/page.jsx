@@ -3888,6 +3888,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             if (!('note' in productWithFields)) {
               productWithFields.note = '';
             }
+            if (!('finish' in productWithFields)) {
+              productWithFields.finish = '';
+            }
+            if (!('size' in productWithFields)) {
+              productWithFields.size = '';
+            }
             if (!('needsPurchase' in productWithFields)) {
               productWithFields.needsPurchase = false;
             }
@@ -5008,6 +5014,30 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                               onMouseDown={(e) => e.stopPropagation()}
                               placeholder="$0.00"
                               style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", MozAppearance: 'textfield', WebkitAppearance: 'none', appearance: 'none' }} 
+                            />
+                          </div>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Finish</label>
+                            <input 
+                              type="text" 
+                              value={product.finish || ''} 
+                              onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'finish', e.target.value)} 
+                              onMouseDown={(e) => e.stopPropagation()}
+                              placeholder="e.g., Walnut, Black, etc."
+                              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Size</label>
+                            <input 
+                              type="text" 
+                              value={product.size || ''} 
+                              onChange={(e) => handleProductPurchaseChange(sectionIdx, productIdx, 'size', e.target.value)} 
+                              onMouseDown={(e) => e.stopPropagation()}
+                              placeholder="e.g., 24x24, Large, etc."
+                              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
                             />
                           </div>
                         </div>
