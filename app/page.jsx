@@ -1522,15 +1522,17 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       waiveProductCare: formData.waiveProductCare || false,
       waiveServiceFee: formData.waiveServiceFee || false,
       taxExempt: formData.taxExempt || false,
-      miscFees: formData.miscFees && formData.miscFees.length > 0 ? JSON.stringify(formData.miscFees.filter(f => f.checked)) : '[]'
+      miscFees: (() => {
+        const checkedFees = formData.miscFees ? formData.miscFees.filter(f => f.checked === true) : [];
+        const result = checkedFees.length > 0 ? JSON.stringify(checkedFees) : '[]';
+        console.log('CreateProposalView - Saving miscFees:', {
+          allFees: formData.miscFees,
+          checkedFees: checkedFees,
+          stringified: result
+        });
+        return result;
+      })()
     };
-    
-    // Debug: Log miscFees being saved
-    console.log('CreateProposalView - Saving miscFees:', {
-      miscFees: formData.miscFees,
-      checkedFees: formData.miscFees ? formData.miscFees.filter(f => f.checked) : [],
-      stringified: finalData.miscFees
-    });
     
     // Debug: Log the customRentalMultiplier being saved
     console.log('CreateProposalView - Saving customRentalMultiplier in discountName:', finalData.discountName, 'from formData:', formData.customRentalMultiplier);
@@ -1665,24 +1667,46 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                 { name: 'Holiday', amount: 1000 }
               ].map((fee) => {
                 const feeKey = fee.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const isChecked = formData.miscFees && formData.miscFees.some(f => f.name === fee.name && f.checked);
+                // Ensure all fees are in the array, get checked state
+                const currentFees = formData.miscFees || [];
+                const existingFee = currentFees.find(f => f.name === fee.name);
+                const isChecked = existingFee ? (existingFee.checked === true) : false;
+                
                 return (
                   <div key={feeKey} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                     <input 
                       type="checkbox" 
-                      checked={isChecked || false}
+                      checked={isChecked}
                       onChange={(e) => {
-                        const currentFees = formData.miscFees || [];
-                        if (e.target.checked) {
-                          // Add fee if checked
-                          const newFees = currentFees.filter(f => f.name !== fee.name);
-                          newFees.push({ name: fee.name, amount: fee.amount, checked: true });
-                          setFormData({ ...formData, miscFees: newFees });
+                        // Get all current fees
+                        const allFees = formData.miscFees || [];
+                        // Update or add this fee
+                        const feeIndex = allFees.findIndex(f => f.name === fee.name);
+                        const updatedFees = [...allFees];
+                        
+                        if (feeIndex >= 0) {
+                          // Update existing fee
+                          updatedFees[feeIndex] = { ...updatedFees[feeIndex], checked: e.target.checked };
                         } else {
-                          // Remove fee if unchecked
-                          const newFees = currentFees.filter(f => f.name !== fee.name);
-                          setFormData({ ...formData, miscFees: newFees });
+                          // Add new fee
+                          updatedFees.push({ name: fee.name, amount: fee.amount, checked: e.target.checked });
                         }
+                        
+                        // Ensure all predefined fees are present (in case some are missing)
+                        const predefinedFees = [
+                          { name: 'Rush Fee', amount: 500 },
+                          { name: 'Late Night Pick-Up', amount: 500 },
+                          { name: 'Early Morning Delivery', amount: 500 },
+                          { name: 'Difficult Delivery', amount: 500 },
+                          { name: 'Holiday', amount: 1000 }
+                        ];
+                        
+                        const completeFees = predefinedFees.map(pf => {
+                          const found = updatedFees.find(f => f.name === pf.name);
+                          return found || { ...pf, checked: false };
+                        });
+                        
+                        setFormData({ ...formData, miscFees: completeFees });
                       }}
                       style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                     />
@@ -4343,8 +4367,16 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       waiveProductCare: formData.waiveProductCare || false,
       waiveServiceFee: formData.waiveServiceFee || false,
       taxExempt: formData.taxExempt || false,
-      chargeMiscFees: formData.chargeMiscFees || false,
-      miscFees: formData.chargeMiscFees ? JSON.stringify(formData.miscFees || []) : '[]'
+      miscFees: (() => {
+        const checkedFees = formData.miscFees ? formData.miscFees.filter(f => f.checked === true) : [];
+        const result = checkedFees.length > 0 ? JSON.stringify(checkedFees) : '[]';
+        console.log('EditProposalView - Saving miscFees:', {
+          allFees: formData.miscFees,
+          checkedFees: checkedFees,
+          stringified: result
+        });
+        return result;
+      })()
     };
     
     // Debug: Log the customRentalMultiplier being saved
@@ -4557,24 +4589,46 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 { name: 'Holiday', amount: 1000 }
               ].map((fee) => {
                 const feeKey = fee.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-                const isChecked = formData.miscFees && formData.miscFees.some(f => f.name === fee.name && f.checked);
+                // Ensure all fees are in the array, get checked state
+                const currentFees = formData.miscFees || [];
+                const existingFee = currentFees.find(f => f.name === fee.name);
+                const isChecked = existingFee ? (existingFee.checked === true) : false;
+                
                 return (
                   <div key={feeKey} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
                     <input 
                       type="checkbox" 
-                      checked={isChecked || false}
+                      checked={isChecked}
                       onChange={(e) => {
-                        const currentFees = formData.miscFees || [];
-                        if (e.target.checked) {
-                          // Add fee if checked
-                          const newFees = currentFees.filter(f => f.name !== fee.name);
-                          newFees.push({ name: fee.name, amount: fee.amount, checked: true });
-                          setFormData({ ...formData, miscFees: newFees });
+                        // Get all current fees
+                        const allFees = formData.miscFees || [];
+                        // Update or add this fee
+                        const feeIndex = allFees.findIndex(f => f.name === fee.name);
+                        const updatedFees = [...allFees];
+                        
+                        if (feeIndex >= 0) {
+                          // Update existing fee
+                          updatedFees[feeIndex] = { ...updatedFees[feeIndex], checked: e.target.checked };
                         } else {
-                          // Remove fee if unchecked
-                          const newFees = currentFees.filter(f => f.name !== fee.name);
-                          setFormData({ ...formData, miscFees: newFees });
+                          // Add new fee
+                          updatedFees.push({ name: fee.name, amount: fee.amount, checked: e.target.checked });
                         }
+                        
+                        // Ensure all predefined fees are present (in case some are missing)
+                        const predefinedFees = [
+                          { name: 'Rush Fee', amount: 500 },
+                          { name: 'Late Night Pick-Up', amount: 500 },
+                          { name: 'Early Morning Delivery', amount: 500 },
+                          { name: 'Difficult Delivery', amount: 500 },
+                          { name: 'Holiday', amount: 1000 }
+                        ];
+                        
+                        const completeFees = predefinedFees.map(pf => {
+                          const found = updatedFees.find(f => f.name === pf.name);
+                          return found || { ...pf, checked: false };
+                        });
+                        
+                        setFormData({ ...formData, miscFees: completeFees });
                       }}
                       style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                     />
