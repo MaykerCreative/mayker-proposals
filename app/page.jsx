@@ -3157,7 +3157,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
               
               {/* Custom Project Notes Section - Two Column Layout */}
               {proposal.customProjectNotes && proposal.customProjectNotes.trim() && (
-                <div style={{ paddingTop: '30px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
+                <div style={{ paddingTop: '30px', paddingBottom: '20px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start', pageBreakInside: 'avoid', breakInside: 'avoid' }}>
                   <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
                     <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
                       Custom Project Notes
