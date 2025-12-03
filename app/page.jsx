@@ -240,7 +240,20 @@ function calculateDetailedTotals(proposal) {
   // Use actual productCare value (which reflects if it was waived) for accurate calculation
   const serviceFeeAmount = (rentalTotal + productCare + delivery) * 0.05;
   
-  const subtotal = rentalTotal + productCare + serviceFee + delivery;
+  // Calculate miscellaneous fees
+  let miscFeesTotal = 0;
+  if (proposal.chargeMiscFees === true || proposal.chargeMiscFees === 'true' || String(proposal.chargeMiscFees || '').toLowerCase() === 'true') {
+    try {
+      const miscFees = typeof proposal.miscFees === 'string' ? JSON.parse(proposal.miscFees) : (proposal.miscFees || []);
+      if (Array.isArray(miscFees)) {
+        miscFeesTotal = miscFees.reduce((sum, fee) => sum + (parseFloat(fee.amount) || 0), 0);
+      }
+    } catch (e) {
+      console.warn('Error parsing miscFees:', e);
+    }
+  }
+  
+  const subtotal = rentalTotal + productCare + serviceFee + delivery + miscFeesTotal;
   // Check if tax exempt - handle boolean, string 'true'/'false', or undefined
   // Also check if it's stored as false/empty string (which means not exempt)
   const taxExempt = proposal.taxExempt === true || proposal.taxExempt === 'true' || String(proposal.taxExempt || '').toLowerCase() === 'true';
@@ -257,6 +270,7 @@ function calculateDetailedTotals(proposal) {
     serviceFee,
     serviceFeeAmount, // Original amount before waiver
     delivery,
+    miscFees: miscFeesTotal,
     subtotal,
     tax,
     total,
@@ -876,8 +890,11 @@ export default function ProposalApp() {
     const clientRouteInfo = typeof window !== 'undefined' ? parseClientRoute() : { isClientRoute: false, projectNumber: null, version: null };
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
     const isPublicView = params.get('public') === 'true';
-    // Client view is true if on client route OR if clientView param is set
-    const isClientView = clientRouteInfo.isClientRoute || params.get('clientView') === 'true' || params.get('fromClientPortal') === 'true';
+    // Check referrer to detect if coming from client portal
+    const referrer = typeof window !== 'undefined' && typeof document !== 'undefined' ? document.referrer : '';
+    const isFromClientPortal = referrer.includes('events-client-proposal') || referrer.includes('client-portal') || referrer.includes('clients.maykerevents.com');
+    // Client view is true if on client route OR if clientView param is set OR if coming from client portal
+    const isClientView = clientRouteInfo.isClientRoute || params.get('clientView') === 'true' || params.get('fromClientPortal') === 'true' || isFromClientPortal;
     
     // Debug logging (only on client-side)
     if (typeof window !== 'undefined') {
@@ -1354,7 +1371,7 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
 
   const handleAddProduct = (sectionIdx) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0, supplier: '', productUrl: '' });
+    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0, supplier: '', productUrl: '', finish: '', size: '' });
     setSections(newSections);
   };
 
@@ -1374,7 +1391,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
         purchaseQuantity: existingProduct.purchaseQuantity || 0,
         oopCost: existingProduct.oopCost || 0,
         supplier: existingProduct.supplier || '',
-        productUrl: existingProduct.productUrl || ''
+        productUrl: existingProduct.productUrl || '',
+        finish: existingProduct.finish || '',
+        size: existingProduct.size || ''
       };
     } else {
       // Different product - preserve note and profitability fields from existing product
@@ -1386,7 +1405,9 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
         purchaseQuantity: existingProduct?.purchaseQuantity || 0,
         oopCost: existingProduct?.oopCost || 0,
         supplier: existingProduct?.supplier || '',
-        productUrl: existingProduct?.productUrl || ''
+        productUrl: existingProduct?.productUrl || '',
+        finish: existingProduct?.finish || '',
+        size: existingProduct?.size || ''
       };
     }
     setSections(newSections);
@@ -1613,6 +1634,76 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                 <option value="true">Waive</option>
               </select>
             </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Charge Miscellaneous Fees</label>
+              <select name="chargeMiscFees" value={formData.chargeMiscFees ? 'true' : 'false'} onChange={(e) => {
+                const value = e.target.value === 'true';
+                setFormData({ ...formData, chargeMiscFees: value, miscFees: value ? (formData.miscFees || []) : [] });
+              }} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
+                <option value="false">No</option>
+                <option value="true">Yes</option>
+              </select>
+            </div>
+            {formData.chargeMiscFees && (
+              <div style={{ gridColumn: '1 / -1', marginTop: '12px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                  <label style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Miscellaneous Fees</label>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      const newFees = [...(formData.miscFees || []), { name: '', amount: 0 }];
+                      setFormData({ ...formData, miscFees: newFees });
+                    }}
+                    style={{ padding: '6px 12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
+                  >
+                    + Add Fee
+                  </button>
+                </div>
+                {(formData.miscFees || []).map((fee, idx) => (
+                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Fee Name</label>
+                      <input 
+                        type="text" 
+                        value={fee.name || ''} 
+                        onChange={(e) => {
+                          const newFees = [...formData.miscFees];
+                          newFees[idx].name = e.target.value;
+                          setFormData({ ...formData, miscFees: newFees });
+                        }}
+                        placeholder="e.g., Setup Fee, Rush Fee"
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Amount ($)</label>
+                      <input 
+                        type="number" 
+                        min="0"
+                        step="0.01"
+                        value={fee.amount || 0} 
+                        onChange={(e) => {
+                          const newFees = [...formData.miscFees];
+                          newFees[idx].amount = parseFloat(e.target.value) || 0;
+                          setFormData({ ...formData, miscFees: newFees });
+                        }}
+                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
+                      />
+                    </div>
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        const newFees = formData.miscFees.filter((_, i) => i !== idx);
+                        setFormData({ ...formData, miscFees: newFees });
+                      }}
+                      style={{ padding: '8px 12px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '8px' }}>
               <input 
                 type="checkbox" 
@@ -1769,6 +1860,36 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                             />
                           </div>
                         </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Finish</label>
+                            <input 
+                              type="text" 
+                              value={product.finish || ''} 
+                              onChange={(e) => {
+                                const newSections = JSON.parse(JSON.stringify(sections));
+                                newSections[sectionIdx].products[productIdx].finish = e.target.value;
+                                setSections(newSections);
+                              }}
+                              placeholder="e.g., Walnut, Black, etc."
+                              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: '#111827', fontFamily: "'Inter', sans-serif" }} 
+                            />
+                          </div>
+                          <div>
+                            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Size</label>
+                            <input 
+                              type="text" 
+                              value={product.size || ''} 
+                              onChange={(e) => {
+                                const newSections = JSON.parse(JSON.stringify(sections));
+                                newSections[sectionIdx].products[productIdx].size = e.target.value;
+                                setSections(newSections);
+                              }}
+                              placeholder="e.g., 24x24, Large, etc."
+                              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: '#111827', fontFamily: "'Inter', sans-serif" }} 
+                            />
+                          </div>
+                        </div>
                         <div>
                           <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Supplier</label>
                           <input 
@@ -1892,10 +2013,20 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefresh
 }
 
 function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitability, isPublicView = false, isClientView = false }) {
+  // Double-check if we're on a client route (safety check)
+  const checkClientRoute = () => {
+    if (typeof window === 'undefined') return false;
+    const pathname = window.location.pathname;
+    return /^\/client\//.test(pathname);
+  };
+  const isOnClientRoute = checkClientRoute();
+  // Ensure isClientView is true if on client route
+  const actualIsClientView = isClientView || isOnClientRoute;
+  
   // Debug: Check if customRentalMultiplier is in the proposal
   console.log('ViewProposalView - proposal.customRentalMultiplier:', proposal.customRentalMultiplier);
   console.log('ViewProposalView - All proposal keys:', Object.keys(proposal));
-  console.log('ViewProposalView - isClientView:', isClientView, 'isPublicView:', isPublicView);
+  console.log('ViewProposalView - isClientView:', isClientView, 'isPublicView:', isPublicView, 'isOnClientRoute:', isOnClientRoute, 'actualIsClientView:', actualIsClientView);
   
   const rawSections = JSON.parse(proposal.sectionsJSON || '[]');
   
@@ -1955,6 +2086,60 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
   
   const handlePrintDownload = () => {
     window.print();
+  };
+  
+  const handleExportSourcing = () => {
+    // Collect all products that need purchase
+    const sourcingItems = [];
+    sections.forEach(section => {
+      section.products.forEach(product => {
+        if (product.needsPurchase === true || product.needsPurchase === 'true') {
+          const purchaseQty = parseFloat(product.purchaseQuantity) || 0;
+          const totalQty = parseFloat(product.quantity) || 0;
+          
+          sourcingItems.push({
+            productName: product.name || '',
+            qtyToSource: purchaseQty,
+            totalQtyOnOrder: totalQty,
+            supplier: product.supplier || '',
+            url: product.productUrl || '',
+            clientName: proposal.clientName || '',
+            projectDate: formatDateRange(proposal) || ''
+          });
+        }
+      });
+    });
+    
+    if (sourcingItems.length === 0) {
+      alert('No items marked as "Needs Purchase" found in this proposal.');
+      return;
+    }
+    
+    // Create CSV content (Excel can open CSV files)
+    const headers = ['Product Name', '# to Source', 'Total # on Order', 'Supplier', 'URL', 'Client Name', 'Project Date'];
+    const csvRows = [
+      headers.join(','),
+      ...sourcingItems.map(item => [
+        `"${item.productName.replace(/"/g, '""')}"`,
+        item.qtyToSource,
+        item.totalQtyOnOrder,
+        `"${item.supplier.replace(/"/g, '""')}"`,
+        `"${item.url.replace(/"/g, '""')}"`,
+        `"${item.clientName.replace(/"/g, '""')}"`,
+        `"${item.projectDate.replace(/"/g, '""')}"`
+      ].join(','))
+    ];
+    
+    const csvContent = csvRows.join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' }); // BOM for Excel UTF-8
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `Sourcing_${proposal.clientName?.replace(/[^a-z0-9]/gi, '_') || 'Proposal'}_${proposal.projectNumber || 'New'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
   
   // Calculate profitability metrics
@@ -2326,27 +2511,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
       ` }} />
 
       <div className="no-print" style={{ position: 'fixed', top: 0, left: 0, right: 0, backgroundColor: 'white', borderBottom: '1px solid #e5e7eb', zIndex: 1000, padding: '16px 24px' }}>
-        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
-          {!isPublicView && !isClientView && (
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: actualIsClientView ? 'flex-end' : 'space-between', alignItems: 'center', gap: '12px' }}>
+          {!isPublicView && !actualIsClientView && (
             <button onClick={onBack} style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px' }}>
               ← Back to Dashboard
             </button>
           )}
-          {isClientView && (
-            <a 
-              href={CLIENT_PORTAL_URL}
-              style={{ color: '#6b7280', background: 'none', border: 'none', cursor: 'pointer', fontSize: '14px', textDecoration: 'none' }}
-            >
-              ← Back to Dashboard
-            </a>
-          )}
-          {isPublicView && !isClientView && (
+          {isPublicView && !actualIsClientView && (
             <div style={{ fontSize: '14px', color: '#6b7280', fontWeight: '500' }}>
               Proposal View
             </div>
           )}
           <div style={{ display: 'flex', gap: '12px' }}>
-            {!isPublicView && !isClientView && (
+            {!isPublicView && !actualIsClientView && (
               <button 
                 onClick={() => {
                   // Generate client-specific URL using client domain: maykerevents.com/client/:projectNumber/:version
@@ -2372,14 +2549,19 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 Copy Shareable Link
               </button>
             )}
-            {onEdit && !isClientView && (
+            {onEdit && !actualIsClientView && (
               <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
                 Edit
               </button>
             )}
-            {onViewProfitability && !isClientView && (
+            {onViewProfitability && !actualIsClientView && (
               <button onClick={onViewProfitability} style={{ padding: '8px 20px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
                 View Profitability
+              </button>
+            )}
+            {!actualIsClientView && (
+              <button onClick={handleExportSourcing} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+                Export Sourcing
               </button>
             )}
             <button onClick={handlePrintDownload} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
@@ -3560,7 +3742,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     salesLead: proposal.salesLead || '',
     status: proposal.status || 'Pending',
     projectNumber: proposal.projectNumber || '',
-    taxExempt: proposal.taxExempt === true || proposal.taxExempt === 'true'
+    taxExempt: proposal.taxExempt === true || proposal.taxExempt === 'true',
+    chargeMiscFees: proposal.chargeMiscFees === true || proposal.chargeMiscFees === 'true' || false,
+    miscFees: proposal.miscFees ? JSON.parse(proposal.miscFees) : []
   });
   const [sections, setSections] = useState(() => {
     const parsed = JSON.parse(proposal.sectionsJSON || '[]');
@@ -3607,6 +3791,12 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             }
             if (!('productUrl' in productWithFields)) {
               productWithFields.productUrl = '';
+            }
+            if (!('finish' in productWithFields)) {
+              productWithFields.finish = '';
+            }
+            if (!('size' in productWithFields)) {
+              productWithFields.size = '';
             }
             return productWithFields;
           })
@@ -3655,7 +3845,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
 
   const handleAddProduct = (sectionIdx) => {
     const newSections = JSON.parse(JSON.stringify(sections));
-    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0, supplier: '', productUrl: '' });
+    newSections[sectionIdx].products.push({ name: '', quantity: 1, price: 0, imageUrl: '', dimensions: '', note: '', needsPurchase: false, purchaseQuantity: 0, oopCost: 0, supplier: '', productUrl: '', finish: '', size: '' });
     setSections(newSections);
   };
 
@@ -3675,7 +3865,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         purchaseQuantity: existingProduct.purchaseQuantity || 0,
         oopCost: existingProduct.oopCost || 0,
         supplier: existingProduct.supplier || '',
-        productUrl: existingProduct.productUrl || ''
+        productUrl: existingProduct.productUrl || '',
+        finish: existingProduct.finish || '',
+        size: existingProduct.size || ''
       };
     } else {
       // Different product - preserve note and profitability fields from existing product
@@ -3687,7 +3879,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         purchaseQuantity: existingProduct?.purchaseQuantity || 0,
         oopCost: existingProduct?.oopCost || 0,
         supplier: existingProduct?.supplier || '',
-        productUrl: existingProduct?.productUrl || ''
+        productUrl: existingProduct?.productUrl || '',
+        finish: existingProduct?.finish || '',
+        size: existingProduct?.size || ''
       };
     }
     setSections(newSections);
@@ -4015,7 +4209,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
             purchaseQuantity: product.purchaseQuantity || 0,
             oopCost: product.oopCost || 0,
             supplier: product.supplier || '',
-            productUrl: product.productUrl || ''
+            productUrl: product.productUrl || '',
+            finish: product.finish || '',
+            size: product.size || ''
           };
         })
       };
@@ -4061,7 +4257,9 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
       // Explicitly include waiver flags for immediate use
       waiveProductCare: formData.waiveProductCare || false,
       waiveServiceFee: formData.waiveServiceFee || false,
-      taxExempt: formData.taxExempt || false
+      taxExempt: formData.taxExempt || false,
+      chargeMiscFees: formData.chargeMiscFees || false,
+      miscFees: formData.chargeMiscFees ? JSON.stringify(formData.miscFees || []) : '[]'
     };
     
     // Debug: Log the customRentalMultiplier being saved
@@ -4684,4 +4882,3 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     </div>
   );
 }
-
