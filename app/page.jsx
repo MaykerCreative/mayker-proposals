@@ -242,15 +242,21 @@ function calculateDetailedTotals(proposal) {
   
   // Calculate miscellaneous fees
   let miscFeesTotal = 0;
-  if (proposal.chargeMiscFees === true || proposal.chargeMiscFees === 'true' || String(proposal.chargeMiscFees || '').toLowerCase() === 'true') {
-    try {
-      const miscFees = typeof proposal.miscFees === 'string' ? JSON.parse(proposal.miscFees) : (proposal.miscFees || []);
-      if (Array.isArray(miscFees)) {
-        miscFeesTotal = miscFees.reduce((sum, fee) => sum + (parseFloat(fee.amount) || 0), 0);
-      }
-    } catch (e) {
-      console.warn('Error parsing miscFees:', e);
+  try {
+    const miscFees = typeof proposal.miscFees === 'string' ? JSON.parse(proposal.miscFees) : (proposal.miscFees || []);
+    if (Array.isArray(miscFees)) {
+      // Sum only checked fees (or all fees if checked property doesn't exist for backward compatibility)
+      miscFeesTotal = miscFees.reduce((sum, fee) => {
+        // If fee has checked property, only count if checked is true
+        // Otherwise count all fees (backward compatibility)
+        if (fee.hasOwnProperty('checked')) {
+          return fee.checked ? sum + (parseFloat(fee.amount) || 0) : sum;
+        }
+        return sum + (parseFloat(fee.amount) || 0);
+      }, 0);
     }
+  } catch (e) {
+    console.warn('Error parsing miscFees:', e);
   }
   
   const subtotal = rentalTotal + productCare + serviceFee + delivery + miscFeesTotal;
@@ -1345,8 +1351,13 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
     status: 'Pending',
     projectNumber: '',
     taxExempt: false,
-    chargeMiscFees: false,
-    miscFees: []
+    miscFees: [
+      { name: 'Rush Fee', amount: 500, checked: false },
+      { name: 'Late Night Pick-Up', amount: 500, checked: false },
+      { name: 'Early Morning Delivery', amount: 500, checked: false },
+      { name: 'Difficult Delivery', amount: 500, checked: false },
+      { name: 'Holiday', amount: 1000, checked: false }
+    ]
   });
   const [sections, setSections] = useState([{ name: '', products: [], type: 'products' }]);
 
@@ -1511,14 +1522,13 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       waiveProductCare: formData.waiveProductCare || false,
       waiveServiceFee: formData.waiveServiceFee || false,
       taxExempt: formData.taxExempt || false,
-      chargeMiscFees: formData.chargeMiscFees || false,
-      miscFees: formData.chargeMiscFees && formData.miscFees && formData.miscFees.length > 0 ? JSON.stringify(formData.miscFees) : '[]'
+      miscFees: formData.miscFees && formData.miscFees.length > 0 ? JSON.stringify(formData.miscFees.filter(f => f.checked)) : '[]'
     };
     
     // Debug: Log miscFees being saved
     console.log('CreateProposalView - Saving miscFees:', {
-      chargeMiscFees: formData.chargeMiscFees,
       miscFees: formData.miscFees,
+      checkedFees: formData.miscFees ? formData.miscFees.filter(f => f.checked) : [],
       stringified: finalData.miscFees
     });
     
@@ -1645,76 +1655,44 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                 <option value="true">Waive</option>
               </select>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Charge Miscellaneous Fees</label>
-              <select name="chargeMiscFees" value={formData.chargeMiscFees ? 'true' : 'false'} onChange={(e) => {
-                const value = e.target.value === 'true';
-                setFormData({ ...formData, chargeMiscFees: value, miscFees: value ? (formData.miscFees || []) : [] });
-              }} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
-            </div>
-            {formData.chargeMiscFees && (
-              <div style={{ gridColumn: '1 / -1', marginTop: '12px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <label style={{ fontSize: '14px', fontWeight: '600', color: '#374151' }}>Miscellaneous Fees</label>
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      const newFees = [...(formData.miscFees || []), { name: '', amount: 0 }];
-                      setFormData({ ...formData, miscFees: newFees });
-                    }}
-                    style={{ padding: '6px 12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
-                  >
-                    + Add Fee
-                  </button>
-                </div>
-                {(formData.miscFees || []).map((fee, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Fee Name</label>
-                      <input 
-                        type="text" 
-                        value={fee.name || ''} 
-                        onChange={(e) => {
-                          const newFees = [...formData.miscFees];
-                          newFees[idx].name = e.target.value;
+            <div style={{ gridColumn: '1 / -1', marginTop: '12px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <label style={{ display: 'block', fontSize: '14px', fontWeight: '600', marginBottom: '12px', color: '#374151' }}>Miscellaneous Fees</label>
+              {[
+                { name: 'Rush Fee', amount: 500 },
+                { name: 'Late Night Pick-Up', amount: 500 },
+                { name: 'Early Morning Delivery', amount: 500 },
+                { name: 'Difficult Delivery', amount: 500 },
+                { name: 'Holiday', amount: 1000 }
+              ].map((fee) => {
+                const feeKey = fee.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const isChecked = formData.miscFees && formData.miscFees.some(f => f.name === fee.name && f.checked);
+                return (
+                  <div key={feeKey} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={isChecked || false}
+                      onChange={(e) => {
+                        const currentFees = formData.miscFees || [];
+                        if (e.target.checked) {
+                          // Add fee if checked
+                          const newFees = currentFees.filter(f => f.name !== fee.name);
+                          newFees.push({ name: fee.name, amount: fee.amount, checked: true });
                           setFormData({ ...formData, miscFees: newFees });
-                        }}
-                        placeholder="e.g., Setup Fee, Rush Fee"
-                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '500', marginBottom: '4px', color: '#6b7280' }}>Amount ($)</label>
-                      <input 
-                        type="number" 
-                        min="0"
-                        step="0.01"
-                        value={fee.amount || 0} 
-                        onChange={(e) => {
-                          const newFees = [...formData.miscFees];
-                          newFees[idx].amount = parseFloat(e.target.value) || 0;
+                        } else {
+                          // Remove fee if unchecked
+                          const newFees = currentFees.filter(f => f.name !== fee.name);
                           setFormData({ ...formData, miscFees: newFees });
-                        }}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }} 
-                      />
-                    </div>
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        const newFees = formData.miscFees.filter((_, i) => i !== idx);
-                        setFormData({ ...formData, miscFees: newFees });
+                        }
                       }}
-                      style={{ padding: '8px 12px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
-                    >
-                      Remove
-                    </button>
+                      style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    <label style={{ fontSize: '14px', color: '#374151', cursor: 'pointer', flex: 1 }}>
+                      {fee.name}: ${fee.amount.toLocaleString()}
+                    </label>
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '8px' }}>
               <input 
                 type="checkbox" 
@@ -3066,30 +3044,35 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                         try {
                           const miscFees = typeof proposal.miscFees === 'string' ? JSON.parse(proposal.miscFees) : (proposal.miscFees || []);
                           if (Array.isArray(miscFees) && miscFees.length > 0) {
-                            return (
-                              <>
-                                {miscFees.map((fee, idx) => (
-                                  <tr key={`misc-fee-${idx}`}>
-                                    <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
-                                      {fee.name || 'Miscellaneous Fee'}
-                                    </td>
-                                    <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                                      ${formatNumber(parseFloat(fee.amount) || 0)}
-                                    </td>
-                                  </tr>
-                                ))}
-                              </>
-                            );
+                            // Filter to only show checked fees (or all if checked property doesn't exist for backward compatibility)
+                            const checkedFees = miscFees.filter(fee => {
+                              if (fee.hasOwnProperty('checked')) {
+                                return fee.checked !== false;
+                              }
+                              return true; // Backward compatibility - show all if no checked property
+                            });
+                            
+                            if (checkedFees.length > 0) {
+                              return (
+                                <>
+                                  {checkedFees.map((fee, idx) => (
+                                    <tr key={`misc-fee-${idx}`}>
+                                      <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>
+                                        {fee.name || 'Miscellaneous Fee'}
+                                      </td>
+                                      <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                                        ${formatNumber(parseFloat(fee.amount) || 0)}
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </>
+                              );
+                            }
                           }
                         } catch (e) {
                           console.warn('Error parsing miscFees for display:', e);
                         }
-                        return (
-                          <tr>
-                            <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Miscellaneous Fees</td>
-                            <td style={{ padding: '6px 0', fontSize: '11px', color: brandCharcoal, textAlign: 'right', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>${formatNumber(totals.miscFees)}</td>
-                          </tr>
-                        );
+                        return null;
                       })()}
                       <tr style={{ borderTop: '1px solid #e5e7eb' }}>
                         <td style={{ padding: '6px 0', fontSize: '11px', color: '#666', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", textAlign: 'left' }}>Subtotal</td>
@@ -3811,21 +3794,40 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
     status: proposal.status || 'Pending',
     projectNumber: proposal.projectNumber || '',
     taxExempt: proposal.taxExempt === true || proposal.taxExempt === 'true',
-    chargeMiscFees: proposal.chargeMiscFees === true || proposal.chargeMiscFees === 'true' || (proposal.miscFees && proposal.miscFees !== '[]' && proposal.miscFees !== ''),
     miscFees: (() => {
-      if (!proposal.miscFees || proposal.miscFees === '[]' || proposal.miscFees === '') return [];
+      // Predefined fees with their amounts
+      const predefinedFees = [
+        { name: 'Rush Fee', amount: 500 },
+        { name: 'Late Night Pick-Up', amount: 500 },
+        { name: 'Early Morning Delivery', amount: 500 },
+        { name: 'Difficult Delivery', amount: 500 },
+        { name: 'Holiday', amount: 1000 }
+      ];
+      
+      if (!proposal.miscFees || proposal.miscFees === '[]' || proposal.miscFees === '') {
+        return predefinedFees.map(fee => ({ ...fee, checked: false }));
+      }
+      
       try {
+        let savedFees = [];
         if (typeof proposal.miscFees === 'string') {
-          const parsed = JSON.parse(proposal.miscFees);
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            return parsed;
-          }
-          return [];
+          savedFees = JSON.parse(proposal.miscFees);
+        } else if (Array.isArray(proposal.miscFees)) {
+          savedFees = proposal.miscFees;
         }
-        return Array.isArray(proposal.miscFees) ? proposal.miscFees : [];
+        
+        // Map predefined fees and mark as checked if they exist in saved fees
+        return predefinedFees.map(fee => {
+          const savedFee = savedFees.find(f => f.name === fee.name);
+          return {
+            name: fee.name,
+            amount: fee.amount,
+            checked: savedFee ? (savedFee.checked !== false) : false
+          };
+        });
       } catch (e) {
         console.warn('Error parsing miscFees:', e, 'Raw value:', proposal.miscFees);
-        return [];
+        return predefinedFees.map(fee => ({ ...fee, checked: false }));
       }
     })()
   });
@@ -4545,76 +4547,44 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 <option value="true">Waive</option>
               </select>
             </div>
-            <div>
-              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Charge Miscellaneous Fees</label>
-              <select name="chargeMiscFees" value={formData.chargeMiscFees ? 'true' : 'false'} onChange={(e) => {
-                const value = e.target.value === 'true';
-                setFormData({ ...formData, chargeMiscFees: value, miscFees: value ? (formData.miscFees || []) : [] });
-              }} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", transition: 'border-color 0.2s' }}>
-                <option value="false">No</option>
-                <option value="true">Yes</option>
-              </select>
-            </div>
-            {formData.chargeMiscFees && (
-              <div style={{ gridColumn: '1 / -1', marginTop: '12px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <label style={{ fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Miscellaneous Fees</label>
-                  <button 
-                    type="button"
-                    onClick={() => {
-                      const newFees = [...(formData.miscFees || []), { name: '', amount: 0 }];
-                      setFormData({ ...formData, miscFees: newFees });
-                    }}
-                    style={{ padding: '6px 12px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
-                  >
-                    + Add Fee
-                  </button>
-                </div>
-                {(formData.miscFees || []).map((fee, idx) => (
-                  <div key={idx} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr auto', gap: '12px', marginBottom: '12px', alignItems: 'end' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '4px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Fee Name</label>
-                      <input 
-                        type="text" 
-                        value={fee.name || ''} 
-                        onChange={(e) => {
-                          const newFees = [...formData.miscFees];
-                          newFees[idx].name = e.target.value;
+            <div style={{ gridColumn: '1 / -1', marginTop: '12px', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+              <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '12px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Miscellaneous Fees</label>
+              {[
+                { name: 'Rush Fee', amount: 500 },
+                { name: 'Late Night Pick-Up', amount: 500 },
+                { name: 'Early Morning Delivery', amount: 500 },
+                { name: 'Difficult Delivery', amount: 500 },
+                { name: 'Holiday', amount: 1000 }
+              ].map((fee) => {
+                const feeKey = fee.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+                const isChecked = formData.miscFees && formData.miscFees.some(f => f.name === fee.name && f.checked);
+                return (
+                  <div key={feeKey} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                    <input 
+                      type="checkbox" 
+                      checked={isChecked || false}
+                      onChange={(e) => {
+                        const currentFees = formData.miscFees || [];
+                        if (e.target.checked) {
+                          // Add fee if checked
+                          const newFees = currentFees.filter(f => f.name !== fee.name);
+                          newFees.push({ name: fee.name, amount: fee.amount, checked: true });
                           setFormData({ ...formData, miscFees: newFees });
-                        }}
-                        placeholder="e.g., Setup Fee, Rush Fee"
-                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
-                      />
-                    </div>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '500', marginBottom: '4px', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Amount ($)</label>
-                      <input 
-                        type="number" 
-                        min="0"
-                        step="0.01"
-                        value={fee.amount || 0} 
-                        onChange={(e) => {
-                          const newFees = [...formData.miscFees];
-                          newFees[idx].amount = parseFloat(e.target.value) || 0;
+                        } else {
+                          // Remove fee if unchecked
+                          const newFees = currentFees.filter(f => f.name !== fee.name);
                           setFormData({ ...formData, miscFees: newFees });
-                        }}
-                        style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }} 
-                      />
-                    </div>
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        const newFees = formData.miscFees.filter((_, i) => i !== idx);
-                        setFormData({ ...formData, miscFees: newFees });
+                        }
                       }}
-                      style={{ padding: '8px 12px', backgroundColor: '#ef4444', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: '500' }}
-                    >
-                      Remove
-                    </button>
+                      style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                    />
+                    <label style={{ fontSize: '11px', color: '#374151', cursor: 'pointer', flex: 1, fontFamily: "'Inter', sans-serif" }}>
+                      {fee.name}: ${fee.amount.toLocaleString()}
+                    </label>
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '8px' }}>
               <input 
                 type="checkbox" 
