@@ -15,7 +15,7 @@ function getLogoPath(filename) {
   // Try assets folder first (if files are there)
   // Then try root public folder (if files are there)
   // This handles different deployment scenarios
-  const basePath = window.location.origin;
+  const basePath = typeof window !== 'undefined' ? window.location.origin : '';
   const paths = [
     `/assets/${filename}`,  // If in public/assets/
     `/${filename}`,          // If in public/ root
@@ -411,6 +411,10 @@ export default function ProposalApp() {
 
   // Helper function to detect and parse client routes
   const parseClientRoute = () => {
+    // Check if window is available (client-side only)
+    if (typeof window === 'undefined') {
+      return { isClientRoute: false, projectNumber: null, version: null };
+    }
     const pathname = window.location.pathname;
     // Check if pathname matches /client/:projectNumber pattern
     const clientRouteMatch = pathname.match(/^\/client\/([^\/]+)(?:\/(\d+))?$/);
@@ -425,6 +429,9 @@ export default function ProposalApp() {
   };
 
   useEffect(() => {
+    // Only run on client-side
+    if (typeof window === 'undefined') return;
+    
     // Check if we're on a client route first
     const clientRouteInfo = parseClientRoute();
     setIsClientRoute(clientRouteInfo.isClientRoute);
@@ -471,6 +478,9 @@ export default function ProposalApp() {
   
   // Handle URL parameters to open specific proposal - runs when proposals load and when loading completes
   useEffect(() => {
+    // Only run on client-side
+    if (typeof window === 'undefined') return;
+    
     // Only process URL params if we're not loading and have proposals
     if (loading || proposals.length === 0) {
       return;
@@ -602,25 +612,30 @@ export default function ProposalApp() {
         }
         
         // After loading completes, check URL params if they exist (for direct links)
-        const clientRouteInfo = parseClientRoute();
-        const params = new URLSearchParams(window.location.search);
-        let projectNumberParam = params.get('projectNumber');
-        let versionParam = params.get('version');
-        
-        // If on client route, use pathname params instead of query params
-        if (clientRouteInfo.isClientRoute) {
-          projectNumberParam = clientRouteInfo.projectNumber;
-          versionParam = clientRouteInfo.version;
+        // Only check on client-side
+        let projectNumberParam = null;
+        let versionParam = null;
+        if (typeof window !== 'undefined') {
+          const clientRouteInfo = parseClientRoute();
+          const params = new URLSearchParams(window.location.search);
+          projectNumberParam = params.get('projectNumber');
+          versionParam = params.get('version');
+          
+          // If on client route, use pathname params instead of query params
+          if (clientRouteInfo.isClientRoute) {
+            projectNumberParam = clientRouteInfo.projectNumber;
+            versionParam = clientRouteInfo.version;
+          }
+          
+          console.log('📋 Proposals loaded, checking URL params:', { 
+            projectNumber: projectNumberParam, 
+            version: versionParam,
+            isClientRoute: clientRouteInfo.isClientRoute,
+            proposalsCount: sortedProposals.length,
+            hasSelectedProposal: !!selectedProposal,
+            isUpdateSelected: updateSelected
+          });
         }
-        
-        console.log('📋 Proposals loaded, checking URL params:', { 
-          projectNumber: projectNumberParam, 
-          version: versionParam,
-          isClientRoute: clientRouteInfo.isClientRoute,
-          proposalsCount: sortedProposals.length,
-          hasSelectedProposal: !!selectedProposal,
-          isUpdateSelected: updateSelected
-        });
         
         if (projectNumberParam && !updateSelected) {
           // Find proposal immediately
@@ -712,15 +727,18 @@ export default function ProposalApp() {
   });
 
   // Enforce client route restrictions - prevent dashboard access on client routes
-  const clientRouteInfo = parseClientRoute();
+  // Only check on client-side to avoid SSR errors
+  const clientRouteInfo = typeof window !== 'undefined' ? parseClientRoute() : { isClientRoute: false, projectNumber: null, version: null };
   
   // PROTECT ROOT URL - Prevent unauthorized access to dashboard
-  const isRootPath = window.location.pathname === '/' || window.location.pathname === '';
-  const params = new URLSearchParams(window.location.search);
-  const hasAdminAccess = params.get('admin') === 'true' || params.get('admin') === '1';
+  // Only check on client-side
+  const isRootPath = typeof window !== 'undefined' ? (window.location.pathname === '/' || window.location.pathname === '') : false;
+  const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const hasAdminAccess = typeof window !== 'undefined' ? (params.get('admin') === 'true' || params.get('admin') === '1') : false;
   
   // If accessing root without admin access and not on a client route, block access
-  if (isRootPath && !hasAdminAccess && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
+  // Only enforce on client-side (after initial render)
+  if (typeof window !== 'undefined' && isRootPath && !hasAdminAccess && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
     return (
       <div style={{ 
         minHeight: '100vh', 
@@ -839,22 +857,24 @@ export default function ProposalApp() {
     };
     
     // Check if this is a public view (for client sharing) or client-facing view
-    const clientRouteInfo = parseClientRoute();
-    const params = new URLSearchParams(window.location.search);
+    const clientRouteInfo = typeof window !== 'undefined' ? parseClientRoute() : { isClientRoute: false, projectNumber: null, version: null };
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
     const isPublicView = params.get('public') === 'true';
     // Client view is true if on client route OR if clientView param is set
     const isClientView = clientRouteInfo.isClientRoute || params.get('clientView') === 'true' || params.get('fromClientPortal') === 'true';
     
-    // Debug logging
-    console.log('🔍 Client view detection:', {
-      isClientRoute: clientRouteInfo.isClientRoute,
-      clientViewParam: params.get('clientView'),
-      fromClientPortalParam: params.get('fromClientPortal'),
-      isClientView,
-      referrer: document.referrer,
-      fullURL: window.location.href,
-      pathname: window.location.pathname
-    });
+    // Debug logging (only on client-side)
+    if (typeof window !== 'undefined') {
+      console.log('🔍 Client view detection:', {
+        isClientRoute: clientRouteInfo.isClientRoute,
+        clientViewParam: params.get('clientView'),
+        fromClientPortalParam: params.get('fromClientPortal'),
+        isClientView,
+        referrer: typeof document !== 'undefined' ? document.referrer : '',
+        fullURL: window.location.href,
+        pathname: window.location.pathname
+      });
+    }
     
     const handleBack = () => {
       if (isClientView) {
@@ -969,10 +989,11 @@ export default function ProposalApp() {
   }
 
   // Final check: If on root without admin access, block dashboard
-  const finalCheckParams = new URLSearchParams(window.location.search);
-  const finalHasAdminAccess = finalCheckParams.get('admin') === 'true' || finalCheckParams.get('admin') === '1';
-  const finalIsRootPath = window.location.pathname === '/' || window.location.pathname === '';
-  if (finalIsRootPath && !finalHasAdminAccess && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
+  // Only check on client-side
+  const finalCheckParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const finalHasAdminAccess = typeof window !== 'undefined' ? (finalCheckParams.get('admin') === 'true' || finalCheckParams.get('admin') === '1') : false;
+  const finalIsRootPath = typeof window !== 'undefined' ? (window.location.pathname === '/' || window.location.pathname === '') : false;
+  if (typeof window !== 'undefined' && finalIsRootPath && !finalHasAdminAccess && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
     return (
       <div style={{ 
         minHeight: '100vh', 
