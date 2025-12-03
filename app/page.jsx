@@ -2089,6 +2089,22 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
   };
   
   const handleExportSourcing = () => {
+    // Helper function to calculate departure date (day before start date)
+    const getDepartureDate = () => {
+      const start = parseDateSafely(proposal.startDate);
+      if (!start) return '';
+      
+      // Subtract one day
+      const departureDate = new Date(start);
+      departureDate.setDate(departureDate.getDate() - 1);
+      
+      const month = departureDate.toLocaleDateString('en-US', { month: 'long' });
+      const day = departureDate.getDate();
+      const year = departureDate.getFullYear();
+      
+      return `${month} ${day}, ${year}`;
+    };
+    
     // Collect all products that need purchase
     const sourcingItems = [];
     sections.forEach(section => {
@@ -2102,9 +2118,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
             qtyToSource: purchaseQty,
             totalQtyOnOrder: totalQty,
             supplier: product.supplier || '',
-            url: product.productUrl || '',
-            clientName: proposal.clientName || '',
-            projectDate: formatDateRange(proposal) || ''
+            supplierProductLink: product.productUrl || '',
+            finish: product.finish || '',
+            size: product.size || '',
+            client: proposal.clientName?.replace(/\s*\(V\d+\)\s*$/, '') || '',
+            projectDate: formatDateRange(proposal) || '',
+            departureDate: getDepartureDate()
           });
         }
       });
@@ -2116,7 +2135,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
     }
     
     // Create CSV content (Excel can open CSV files)
-    const headers = ['Product Name', '# to Source', 'Total # on Order', 'Supplier', 'URL', 'Client Name', 'Project Date'];
+    const headers = ['Product Name', '# to Source', 'Total # on Order', 'Supplier', 'Supplier Product Link', 'Finish', 'Size', 'Client', 'Project Date', 'Project Departure Date'];
     const csvRows = [
       headers.join(','),
       ...sourcingItems.map(item => [
@@ -2124,9 +2143,12 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
         item.qtyToSource,
         item.totalQtyOnOrder,
         `"${item.supplier.replace(/"/g, '""')}"`,
-        `"${item.url.replace(/"/g, '""')}"`,
-        `"${item.clientName.replace(/"/g, '""')}"`,
-        `"${item.projectDate.replace(/"/g, '""')}"`
+        `"${item.supplierProductLink.replace(/"/g, '""')}"`,
+        `"${item.finish.replace(/"/g, '""')}"`,
+        `"${item.size.replace(/"/g, '""')}"`,
+        `"${item.client.replace(/"/g, '""')}"`,
+        `"${item.projectDate.replace(/"/g, '""')}"`,
+        `"${item.departureDate.replace(/"/g, '""')}"`
       ].join(','))
     ];
     
@@ -2135,7 +2157,13 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `Sourcing_${proposal.clientName?.replace(/[^a-z0-9]/gi, '_') || 'Proposal'}_${proposal.projectNumber || 'New'}.csv`);
+    
+    // Format filename: "Client Name - Product Plan - Project Date"
+    const clientName = proposal.clientName?.replace(/\s*\(V\d+\)\s*$/, '').replace(/[^a-z0-9\s-]/gi, '') || 'Proposal';
+    const projectDate = formatDateRange(proposal).replace(/[^a-z0-9\s-]/gi, '') || 'Date';
+    const filename = `${clientName} - Product Plan - ${projectDate}.csv`;
+    
+    link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
