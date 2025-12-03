@@ -1357,7 +1357,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
       { name: 'Early Morning Delivery', amount: 500, checked: false },
       { name: 'Difficult Delivery', amount: 500, checked: false },
       { name: 'Holiday', amount: 1000, checked: false }
-    ]
+    ],
+    customProjectNotes: ''
   });
   const [sections, setSections] = useState([{ name: '', products: [], type: 'products' }]);
 
@@ -1531,7 +1532,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
           stringified: result
         });
         return result;
-      })()
+      })(),
+      customProjectNotes: formData.customProjectNotes || ''
     };
     
     // Debug: Log the customRentalMultiplier being saved
@@ -1765,6 +1767,17 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
                 <option value="Cancelled">Cancelled</option>
               </select>
             </div>
+          </div>
+          <div style={{ marginTop: '24px' }}>
+            <label style={{ display: 'block', fontSize: '14px', fontWeight: '500', marginBottom: '8px', color: '#374151' }}>Custom Project Notes (Optional)</label>
+            <textarea 
+              name="customProjectNotes" 
+              value={formData.customProjectNotes} 
+              onChange={handleInputChange} 
+              placeholder="Add any custom notes or special instructions for this project..."
+              rows={4}
+              style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif", resize: 'vertical' }} 
+            />
           </div>
         </div>
 
@@ -3142,6 +3155,22 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 </div>
               </div>
               
+              {/* Custom Project Notes Section - Two Column Layout */}
+              {proposal.customProjectNotes && proposal.customProjectNotes.trim() && (
+                <div style={{ paddingTop: '30px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
+                  <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
+                      Custom Project Notes
+                    </h2>
+                  </div>
+                  <div style={{ flex: '1', minWidth: 0 }}>
+                    <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.6', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif", whiteSpace: 'pre-wrap' }}>
+                      {proposal.customProjectNotes}
+                    </p>
+                  </div>
+                </div>
+              )}
+              
               {/* Confirmation and Payment Section - Two Column Layout */}
               <div style={{ paddingTop: '30px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
                 <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
@@ -3855,7 +3884,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         console.warn('Error parsing miscFees:', e, 'Raw value:', proposal.miscFees);
         return predefinedFees.map(fee => ({ ...fee, checked: false }));
       }
-    })()
+    })(),
+    customProjectNotes: proposal.customProjectNotes || ''
   });
   const [sections, setSections] = useState(() => {
     const parsed = JSON.parse(proposal.sectionsJSON || '[]');
@@ -4384,7 +4414,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
           stringified: result
         });
         return result;
-      })()
+      })(),
+      customProjectNotes: formData.customProjectNotes || ''
     };
     
     // Debug: Log the customRentalMultiplier being saved
@@ -4699,6 +4730,17 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
                 <option value="Cancelled">Cancelled</option>
               </select>
             </div>
+          </div>
+          <div style={{ marginTop: '24px' }}>
+            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>Custom Project Notes (Optional)</label>
+            <textarea 
+              name="customProjectNotes" 
+              value={formData.customProjectNotes} 
+              onChange={handleInputChange} 
+              placeholder="Add any custom notes or special instructions for this project..."
+              rows={4}
+              style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", resize: 'vertical', transition: 'border-color 0.2s' }} 
+            />
           </div>
         </div>
 
