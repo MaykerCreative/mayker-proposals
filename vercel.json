@@ -1,4 +1,4 @@
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": ".next"
-}
+   cd "Mayker Proposals"
+   git add vercel.json
+   git commit -m "Add rewrites for client routes"
+   git push
