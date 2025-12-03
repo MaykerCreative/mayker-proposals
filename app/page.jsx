@@ -401,6 +401,7 @@ export default function ProposalApp() {
   const [proposalNotFoundFromURL, setProposalNotFoundFromURL] = useState(false);
   const [urlProjectNumber, setUrlProjectNumber] = useState(null);
   const [urlVersion, setUrlVersion] = useState(null);
+  const [isClientRoute, setIsClientRoute] = useState(false);
   const [filters, setFilters] = useState({
     clientName: '',
     salesLead: '',
@@ -408,16 +409,48 @@ export default function ProposalApp() {
     location: ''
   });
 
+  // Helper function to detect and parse client routes
+  const parseClientRoute = () => {
+    const pathname = window.location.pathname;
+    // Check if pathname matches /client/:projectNumber pattern
+    const clientRouteMatch = pathname.match(/^\/client\/([^\/]+)(?:\/(\d+))?$/);
+    if (clientRouteMatch) {
+      return {
+        isClientRoute: true,
+        projectNumber: clientRouteMatch[1],
+        version: clientRouteMatch[2] ? parseInt(clientRouteMatch[2], 10) : null
+      };
+    }
+    return { isClientRoute: false, projectNumber: null, version: null };
+  };
+
   useEffect(() => {
+    // Check if we're on a client route first
+    const clientRouteInfo = parseClientRoute();
+    setIsClientRoute(clientRouteInfo.isClientRoute);
+    
     // Log URL on initial load for debugging
     const initialParams = new URLSearchParams(window.location.search);
-    const initialProjectNumber = initialParams.get('projectNumber');
-    const initialVersion = initialParams.get('version');
-    console.log('🔍 Initial page load - URL params:', { 
-      projectNumber: initialProjectNumber, 
-      version: initialVersion,
-      fullURL: window.location.href 
-    });
+    let initialProjectNumber = initialParams.get('projectNumber');
+    let initialVersion = initialParams.get('version');
+    
+    // If on client route, use pathname params instead of query params
+    if (clientRouteInfo.isClientRoute) {
+      initialProjectNumber = clientRouteInfo.projectNumber;
+      initialVersion = clientRouteInfo.version;
+      console.log('🔍 Client route detected:', { 
+        projectNumber: initialProjectNumber, 
+        version: initialVersion,
+        pathname: window.location.pathname,
+        fullURL: window.location.href 
+      });
+    } else {
+      console.log('🔍 Initial page load - URL params:', { 
+        projectNumber: initialProjectNumber, 
+        version: initialVersion,
+        fullURL: window.location.href 
+      });
+    }
     
     // Store URL params to check later
     if (initialProjectNumber) {
@@ -428,7 +461,10 @@ export default function ProposalApp() {
     
     fetchProposals();
     
-    if (initialParams.get('page') === 'create') {
+    // Prevent creating new proposals on client routes
+    if (clientRouteInfo.isClientRoute) {
+      setIsCreatingNew(false);
+    } else if (initialParams.get('page') === 'create') {
       setIsCreatingNew(true);
     }
   }, []);
@@ -440,12 +476,22 @@ export default function ProposalApp() {
       return;
     }
     
-    const params = new URLSearchParams(window.location.search);
-    const projectNumberParam = params.get('projectNumber');
-    const versionParam = params.get('version');
+    // Check if we're on a client route
+    const clientRouteInfo = parseClientRoute();
+    setIsClientRoute(clientRouteInfo.isClientRoute);
     
-    // Skip if we're creating a new proposal
-    if (isCreatingNew) {
+    const params = new URLSearchParams(window.location.search);
+    let projectNumberParam = params.get('projectNumber');
+    let versionParam = params.get('version');
+    
+    // If on client route, use pathname params instead of query params
+    if (clientRouteInfo.isClientRoute) {
+      projectNumberParam = clientRouteInfo.projectNumber;
+      versionParam = clientRouteInfo.version;
+    }
+    
+    // Skip if we're creating a new proposal (and not on client route)
+    if (isCreatingNew && !clientRouteInfo.isClientRoute) {
       return;
     }
     
@@ -493,12 +539,18 @@ export default function ProposalApp() {
             console.log('✅ Opening proposal from URL:', projectNumberStr, versionNum, proposal);
             
             // Update URL to reflect the selected proposal (without page reload)
-            const urlParams = new URLSearchParams();
-            urlParams.set('projectNumber', projectNumberStr);
-            if (versionNum !== null) {
-              urlParams.set('version', versionNum.toString());
+            // If on client route, maintain the client route format
+            if (clientRouteInfo.isClientRoute) {
+              const clientPath = `/client/${projectNumberStr}${versionNum !== null ? `/${versionNum}` : ''}`;
+              window.history.replaceState({}, '', clientPath);
+            } else {
+              const urlParams = new URLSearchParams();
+              urlParams.set('projectNumber', projectNumberStr);
+              if (versionNum !== null) {
+                urlParams.set('version', versionNum.toString());
+              }
+              window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
             }
-            window.history.replaceState({}, '', `${window.location.pathname}?${urlParams.toString()}`);
             
             return proposal;
           }
@@ -550,13 +602,21 @@ export default function ProposalApp() {
         }
         
         // After loading completes, check URL params if they exist (for direct links)
+        const clientRouteInfo = parseClientRoute();
         const params = new URLSearchParams(window.location.search);
-        const projectNumberParam = params.get('projectNumber');
-        const versionParam = params.get('version');
+        let projectNumberParam = params.get('projectNumber');
+        let versionParam = params.get('version');
+        
+        // If on client route, use pathname params instead of query params
+        if (clientRouteInfo.isClientRoute) {
+          projectNumberParam = clientRouteInfo.projectNumber;
+          versionParam = clientRouteInfo.version;
+        }
         
         console.log('📋 Proposals loaded, checking URL params:', { 
           projectNumber: projectNumberParam, 
           version: versionParam,
+          isClientRoute: clientRouteInfo.isClientRoute,
           proposalsCount: sortedProposals.length,
           hasSelectedProposal: !!selectedProposal,
           isUpdateSelected: updateSelected
@@ -651,10 +711,81 @@ export default function ProposalApp() {
     return matchesSearch && matchesClientName && matchesSalesLead && matchesStatus && matchesLocation;
   });
 
+  // Enforce client route restrictions - prevent dashboard access on client routes
+  const clientRouteInfo = parseClientRoute();
+  
+  // PROTECT ROOT URL - Prevent unauthorized access to dashboard
+  const isRootPath = window.location.pathname === '/' || window.location.pathname === '';
+  const params = new URLSearchParams(window.location.search);
+  const hasAdminAccess = params.get('admin') === 'true' || params.get('admin') === '1';
+  
+  // If accessing root without admin access and not on a client route, block access
+  if (isRootPath && !hasAdminAccess && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        padding: '40px 20px',
+        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
+        backgroundColor: '#fafafa'
+      }}>
+        <div style={{
+          maxWidth: '600px',
+          textAlign: 'center',
+          backgroundColor: 'white',
+          padding: '60px 40px',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{
+            fontSize: '48px',
+            marginBottom: '24px'
+          }}>🔒</div>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: '#2C2C2C',
+            marginBottom: '16px',
+            fontFamily: "'Domaine Text', serif"
+          }}>
+            Access Restricted
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#666',
+            marginBottom: '32px',
+            lineHeight: '1.6'
+          }}>
+            This area is restricted to authorized personnel only.
+          </p>
+          <p style={{
+            fontSize: '14px',
+            color: '#999',
+            marginBottom: '32px'
+          }}>
+            If you're looking for a proposal, please use the client link provided to you.
+          </p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (clientRouteInfo.isClientRoute && !selectedProposal && !proposalNotFoundFromURL) {
+    // On client route, we should only show the proposal, not the dashboard
+    // If no proposal is selected yet, wait for it to load
+    if (loading) {
+      return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></div>;
+    }
+  }
+  
   if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></div>;
   if (error) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#dc2626' }}>{error}</p></div>;
   
-  if (isCreatingNew) {
+  // Prevent creating new proposals on client routes
+  if (isCreatingNew && !clientRouteInfo.isClientRoute) {
     return <CreateProposalView 
       catalog={catalog} 
       onSave={async (formData) => {
@@ -708,23 +839,35 @@ export default function ProposalApp() {
     };
     
     // Check if this is a public view (for client sharing) or client-facing view
+    const clientRouteInfo = parseClientRoute();
     const params = new URLSearchParams(window.location.search);
     const isPublicView = params.get('public') === 'true';
-    const isClientView = params.get('clientView') === 'true' || params.get('fromClientPortal') === 'true';
+    // Client view is true if on client route OR if clientView param is set
+    const isClientView = clientRouteInfo.isClientRoute || params.get('clientView') === 'true' || params.get('fromClientPortal') === 'true';
     
     // Debug logging
     console.log('🔍 Client view detection:', {
+      isClientRoute: clientRouteInfo.isClientRoute,
       clientViewParam: params.get('clientView'),
       fromClientPortalParam: params.get('fromClientPortal'),
       isClientView,
       referrer: document.referrer,
-      fullURL: window.location.href
+      fullURL: window.location.href,
+      pathname: window.location.pathname
     });
     
     const handleBack = () => {
       if (isClientView) {
-        // If coming from client portal, go back to client portal
-        window.location.href = CLIENT_PORTAL_URL;
+        // If on client route, prevent going back to dashboard
+        // Just show a message or redirect to a safe page
+        if (clientRouteInfo.isClientRoute) {
+          // On client route, there's no "back" - they can only view this proposal
+          // Optionally show a message or do nothing
+          return;
+        } else {
+          // If coming from client portal, go back to client portal
+          window.location.href = CLIENT_PORTAL_URL;
+        }
       } else {
         setSelectedProposal(null);
         // Clear URL parameters when going back
@@ -787,10 +930,18 @@ export default function ProposalApp() {
           <button
             onClick={() => {
               // Clear URL params and reset state
-              window.history.pushState({}, '', window.location.pathname);
-              setProposalNotFoundFromURL(false);
-              setUrlProjectNumber(null);
-              setUrlVersion(null);
+              // Only allow going to dashboard if admin access is granted
+              const currentParams = new URLSearchParams(window.location.search);
+              const hasAdmin = currentParams.get('admin') === 'true' || currentParams.get('admin') === '1';
+              if (hasAdmin) {
+                window.history.pushState({}, '', window.location.pathname);
+                setProposalNotFoundFromURL(false);
+                setUrlProjectNumber(null);
+                setUrlVersion(null);
+              } else {
+                // Redirect to access denied
+                window.location.href = window.location.origin;
+              }
             }}
             style={{
               padding: '12px 24px',
@@ -804,8 +955,71 @@ export default function ProposalApp() {
               fontFamily: "'Neue Haas Unica', 'Inter', sans-serif"
             }}
           >
-            Go to Dashboard
+            Go Back
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Prevent dashboard access on client routes
+  if (clientRouteInfo.isClientRoute && !selectedProposal && !proposalNotFoundFromURL) {
+    // Still loading or waiting for proposal - show loading state
+    return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading proposal...</p></div>;
+  }
+
+  // Final check: If on root without admin access, block dashboard
+  const finalCheckParams = new URLSearchParams(window.location.search);
+  const finalHasAdminAccess = finalCheckParams.get('admin') === 'true' || finalCheckParams.get('admin') === '1';
+  const finalIsRootPath = window.location.pathname === '/' || window.location.pathname === '';
+  if (finalIsRootPath && !finalHasAdminAccess && !clientRouteInfo.isClientRoute && !selectedProposal && !isCreatingNew && !proposalNotFoundFromURL) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        padding: '40px 20px',
+        fontFamily: "'Neue Haas Unica', 'Inter', sans-serif",
+        backgroundColor: '#fafafa'
+      }}>
+        <div style={{
+          maxWidth: '600px',
+          textAlign: 'center',
+          backgroundColor: 'white',
+          padding: '60px 40px',
+          borderRadius: '12px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+        }}>
+          <div style={{
+            fontSize: '48px',
+            marginBottom: '24px'
+          }}>🔒</div>
+          <h1 style={{
+            fontSize: '24px',
+            fontWeight: '600',
+            color: '#2C2C2C',
+            marginBottom: '16px',
+            fontFamily: "'Domaine Text', serif"
+          }}>
+            Access Restricted
+          </h1>
+          <p style={{
+            fontSize: '16px',
+            color: '#666',
+            marginBottom: '32px',
+            lineHeight: '1.6'
+          }}>
+            This area is restricted to authorized personnel only.
+          </p>
+          <p style={{
+            fontSize: '14px',
+            color: '#999',
+            marginBottom: '32px'
+          }}>
+            If you're looking for a proposal, please use the client link provided to you.
+          </p>
         </div>
       </div>
     );
@@ -972,15 +1186,23 @@ export default function ProposalApp() {
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
                       <button onClick={() => {
-                        setSelectedProposal(proposal);
-                        // Update URL with client-facing view parameters
-                        const params = new URLSearchParams();
-                        params.set('projectNumber', proposal.projectNumber || '');
-                        if (proposal.version) {
-                          params.set('version', proposal.version.toString());
-                        }
-                        params.set('clientView', 'true');
-                        window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
+                        // Generate client-specific URL: /client/:projectNumber/:version
+                        const clientPath = `/client/${proposal.projectNumber || ''}${proposal.version ? `/${proposal.version}` : ''}`;
+                        const clientUrl = `${window.location.origin}${clientPath}`;
+                        
+                        // Copy to clipboard
+                        navigator.clipboard.writeText(clientUrl).then(() => {
+                          alert('Client link copied to clipboard!');
+                        }).catch(() => {
+                          // Fallback for older browsers
+                          const textArea = document.createElement('textarea');
+                          textArea.value = clientUrl;
+                          document.body.appendChild(textArea);
+                          textArea.select();
+                          document.execCommand('copy');
+                          document.body.removeChild(textArea);
+                          alert('Client link copied to clipboard!');
+                        });
                       }} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         Share
                       </button>
@@ -2088,15 +2310,11 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
             {!isPublicView && !isClientView && (
               <button 
                 onClick={() => {
-                  const params = new URLSearchParams();
-                  params.set('projectNumber', proposal.projectNumber || '');
-                  if (proposal.version) {
-                    params.set('version', proposal.version.toString());
-                  }
-                  params.set('public', 'true');
-                  const shareableUrl = `${window.location.origin}${window.location.pathname}?${params.toString()}`;
+                  // Generate client-specific URL: /client/:projectNumber/:version
+                  const clientPath = `/client/${proposal.projectNumber || ''}${proposal.version ? `/${proposal.version}` : ''}`;
+                  const shareableUrl = `${window.location.origin}${clientPath}`;
                   navigator.clipboard.writeText(shareableUrl).then(() => {
-                    alert('Shareable link copied to clipboard!');
+                    alert('Client link copied to clipboard!');
                   }).catch(() => {
                     // Fallback for older browsers
                     const textArea = document.createElement('textarea');
@@ -2105,7 +2323,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                     textArea.select();
                     document.execCommand('copy');
                     document.body.removeChild(textArea);
-                    alert('Shareable link copied to clipboard!');
+                    alert('Client link copied to clipboard!');
                   });
                 }}
                 style={{ padding: '8px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
