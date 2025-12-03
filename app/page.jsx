@@ -208,8 +208,8 @@ function calculateDetailedTotals(proposal) {
     // Direct dollar amount discount
     standardRateDiscount = discountValue;
   } else {
-    // Percentage discount (default/legacy behavior)
-    standardRateDiscount = extendedProductTotal * (discountValue / 100);
+    // Percentage discount is based on product total only, prior to any extended rental fees
+    standardRateDiscount = baseProductTotal * (discountValue / 100);
   }
   
   const rentalTotal = extendedProductTotal - standardRateDiscount;
