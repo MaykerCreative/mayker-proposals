@@ -3143,7 +3143,7 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 </div>
                 <div style={{ flex: '1', minWidth: 0 }}>
                   <p style={{ marginBottom: '12px', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    The delivery fee quoted is based on the current scope of rentals, as well as the below delivery details. If your project needs change, we're happy to accommodate where possible, but delivery fees may adjust accordingly:
+                    The quoted delivery fee reflects the current rental scope and delivery details. If project needs change, we can adjust as needed, and delivery fees may be updated accordingly:
                   </p>
                   <ul style={{ fontSize: '12px', lineHeight: '1.6', marginBottom: '0', color: '#222', listStyle: 'none', padding: 0, fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
                     <li style={{ marginBottom: '5px' }}><span style={{ fontWeight: '400' }}>Project Address:</span> {proposal.venueName}, {proposal.city}, {proposal.state}</li>
@@ -3174,17 +3174,17 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 )}
                 
                 {/* Confirmation and Payment Section - Two Column Layout */}
-                <div style={{ paddingTop: proposal.customProjectNotes && proposal.customProjectNotes.trim() ? '15px' : '30px', borderTop: proposal.customProjectNotes && proposal.customProjectNotes.trim() ? 'none' : '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
-                <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
-                  <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
-                    Confirmation and Payment
-                  </h2>
-                </div>
-                <div style={{ flex: '1', minWidth: 0 }}>
-                  <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
-                    Projects are confirmed with a signed service agreement and corresponding deposit payment. Payment can be made via wire, ACH, credit card, or check. A 3% processing fee is applied to all credit card payments.
-                  </p>
-                </div>
+                <div style={{ paddingTop: proposal.customProjectNotes && proposal.customProjectNotes.trim() ? '30px' : '30px', borderTop: '1px solid #e5e7eb', display: 'flex', alignItems: 'flex-start' }}>
+                  <div style={{ width: '140px', flexShrink: 0, paddingRight: '20px' }}>
+                    <h2 style={{ fontSize: '13px', fontWeight: '400', color: brandCharcoal, fontFamily: "'Domaine Text', serif", letterSpacing: '0.02em', margin: 0 }}>
+                      Confirmation and Payment
+                    </h2>
+                  </div>
+                  <div style={{ flex: '1', minWidth: 0 }}>
+                    <p style={{ marginBottom: '0', fontSize: '12px', lineHeight: '1.5', color: '#444', fontFamily: "'Neue Haas Unica', 'Inter', sans-serif" }}>
+                      Projects are confirmed once the service agreement is signed and the deposit is paid. We accept wire, ACH, credit card, and check. A 3% processing fee applies to credit card payments.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
