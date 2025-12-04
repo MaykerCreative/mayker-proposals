@@ -438,6 +438,9 @@ export default function ProposalApp() {
   const [urlProjectNumber, setUrlProjectNumber] = useState(null);
   const [urlVersion, setUrlVersion] = useState(null);
   const [isClientRoute, setIsClientRoute] = useState(false);
+  const [viewingChangeRequests, setViewingChangeRequests] = useState(false);
+  const [changeRequests, setChangeRequests] = useState([]);
+  const [selectedChangeRequest, setSelectedChangeRequest] = useState(null);
   const [filters, setFilters] = useState({
     clientName: '',
     salesLead: '',
@@ -742,6 +745,28 @@ export default function ProposalApp() {
     } catch (err) {
       setError(`Failed to fetch proposals: ${err.message}`);
       setLoading(false);
+    }
+  };
+  
+  const fetchChangeRequests = async () => {
+    try {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec?action=getChangeRequests', {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      
+      if (data && data.changeRequests && Array.isArray(data.changeRequests)) {
+        const sorted = data.changeRequests.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setChangeRequests(sorted);
+      } else {
+        setChangeRequests([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch change requests:', err);
+      setChangeRequests([]);
     }
   };
 
@@ -1173,8 +1198,35 @@ export default function ProposalApp() {
           <button onClick={fetchProposals} style={{ padding: '10px 20px', backgroundColor: '#2C2C2C', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
             ↻ Refresh
           </button>
-          <button onClick={() => setIsCreatingNew(true)} style={{ padding: '10px 20px', backgroundColor: '#545142', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
+          <button onClick={() => { setViewingChangeRequests(false); setIsCreatingNew(true); }} style={{ padding: '10px 20px', backgroundColor: '#545142', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
             + Create New Proposal
+          </button>
+          <button onClick={async () => { 
+            setViewingChangeRequests(true); 
+            setIsCreatingNew(false);
+            setSelectedProposal(null);
+            await fetchChangeRequests();
+          }} style={{ padding: '10px 20px', backgroundColor: '#7693a9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', position: 'relative' }}>
+            📋 Change Requests
+            {changeRequests.filter(cr => !cr.reviewed).length > 0 && (
+              <span style={{ 
+                position: 'absolute', 
+                top: '-6px', 
+                right: '-6px', 
+                backgroundColor: '#dc2626', 
+                color: 'white', 
+                borderRadius: '50%', 
+                width: '20px', 
+                height: '20px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: '11px', 
+                fontWeight: '600' 
+              }}>
+                {changeRequests.filter(cr => !cr.reviewed).length}
+              </span>
+            )}
           </button>
           <div style={{ flex: 1, maxWidth: '400px' }}>
             <input type="text" placeholder="Search by client, venue, or location..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '10px 14px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }} />
@@ -1182,6 +1234,19 @@ export default function ProposalApp() {
           {searchTerm && <button onClick={() => setSearchTerm('')} style={{ padding: '10px 14px', backgroundColor: '#f0ede5', color: '#888888', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>Clear</button>}
         </div>
 
+        {viewingChangeRequests ? (
+          <ChangeRequestsReviewView 
+            changeRequests={changeRequests}
+            proposals={proposals}
+            onBack={() => setViewingChangeRequests(false)}
+            onViewProposal={(proposal) => {
+              setSelectedProposal(proposal);
+              setViewingChangeRequests(false);
+            }}
+            onRefresh={fetchChangeRequests}
+          />
+        ) : (
+          <>
         <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', backgroundColor: 'white', padding: '16px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
           <div>
             <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client Name</label>
@@ -1320,7 +1385,336 @@ export default function ProposalApp() {
             </tbody>
           </table>
         </div>
+          </>
+        )}
       </div>
+    </div>
+  );
+}
+
+// ============================================
+// CHANGE REQUESTS REVIEW VIEW
+// ============================================
+
+function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewProposal, onRefresh }) {
+  const [selectedChangeRequest, setSelectedChangeRequest] = useState(null);
+  const brandCharcoal = '#2C2C2C';
+  const brandTaupe = '#545142';
+  
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return dateStr;
+    }
+  };
+  
+  const getProposalForChangeRequest = (cr) => {
+    return proposals.find(p => 
+      p.projectNumber === cr.originalProposal?.projectNumber && 
+      p.version === cr.originalProposal?.version
+    );
+  };
+  
+  const handleMarkReviewed = async (changeRequestId) => {
+    try {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          type: 'markChangeRequestReviewed',
+          changeRequestId: changeRequestId
+        }),
+        mode: 'cors'
+      });
+      const result = await response.json();
+      if (result.success !== false) {
+        await onRefresh();
+        setSelectedChangeRequest(null);
+      } else {
+        alert('Error marking as reviewed: ' + (result.error || 'Unknown error'));
+      }
+    } catch (err) {
+      alert('Error marking as reviewed: ' + err.message);
+    }
+  };
+  
+  if (selectedChangeRequest) {
+    const proposal = getProposalForChangeRequest(selectedChangeRequest);
+    const changes = selectedChangeRequest.changes || {};
+    
+    return (
+      <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Domaine Text', serif" }}>
+            Change Request Details
+          </h2>
+          <button
+            onClick={() => setSelectedChangeRequest(null)}
+            style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+          >
+            ← Back to List
+          </button>
+        </div>
+        
+        <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Client</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedChangeRequest.originalProposal?.clientName || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Project Number</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedChangeRequest.originalProposal?.projectNumber || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Version</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>V{selectedChangeRequest.originalProposal?.version || '1'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Submitted</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{formatDate(selectedChangeRequest.timestamp)}</div>
+            </div>
+          </div>
+          {proposal && (
+            <button
+              onClick={() => {
+                onViewProposal(proposal);
+              }}
+              style={{ padding: '8px 16px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', marginTop: '8px' }}
+            >
+              View Original Proposal →
+            </button>
+          )}
+        </div>
+        
+        {/* Date/Time Changes */}
+        {(changes.dateTimeChanges && (
+          changes.dateTimeChanges.startDate !== proposal?.startDate ||
+          changes.dateTimeChanges.endDate !== proposal?.endDate ||
+          changes.dateTimeChanges.deliveryTime !== proposal?.deliveryTime ||
+          changes.dateTimeChanges.strikeTime !== proposal?.strikeTime
+        )) && (
+          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#fef3c7', borderRadius: '6px', border: '1px solid #fbbf24' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '16px' }}>Date & Time Changes</h3>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              {changes.dateTimeChanges.startDate !== proposal?.startDate && (
+                <div>
+                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Event Start Date</div>
+                  <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                    {proposal?.startDate || 'N/A'} → {changes.dateTimeChanges.startDate}
+                  </div>
+                </div>
+              )}
+              {changes.dateTimeChanges.endDate !== proposal?.endDate && (
+                <div>
+                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Event End Date</div>
+                  <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                    {proposal?.endDate || 'N/A'} → {changes.dateTimeChanges.endDate}
+                  </div>
+                </div>
+              )}
+              {changes.dateTimeChanges.deliveryTime !== proposal?.deliveryTime && (
+                <div>
+                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Load-In Time</div>
+                  <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                    {proposal?.deliveryTime || 'N/A'} → {changes.dateTimeChanges.deliveryTime}
+                  </div>
+                </div>
+              )}
+              {changes.dateTimeChanges.strikeTime !== proposal?.strikeTime && (
+                <div>
+                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Strike Time</div>
+                  <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                    {proposal?.strikeTime || 'N/A'} → {changes.dateTimeChanges.strikeTime}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Quantity Changes */}
+        {changes.quantityChanges && Object.keys(changes.quantityChanges).length > 0 && (
+          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#fef3c7', borderRadius: '6px', border: '1px solid #fbbf24' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '16px' }}>Quantity Changes</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {Object.values(changes.quantityChanges).map((change, idx) => (
+                <div key={idx} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '4px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal, marginBottom: '4px' }}>
+                    {change.productName}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#92400e' }}>
+                    Quantity: {change.originalQuantity} → {change.newQuantity}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* New Products */}
+        {changes.newProducts && changes.newProducts.length > 0 && (
+          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#fef3c7', borderRadius: '6px', border: '1px solid #fbbf24' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '16px' }}>New Product Requests</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {changes.newProducts.map((product, idx) => (
+                <div key={idx} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '4px' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal, marginBottom: '4px' }}>
+                    {product.name} (Qty: {product.quantity})
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                    Section: {product.section}
+                  </div>
+                  {product.notes && (
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      Notes: {product.notes}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Miscellaneous Notes */}
+        {changes.miscNotes && changes.miscNotes.trim() && (
+          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#fef3c7', borderRadius: '6px', border: '1px solid #fbbf24' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Additional Notes</h3>
+            <div style={{ fontSize: '14px', color: brandCharcoal, whiteSpace: 'pre-wrap' }}>
+              {changes.miscNotes}
+            </div>
+          </div>
+        )}
+        
+        {/* Action Buttons */}
+        <div style={{ display: 'flex', gap: '12px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
+          <button
+            onClick={() => handleMarkReviewed(selectedChangeRequest.id || selectedChangeRequest.timestamp)}
+            style={{ padding: '12px 24px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+          >
+            ✓ Mark as Reviewed
+          </button>
+        </div>
+      </div>
+    );
+  }
+  
+  const pendingRequests = changeRequests.filter(cr => !cr.reviewed);
+  const reviewedRequests = changeRequests.filter(cr => cr.reviewed);
+  
+  return (
+    <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Domaine Text', serif" }}>
+          Change Requests Review
+        </h2>
+        <button
+          onClick={onBack}
+          style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
+      
+      {changeRequests.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#666' }}>
+          <p style={{ fontSize: '16px', marginBottom: '8px' }}>No change requests found.</p>
+          <p style={{ fontSize: '14px' }}>Change requests submitted by clients will appear here.</p>
+        </div>
+      ) : (
+        <>
+          {/* Pending Requests */}
+          {pendingRequests.length > 0 && (
+            <div style={{ marginBottom: '32px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '16px' }}>
+                Pending Review ({pendingRequests.length})
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {pendingRequests.map((cr, idx) => {
+                  const proposal = getProposalForChangeRequest(cr);
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedChangeRequest(cr)}
+                      style={{
+                        padding: '16px',
+                        backgroundColor: '#fef3c7',
+                        borderRadius: '6px',
+                        border: '2px solid #fbbf24',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#fde68a'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fef3c7'}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div>
+                          <div style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '4px' }}>
+                            {cr.originalProposal?.clientName || 'Unknown Client'}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666', marginBottom: '8px' }}>
+                            Project #{cr.originalProposal?.projectNumber} • V{cr.originalProposal?.version || '1'} • {formatDate(cr.timestamp)}
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#92400e' }}>
+                            {Object.keys(cr.changes?.quantityChanges || {}).length > 0 && `Quantity changes: ${Object.keys(cr.changes.quantityChanges).length} • `}
+                            {cr.changes?.newProducts?.length > 0 && `New products: ${cr.changes.newProducts.length} • `}
+                            {cr.changes?.miscNotes && 'Has notes'}
+                          </div>
+                        </div>
+                        <div style={{ fontSize: '14px', color: brandTaupe, fontWeight: '500' }}>
+                          Click to review →
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* Reviewed Requests */}
+          {reviewedRequests.length > 0 && (
+            <div>
+              <h3 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '16px' }}>
+                Reviewed ({reviewedRequests.length})
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {reviewedRequests.map((cr, idx) => {
+                  const proposal = getProposalForChangeRequest(cr);
+                  return (
+                    <div
+                      key={idx}
+                      onClick={() => setSelectedChangeRequest(cr)}
+                      style={{
+                        padding: '16px',
+                        backgroundColor: '#f9fafb',
+                        borderRadius: '6px',
+                        border: '1px solid #e5e7eb',
+                        cursor: 'pointer',
+                        opacity: 0.7
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                        <div>
+                          <div style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '4px' }}>
+                            {cr.originalProposal?.clientName || 'Unknown Client'} ✓
+                          </div>
+                          <div style={{ fontSize: '12px', color: '#666' }}>
+                            Project #{cr.originalProposal?.projectNumber} • V{cr.originalProposal?.version || '1'} • {formatDate(cr.timestamp)}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -2033,10 +2427,13 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefresh
     return <ProfitabilityView proposal={proposal} onBack={() => setShowProfitability(false)} />;
   }
 
-  return <ViewProposalView proposal={proposal} onBack={onBack} onPrint={onPrint} onEdit={isPublicView || isClientView ? undefined : () => setIsEditing(true)} onViewProfitability={isPublicView || isClientView ? undefined : () => setShowProfitability(true)} isPublicView={isPublicView} isClientView={isClientView} />;
+  return <ViewProposalView proposal={proposal} catalog={catalog} onBack={onBack} onPrint={onPrint} onEdit={isPublicView || isClientView ? undefined : () => setIsEditing(true)} onViewProfitability={isPublicView || isClientView ? undefined : () => setShowProfitability(true)} isPublicView={isPublicView} isClientView={isClientView} />;
 }
 
-function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitability, isPublicView = false, isClientView = false }) {
+function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewProfitability, isPublicView = false, isClientView = false }) {
+  // State for change request mode
+  const [isChangeRequestMode, setIsChangeRequestMode] = useState(false);
+  
   // Double-check if we're on a client route (safety check)
   const checkClientRoute = () => {
     if (typeof window === 'undefined') return false;
@@ -2617,6 +3014,16 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
                 Export Sourcing
               </button>
             )}
+            {actualIsClientView && !isChangeRequestMode && (
+              <button onClick={() => setIsChangeRequestMode(true)} style={{ padding: '8px 20px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+                Request Changes
+              </button>
+            )}
+            {actualIsClientView && isChangeRequestMode && (
+              <button onClick={() => setIsChangeRequestMode(false)} style={{ padding: '8px 20px', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+                Back to View
+              </button>
+            )}
             <button onClick={handlePrintDownload} style={{ padding: '8px 20px', backgroundColor: brandCharcoal, color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
               Print / Export as PDF
             </button>
@@ -2624,6 +3031,15 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
         </div>
       </div>
 
+      {isChangeRequestMode && actualIsClientView ? (
+        <ChangeRequestView 
+          proposal={proposal} 
+          sections={sections}
+          onCancel={() => setIsChangeRequestMode(false)}
+          catalog={catalog || []}
+        />
+      ) : (
+        <>
       <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always', pageBreakBefore: 'auto', overflow: 'hidden' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
@@ -3260,6 +3676,424 @@ function ViewProposalView({ proposal, onBack, onPrint, onEdit, onViewProfitabili
           </div>
         );
       })()}
+        </>
+      )}
+    </div>
+  );
+}
+
+// Change Request View Component for Clients
+function ChangeRequestView({ proposal, sections, onCancel, catalog }) {
+  const [changeRequest, setChangeRequest] = useState({
+    quantityChanges: {},
+    dateTimeChanges: {
+      startDate: proposal.startDate || '',
+      endDate: proposal.endDate || '',
+      deliveryTime: proposal.deliveryTime || '',
+      strikeTime: proposal.strikeTime || ''
+    },
+    newProducts: []
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [showAddProduct, setShowAddProduct] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    section: '',
+    name: '',
+    quantity: 1,
+    notes: ''
+  });
+
+  const brandTaupe = '#545142';
+  const brandCharcoal = '#2C2C2C';
+
+  const handleQuantityChange = (sectionIdx, productIdx, newQuantity) => {
+    const key = `${sectionIdx}-${productIdx}`;
+    const originalQuantity = sections[sectionIdx]?.products[productIdx]?.quantity || 0;
+    
+    if (parseInt(newQuantity) === parseInt(originalQuantity)) {
+      // If quantity matches original, remove from changes
+      const newChanges = { ...changeRequest.quantityChanges };
+      delete newChanges[key];
+      setChangeRequest({ ...changeRequest, quantityChanges: newChanges });
+    } else {
+      setChangeRequest({
+        ...changeRequest,
+        quantityChanges: {
+          ...changeRequest.quantityChanges,
+          [key]: {
+            sectionIdx,
+            productIdx,
+            originalQuantity,
+            newQuantity: parseInt(newQuantity) || 0,
+            productName: sections[sectionIdx]?.products[productIdx]?.name || ''
+          }
+        }
+      });
+    }
+  };
+
+  const handleDateTimeChange = (field, value) => {
+    setChangeRequest({
+      ...changeRequest,
+      dateTimeChanges: {
+        ...changeRequest.dateTimeChanges,
+        [field]: value
+      }
+    });
+  };
+
+  const handleAddNewProduct = () => {
+    if (!newProduct.name.trim() || !newProduct.section) {
+      alert('Please select a section and enter a product name');
+      return;
+    }
+    
+    setChangeRequest({
+      ...changeRequest,
+      newProducts: [...changeRequest.newProducts, { ...newProduct }]
+    });
+    
+    setNewProduct({ section: '', name: '', quantity: 1, notes: '' });
+    setShowAddProduct(false);
+  };
+
+  const handleRemoveNewProduct = (index) => {
+    setChangeRequest({
+      ...changeRequest,
+      newProducts: changeRequest.newProducts.filter((_, i) => i !== index)
+    });
+  };
+
+  const handleSubmit = async () => {
+    // Check if there are any changes
+    const hasQuantityChanges = Object.keys(changeRequest.quantityChanges).length > 0;
+    const hasDateTimeChanges = 
+      changeRequest.dateTimeChanges.startDate !== (proposal.startDate || '') ||
+      changeRequest.dateTimeChanges.endDate !== (proposal.endDate || '') ||
+      changeRequest.dateTimeChanges.deliveryTime !== (proposal.deliveryTime || '') ||
+      changeRequest.dateTimeChanges.strikeTime !== (proposal.strikeTime || '');
+    const hasNewProducts = changeRequest.newProducts.length > 0;
+
+    if (!hasQuantityChanges && !hasDateTimeChanges && !hasNewProducts) {
+      alert('Please make at least one change before submitting');
+      return;
+    }
+
+    if (!confirm('Are you sure you want to submit this change request? The team will review and respond to your request.')) {
+      return;
+    }
+
+    setSubmitting(true);
+    try {
+      const changeRequestData = {
+        type: 'changeRequest',
+        projectNumber: proposal.projectNumber,
+        version: proposal.version,
+        timestamp: new Date().toISOString(),
+        changes: {
+          quantityChanges: changeRequest.quantityChanges,
+          dateTimeChanges: changeRequest.dateTimeChanges,
+          newProducts: changeRequest.newProducts
+        },
+        originalProposal: {
+          projectNumber: proposal.projectNumber,
+          version: proposal.version,
+          clientName: proposal.clientName
+        }
+      };
+
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(changeRequestData),
+        mode: 'cors'
+      });
+
+      const result = await response.json();
+      
+      if (result.success === false) {
+        throw new Error(result.error || 'Failed to submit change request');
+      }
+
+      alert('Change request submitted successfully! The team will review your request and get back to you.');
+      onCancel();
+    } catch (err) {
+      alert('Error submitting change request: ' + err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const hasChanges = 
+    Object.keys(changeRequest.quantityChanges).length > 0 ||
+    changeRequest.dateTimeChanges.startDate !== (proposal.startDate || '') ||
+    changeRequest.dateTimeChanges.endDate !== (proposal.endDate || '') ||
+    changeRequest.dateTimeChanges.deliveryTime !== (proposal.deliveryTime || '') ||
+    changeRequest.dateTimeChanges.strikeTime !== (proposal.strikeTime || '') ||
+    changeRequest.newProducts.length > 0;
+
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: '#fafaf8', paddingTop: '80px' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px 24px' }}>
+        <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)' }}>
+          <div style={{ marginBottom: '32px' }}>
+            <h1 style={{ fontSize: '28px', fontWeight: '600', color: brandCharcoal, marginBottom: '8px', fontFamily: "'Inter', sans-serif" }}>
+              Request Changes
+            </h1>
+            <p style={{ fontSize: '14px', color: '#6b7280', fontFamily: "'Inter', sans-serif" }}>
+              Please review the proposal below and indicate any changes you'd like to request. The team will review and respond to your request.
+            </p>
+          </div>
+
+          {/* Date/Time Changes */}
+          <div style={{ marginBottom: '40px', padding: '24px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '20px', fontFamily: "'Inter', sans-serif" }}>
+              Event Dates & Times
+            </h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                  Event Start Date
+                </label>
+                <input
+                  type="date"
+                  value={changeRequest.dateTimeChanges.startDate}
+                  onChange={(e) => handleDateTimeChange('startDate', e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                  Event End Date
+                </label>
+                <input
+                  type="date"
+                  value={changeRequest.dateTimeChanges.endDate}
+                  onChange={(e) => handleDateTimeChange('endDate', e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                  Load-In Time
+                </label>
+                <input
+                  type="time"
+                  value={changeRequest.dateTimeChanges.deliveryTime}
+                  onChange={(e) => handleDateTimeChange('deliveryTime', e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                  Strike Time
+                </label>
+                <input
+                  type="time"
+                  value={changeRequest.dateTimeChanges.strikeTime}
+                  onChange={(e) => handleDateTimeChange('strikeTime', e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Quantity Changes */}
+          <div style={{ marginBottom: '40px' }}>
+            <h2 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '20px', fontFamily: "'Inter', sans-serif" }}>
+              Product Quantities
+            </h2>
+            {sections.map((section, sectionIdx) => (
+              section.products && section.products.length > 0 && (
+                <div key={sectionIdx} style={{ marginBottom: '32px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                  <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '16px', fontFamily: "'Inter', sans-serif" }}>
+                    {section.name || 'Unnamed Section'}
+                  </h3>
+                  {section.products.map((product, productIdx) => {
+                    const key = `${sectionIdx}-${productIdx}`;
+                    const change = changeRequest.quantityChanges[key];
+                    const currentQuantity = change ? change.newQuantity : (product.quantity || 0);
+                    const originalQuantity = product.quantity || 0;
+                    const hasChange = change && change.newQuantity !== originalQuantity;
+
+                    return (
+                      <div key={productIdx} style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px', padding: '12px', backgroundColor: hasChange ? '#fef3c7' : 'white', borderRadius: '4px', border: hasChange ? '1px solid #fbbf24' : '1px solid #e5e7eb' }}>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal, marginBottom: '4px', fontFamily: "'Inter', sans-serif" }}>
+                            {product.name}
+                          </div>
+                          {hasChange && (
+                            <div style={{ fontSize: '12px', color: '#92400e', fontFamily: "'Inter', sans-serif" }}>
+                              Original: {originalQuantity} → New: {change.newQuantity}
+                            </div>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <button
+                            onClick={() => handleQuantityChange(sectionIdx, productIdx, Math.max(0, currentQuantity - 1))}
+                            style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', fontSize: '18px', color: brandCharcoal }}
+                          >
+                            −
+                          </button>
+                          <input
+                            type="number"
+                            value={currentQuantity}
+                            onChange={(e) => handleQuantityChange(sectionIdx, productIdx, e.target.value)}
+                            min="0"
+                            style={{ width: '80px', padding: '6px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', textAlign: 'center', fontFamily: "'Inter', sans-serif" }}
+                          />
+                          <button
+                            onClick={() => handleQuantityChange(sectionIdx, productIdx, currentQuantity + 1)}
+                            style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', borderRadius: '4px', cursor: 'pointer', fontSize: '18px', color: brandCharcoal }}
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            ))}
+          </div>
+
+          {/* New Products */}
+          <div style={{ marginBottom: '40px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h2 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Inter', sans-serif" }}>
+                Request New Products
+              </h2>
+              {!showAddProduct && (
+                <button
+                  onClick={() => setShowAddProduct(true)}
+                  style={{ padding: '8px 16px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                >
+                  + Add Product Request
+                </button>
+              )}
+            </div>
+
+            {showAddProduct && (
+              <div style={{ padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb', marginBottom: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                      Section
+                    </label>
+                    <select
+                      value={newProduct.section}
+                      onChange={(e) => setNewProduct({ ...newProduct, section: e.target.value })}
+                      style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                    >
+                      <option value="">Select section...</option>
+                      {sections.map((section, idx) => (
+                        <option key={idx} value={section.name || `Section ${idx + 1}`}>
+                          {section.name || `Section ${idx + 1}`}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                      Product Name
+                    </label>
+                    <input
+                      type="text"
+                      value={newProduct.name}
+                      onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                      placeholder="Enter product name..."
+                      style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      value={newProduct.quantity}
+                      onChange={(e) => setNewProduct({ ...newProduct, quantity: parseInt(e.target.value) || 1 })}
+                      min="1"
+                      style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                    />
+                  </div>
+                </div>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', marginBottom: '8px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', fontFamily: "'Inter', sans-serif" }}>
+                    Notes (optional)
+                  </label>
+                  <textarea
+                    value={newProduct.notes}
+                    onChange={(e) => setNewProduct({ ...newProduct, notes: e.target.value })}
+                    placeholder="Any additional details about this product..."
+                    rows="3"
+                    style={{ width: '100%', padding: '10px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '14px', fontFamily: "'Inter', sans-serif", resize: 'vertical' }}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={handleAddNewProduct}
+                    style={{ padding: '8px 16px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                  >
+                    Add Product
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowAddProduct(false);
+                      setNewProduct({ section: '', name: '', quantity: 1, notes: '' });
+                    }}
+                    style={{ padding: '8px 16px', backgroundColor: '#6b7280', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontFamily: "'Inter', sans-serif" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {changeRequest.newProducts.length > 0 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {changeRequest.newProducts.map((product, idx) => (
+                  <div key={idx} style={{ padding: '16px', backgroundColor: '#fef3c7', borderRadius: '6px', border: '1px solid #fbbf24', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal, marginBottom: '4px', fontFamily: "'Inter', sans-serif" }}>
+                        {product.name} (Qty: {product.quantity})
+                      </div>
+                      <div style={{ fontSize: '12px', color: '#92400e', fontFamily: "'Inter', sans-serif" }}>
+                        Section: {product.section}
+                        {product.notes && ` • ${product.notes}`}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveNewProduct(idx)}
+                      style={{ padding: '6px 12px', backgroundColor: '#dc2626', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '12px', fontFamily: "'Inter', sans-serif" }}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Action Buttons */}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
+            <button
+              onClick={onCancel}
+              disabled={submitting}
+              style={{ padding: '12px 24px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: submitting ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', fontFamily: "'Inter', sans-serif" }}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={submitting || !hasChanges}
+              style={{ padding: '12px 24px', backgroundColor: hasChanges && !submitting ? '#2563eb' : '#9ca3af', color: 'white', border: 'none', borderRadius: '4px', cursor: (submitting || !hasChanges) ? 'not-allowed' : 'pointer', fontSize: '14px', fontWeight: '500', fontFamily: "'Inter', sans-serif" }}
+            >
+              {submitting ? 'Submitting...' : 'Submit Change Request'}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
