@@ -1637,6 +1637,119 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '12px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
           <button
+            onClick={async () => {
+              if (!proposal) {
+                window.alert('Original proposal not found. Cannot create updated version.');
+                return;
+              }
+              
+              if (!window.confirm('This will create a new version of the proposal with all requested changes applied. Continue?')) {
+                return;
+              }
+              
+              try {
+                // Parse the original proposal's sections
+                const originalSections = JSON.parse(proposal.sectionsJSON || '[]');
+                
+                // Apply quantity changes
+                const updatedSections = originalSections.map((section, sectionIdx) => {
+                  const updatedProducts = (section.products || []).map((product, productIdx) => {
+                    const changeKey = `${sectionIdx}-${productIdx}`;
+                    const quantityChange = changes.quantityChanges?.[changeKey];
+                    if (quantityChange) {
+                      return {
+                        ...product,
+                        quantity: quantityChange.newQuantity
+                      };
+                    }
+                    return product;
+                  });
+                  return {
+                    ...section,
+                    products: updatedProducts
+                  };
+                });
+                
+                // Add new products to their respective sections
+                if (changes.newProducts && changes.newProducts.length > 0) {
+                  changes.newProducts.forEach(newProduct => {
+                    // Find or create the section
+                    let targetSection = updatedSections.find(s => s.name === newProduct.section);
+                    if (!targetSection) {
+                      // Create new section if it doesn't exist
+                      targetSection = {
+                        name: newProduct.section,
+                        products: []
+                      };
+                      updatedSections.push(targetSection);
+                    }
+                    
+                    // Add the new product to the section
+                    targetSection.products.push({
+                      name: newProduct.name,
+                      quantity: newProduct.quantity || 1,
+                      price: 0, // Will need to be set manually or looked up from catalog
+                      note: newProduct.notes || ''
+                    });
+                  });
+                }
+                
+                // Prepare the updated proposal data
+                const updatedProposalData = {
+                  clientName: proposal.clientName.replace(/\s*\(V\d+\)\s*$/, '').trim(),
+                  projectNumber: proposal.projectNumber,
+                  venueName: changes.dateTimeChanges?.venueName || proposal.venueName,
+                  city: proposal.city,
+                  state: proposal.state,
+                  startDate: changes.dateTimeChanges?.startDate || proposal.startDate,
+                  endDate: changes.dateTimeChanges?.endDate || proposal.endDate,
+                  deliveryTime: changes.dateTimeChanges?.deliveryTime || proposal.deliveryTime,
+                  strikeTime: changes.dateTimeChanges?.strikeTime || proposal.strikeTime,
+                  deliveryFee: proposal.deliveryFee || '0',
+                  discount: proposal.discount || '0',
+                  discountName: proposal.discountName || '',
+                  clientFolderURL: proposal.clientFolderURL || '',
+                  salesLead: proposal.salesLead || '',
+                  status: 'Pending',
+                  sectionsJSON: JSON.stringify(updatedSections),
+                  customRentalMultiplier: proposal.customRentalMultiplier || '',
+                  taxExempt: proposal.taxExempt || false,
+                  miscFees: proposal.miscFees || '[]',
+                  customProjectNotes: changes.miscNotes ? (proposal.customProjectNotes || '') + '\n\nChange Request Notes:\n' + changes.miscNotes : (proposal.customProjectNotes || '')
+                };
+                
+                // Save as new version
+                const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'text/plain' },
+                  body: JSON.stringify(updatedProposalData),
+                  mode: 'cors'
+                });
+                
+                const result = await response.json();
+                if (result.success === false) {
+                  throw new Error(result.error || 'Failed to create updated proposal');
+                }
+                
+                window.alert('New proposal version created successfully! You can now review and edit it.');
+                
+                // Mark change request as reviewed
+                await handleMarkReviewed(selectedChangeRequest.id || selectedChangeRequest.timestamp);
+                
+                // Refresh proposals and go back
+                await onRefresh();
+                setSelectedChangeRequest(null);
+                
+              } catch (err) {
+                window.alert('Error creating updated proposal: ' + err.message);
+                console.error('Error:', err);
+              }
+            }}
+            style={{ padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+          >
+            📝 Update Proposal (Create New Version)
+          </button>
+          <button
             onClick={() => handleMarkReviewed(selectedChangeRequest.id || selectedChangeRequest.timestamp)}
             style={{ padding: '12px 24px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
           >
