@@ -229,16 +229,18 @@ function calculateDetailedTotals(proposal) {
   }
   
   // Calculate what the fees would have been (for display when waived)
+  // IMPORTANT: Product care and service fee are calculated BEFORE discount is applied
   const productCareAmount = extendedProductTotal * 0.10;
   const productCare = waiveProductCare ? 0 : productCareAmount;
   
   const delivery = parseFloat(proposal.deliveryFee) || 0;
   
-  // Calculate service fee - use actual productCare for calculation (which might be 0 if waived)
-  const serviceFee = waiveServiceFee ? 0 : (rentalTotal + productCare + delivery) * 0.05;
+  // Calculate service fee BEFORE discount is applied
+  // Service fee is calculated on extendedProductTotal (before discount) + productCare + delivery
+  const serviceFee = waiveServiceFee ? 0 : (extendedProductTotal + productCare + delivery) * 0.05;
   // For display when waived, calculate what service fee would have been if not waived
-  // Use actual productCare value (which reflects if it was waived) for accurate calculation
-  const serviceFeeAmount = (rentalTotal + productCare + delivery) * 0.05;
+  // Use extendedProductTotal (before discount) for accurate calculation
+  const serviceFeeAmount = (extendedProductTotal + productCare + delivery) * 0.05;
   
   // Calculate miscellaneous fees
   let miscFeesTotal = 0;
