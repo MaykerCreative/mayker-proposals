@@ -631,6 +631,24 @@ export default function ProposalApp() {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
+      // Also fetch change requests
+      try {
+        const crResponse = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec?action=getChangeRequests', {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache'
+        });
+        if (crResponse.ok) {
+          const crData = await crResponse.json();
+          if (crData && crData.changeRequests && Array.isArray(crData.changeRequests)) {
+            const sorted = crData.changeRequests.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            setChangeRequests(sorted);
+          }
+        }
+      } catch (crErr) {
+        console.error('Failed to fetch change requests:', crErr);
+      }
+      
       if (!data || !data.proposals || !Array.isArray(data.proposals) || data.proposals.length === 0) {
         setProposals([]);
         setCatalog([]);
@@ -770,6 +788,15 @@ export default function ProposalApp() {
     }
   };
 
+  // Helper function to check if a proposal has unreviewed change requests
+  const hasUnreviewedChangeRequest = (proposal) => {
+    return changeRequests.some(cr => 
+      !cr.reviewed &&
+      cr.originalProposal?.projectNumber === proposal.projectNumber &&
+      cr.originalProposal?.version === proposal.version
+    );
+  };
+
   const filteredProposals = proposals.filter(proposal => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm || (
@@ -785,6 +812,16 @@ export default function ProposalApp() {
     const matchesLocation = !filters.location || `${proposal.venueName}, ${proposal.city}, ${proposal.state}`.toLowerCase().includes(filters.location.toLowerCase());
 
     return matchesSearch && matchesClientName && matchesSalesLead && matchesStatus && matchesLocation;
+  }).sort((a, b) => {
+    // Sort proposals with unreviewed change requests to the top
+    const aHasUnreviewed = hasUnreviewedChangeRequest(a);
+    const bHasUnreviewed = hasUnreviewedChangeRequest(b);
+    
+    if (aHasUnreviewed && !bHasUnreviewed) return -1;
+    if (!aHasUnreviewed && bHasUnreviewed) return 1;
+    
+    // If both have or both don't have unreviewed change requests, sort by timestamp (newest first)
+    return new Date(b.timestamp) - new Date(a.timestamp);
   });
 
   // Enforce client route restrictions - prevent dashboard access on client routes
@@ -1292,8 +1329,15 @@ export default function ProposalApp() {
               </tr>
             </thead>
             <tbody>
-              {filteredProposals.map((proposal, index) => (
-                <tr key={index} style={{ borderBottom: '1px solid #f0ede5', backgroundColor: index % 2 === 0 ? 'white' : '#fafaf8' }}>
+              {filteredProposals.map((proposal, index) => {
+                const hasUnreviewed = hasUnreviewedChangeRequest(proposal);
+                const rowBgColor = hasUnreviewed 
+                  ? '#e6f0f7' // Light blue background for proposals with unreviewed change requests
+                  : (index % 2 === 0 ? 'white' : '#fafaf8');
+                const rowBorderColor = hasUnreviewed ? '#7693a9' : '#f0ede5';
+                
+                return (
+                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: hasUnreviewed ? '4px solid #7693a9' : 'none' }}>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => {
@@ -1381,7 +1425,8 @@ export default function ProposalApp() {
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.version ? `V${proposal.version}` : '-'}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#888888' }}>{proposal.lastUpdated || '-'}</td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>
