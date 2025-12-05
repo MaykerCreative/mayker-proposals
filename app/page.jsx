@@ -1316,7 +1316,7 @@ export default function ProposalApp() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#F8F7F4', padding: '32px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FAF9F7', padding: '32px' }}>
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
         
@@ -1395,8 +1395,8 @@ export default function ProposalApp() {
             onLoad={() => console.log('Dashboard logo loaded successfully:', '/mayker_icon-black.svg')}
           />
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: '500', color: '#3F3B34', margin: '0', fontFamily: "'Domaine Text', serif" }}>Mayker Proposals</h1>
-            <p style={{ marginTop: '2px', color: '#888888', fontSize: '13px', margin: '0', fontWeight: '400' }}>Manage and view all event proposals</p>
+            <h1 style={{ fontSize: '24px', fontWeight: '500', color: '#3A3732', margin: '0', fontFamily: "'Domaine Text', serif" }}>Mayker Proposals</h1>
+            <p style={{ marginTop: '2px', color: '#8A8378', fontSize: '13px', margin: '0', fontWeight: '400' }}>Manage and view all event proposals</p>
           </div>
         </div>
 
@@ -1406,9 +1406,9 @@ export default function ProposalApp() {
             onClick={fetchProposals} 
             style={{ 
               padding: '10px 20px', 
-              backgroundColor: 'transparent', 
-              color: '#3F3B34', 
-              border: '1px solid #e8e8e3', 
+              backgroundColor: 'white', 
+              color: '#3A3732', 
+              border: '1px solid #D7D1C7', 
               borderRadius: '8px', 
               cursor: 'pointer', 
               fontSize: '13px', 
@@ -1417,12 +1417,10 @@ export default function ProposalApp() {
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#FAF8F3';
-              e.currentTarget.style.borderColor = '#d1d5db';
+              e.currentTarget.style.backgroundColor = '#F5F2ED';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = '#e8e8e3';
+              e.currentTarget.style.backgroundColor = 'white';
             }}
           >
             ↻ Refresh
@@ -1431,9 +1429,9 @@ export default function ProposalApp() {
             onClick={() => { setViewingChangeRequests(false); setIsCreatingNew(true); }} 
             style={{ 
               padding: '10px 20px', 
-              backgroundColor: '#FAF8F3', 
-              color: '#000000', 
-              border: '1px solid #e8e8e3', 
+              backgroundColor: '#37332E', 
+              color: 'white', 
+              border: 'none', 
               borderRadius: '8px', 
               cursor: 'pointer', 
               fontSize: '13px', 
@@ -1441,18 +1439,15 @@ export default function ProposalApp() {
               fontFamily: "'Neue Haas Unica', sans-serif",
               letterSpacing: '0.02em',
               textTransform: 'uppercase',
-              transition: 'all 0.2s ease',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
+              transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#f5f5f2';
-              e.currentTarget.style.borderColor = '#d1d5db';
-              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.12)';
+              e.currentTarget.style.backgroundColor = '#3A3732';
+              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.12)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#FAF8F3';
-              e.currentTarget.style.borderColor = '#e8e8e3';
-              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)';
+              e.currentTarget.style.backgroundColor = '#37332E';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             + Create New Proposal
@@ -1467,9 +1462,9 @@ export default function ProposalApp() {
             }} 
             style={{ 
               padding: '10px 20px', 
-              backgroundColor: 'transparent', 
-              color: '#3F3B34', 
-              border: '1px solid #e8e8e3', 
+              backgroundColor: 'white', 
+              color: '#3A3732', 
+              border: '1px solid #D7D1C7', 
               borderRadius: '8px', 
               cursor: 'pointer', 
               fontSize: '13px', 
@@ -1479,12 +1474,10 @@ export default function ProposalApp() {
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#FAF8F3';
-              e.currentTarget.style.borderColor = '#d1d5db';
+              e.currentTarget.style.backgroundColor = '#F5F2ED';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = '#e8e8e3';
+              e.currentTarget.style.backgroundColor = 'white';
             }}
           >
             📋 Change Requests
@@ -1493,17 +1486,16 @@ export default function ProposalApp() {
                 position: 'absolute', 
                 top: '-8px', 
                 right: '-8px', 
-                backgroundColor: '#c2410c', 
+                backgroundColor: '#B15B3C', 
                 color: 'white', 
                 borderRadius: '50%', 
-                width: '18px', 
-                height: '18px', 
+                width: '16px', 
+                height: '16px', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
                 fontSize: '10px', 
-                fontWeight: '600',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+                fontWeight: '600'
               }}>
                 {changeRequests.filter(cr => !cr.reviewed).length}
               </span>
@@ -1519,9 +1511,9 @@ export default function ProposalApp() {
             }} 
             style={{ 
               padding: '10px 20px', 
-              backgroundColor: 'transparent', 
-              color: '#3F3B34', 
-              border: '1px solid #e8e8e3', 
+              backgroundColor: 'white', 
+              color: '#3A3732', 
+              border: '1px solid #D7D1C7', 
               borderRadius: '8px', 
               cursor: 'pointer', 
               fontSize: '13px', 
@@ -1531,12 +1523,10 @@ export default function ProposalApp() {
               transition: 'all 0.2s ease'
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#FAF8F3';
-              e.currentTarget.style.borderColor = '#d1d5db';
+              e.currentTarget.style.backgroundColor = '#F5F2ED';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = '#e8e8e3';
+              e.currentTarget.style.backgroundColor = 'white';
             }}
           >
             🎯 New Project Inquiries
@@ -1545,17 +1535,16 @@ export default function ProposalApp() {
                 position: 'absolute', 
                 top: '-8px', 
                 right: '-8px', 
-                backgroundColor: '#c2410c', 
+                backgroundColor: '#B15B3C', 
                 color: 'white', 
                 borderRadius: '50%', 
-                width: '18px', 
-                height: '18px', 
+                width: '16px', 
+                height: '16px', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
                 fontSize: '10px', 
-                fontWeight: '600',
-                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+                fontWeight: '600'
               }}>
                 {newSubmissions.length}
               </span>
@@ -1570,21 +1559,22 @@ export default function ProposalApp() {
               style={{ 
                 width: '100%', 
                 padding: '10px 14px', 
-                border: '1px solid #e8e8e3', 
+                border: '1px solid #D7D1C7', 
                 borderRadius: '8px', 
                 fontSize: '13px', 
                 boxSizing: 'border-box', 
                 fontFamily: "'Neue Haas Unica', sans-serif",
                 backgroundColor: 'white',
+                color: '#3A3732',
                 transition: 'all 0.2s ease',
                 outline: 'none'
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#d1d5db';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 0, 0, 0.05)';
+                e.currentTarget.style.borderColor = '#8A8378';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 0, 0, 0.04)';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#e8e8e3';
+                e.currentTarget.style.borderColor = '#D7D1C7';
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
@@ -1594,9 +1584,9 @@ export default function ProposalApp() {
               onClick={() => setSearchTerm('')} 
               style={{ 
                 padding: '10px 16px', 
-                backgroundColor: 'transparent', 
-                color: '#888888', 
-                border: '1px solid #e8e8e3', 
+                backgroundColor: 'white', 
+                color: '#8A8378', 
+                border: '1px solid #D7D1C7', 
                 borderRadius: '8px', 
                 cursor: 'pointer', 
                 fontSize: '13px', 
@@ -1605,12 +1595,12 @@ export default function ProposalApp() {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#FAF8F3';
-                e.currentTarget.style.color = '#3F3B34';
+                e.currentTarget.style.backgroundColor = '#F5F2ED';
+                e.currentTarget.style.color = '#3A3732';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.color = '#888888';
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.color = '#8A8378';
               }}
             >
               Clear
@@ -1915,7 +1905,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
     return (
       <div style={{ 
         minHeight: '100vh', 
-        backgroundColor: '#F8F7F4', 
+        backgroundColor: '#FAF9F7', 
         padding: '40px 24px',
         display: 'flex',
         justifyContent: 'center',
@@ -1924,18 +1914,18 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
         <div style={{ 
           backgroundColor: 'white', 
           borderRadius: '12px', 
-          padding: '40px', 
-          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+          padding: '32px', 
+          boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
           maxWidth: '800px',
           width: '100%',
-          border: '1px solid rgba(0,0,0,0.04)'
+          border: '1px solid #E5E2DC'
         }}>
           {/* Header */}
-          <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ 
               fontSize: '20px', 
               fontWeight: '500', 
-              color: '#3F3B34', 
+              color: '#3A3732', 
               fontFamily: "'Domaine Text', serif",
               margin: 0,
               letterSpacing: '0.01em'
@@ -1946,9 +1936,9 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               onClick={() => setSelectedSubmission(null)}
               style={{ 
                 padding: '8px 16px', 
-                backgroundColor: 'transparent', 
-                color: '#3F3B34', 
-                border: '1px solid #e8e8e3', 
+                backgroundColor: 'white', 
+                color: '#3A3732', 
+                border: '1px solid #D7D1C7', 
                 borderRadius: '8px', 
                 cursor: 'pointer', 
                 fontSize: '13px',
@@ -1957,12 +1947,10 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                 transition: 'all 0.2s ease'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.backgroundColor = '#FAF8F3';
-                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.backgroundColor = '#F5F2ED';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.backgroundColor = 'transparent';
-                e.currentTarget.style.borderColor = '#e8e8e3';
+                e.currentTarget.style.backgroundColor = 'white';
               }}
             >
               ← Back to List
@@ -1970,10 +1958,10 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           </div>
           
           {/* Client & Submission Section */}
-          <div style={{ marginBottom: '32px' }}>
+          <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E9E3DC' }}>
             <div style={{ 
               fontSize: '11px', 
-              color: '#888888', 
+              color: '#8A8378', 
               textTransform: 'uppercase', 
               letterSpacing: '0.08em',
               marginBottom: '16px',
@@ -1984,29 +1972,29 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
               <div>
-                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Client</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{selectedSubmission.clientName || 'N/A'}</div>
+                <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Client</div>
+                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>{selectedSubmission.clientName || 'N/A'}</div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Submitted</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{formatDate(selectedSubmission.timestamp)}</div>
+                <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Submitted</div>
+                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>{formatDate(selectedSubmission.timestamp)}</div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Venue</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{selectedSubmission.venueName || 'N/A'}</div>
+                <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Venue</div>
+                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>{selectedSubmission.venueName || 'N/A'}</div>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
-                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Address</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{selectedSubmission.venueAddress || 'N/A'}</div>
+                <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Address</div>
+                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>{selectedSubmission.venueAddress || 'N/A'}</div>
               </div>
             </div>
           </div>
           
           {/* Timing Section */}
-          <div style={{ marginBottom: '32px' }}>
+          <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E9E3DC' }}>
             <div style={{ 
               fontSize: '11px', 
-              color: '#888888', 
+              color: '#8A8378', 
               textTransform: 'uppercase', 
               letterSpacing: '0.08em',
               marginBottom: '16px',
@@ -2017,14 +2005,14 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
               <div>
-                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Load-In</div>
-                <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.6' }}>
+                <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Load-In</div>
+                <div style={{ fontSize: '15px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>
                   {formatDateTime(selectedSubmission.loadInDate, selectedSubmission.loadInTime)}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Load-Out</div>
-                <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.6' }}>
+                <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Load-Out</div>
+                <div style={{ fontSize: '15px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>
                   {formatDateTime(selectedSubmission.loadOutDate, selectedSubmission.loadOutTime)}
                 </div>
               </div>
@@ -2033,10 +2021,10 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           
           {/* Products Section */}
           {selectedSubmission.products && selectedSubmission.products.length > 0 && (
-            <div style={{ marginBottom: '32px' }}>
+            <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E9E3DC' }}>
               <div style={{ 
                 fontSize: '11px', 
-                color: '#888888', 
+                color: '#8A8378', 
                 textTransform: 'uppercase', 
                 letterSpacing: '0.08em',
                 marginBottom: '16px',
@@ -2047,14 +2035,11 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                 {selectedSubmission.products.map((product, idx) => (
-                  <div key={idx} style={{ 
-                    paddingBottom: idx < selectedSubmission.products.length - 1 ? '16px' : '0',
-                    borderBottom: idx < selectedSubmission.products.length - 1 ? '1px solid #f0f0f0' : 'none'
-                  }}>
-                    <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>
+                  <div key={idx}>
+                    <div style={{ fontSize: '15px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>
                       {product.name || 'Unnamed Product'}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#888888', marginTop: '4px', lineHeight: '1.5' }}>
+                    <div style={{ fontSize: '13px', color: '#8A8378', marginTop: '4px', lineHeight: '1.5' }}>
                       Quantity: {product.quantity || 1}
                     </div>
                   </div>
@@ -2065,10 +2050,10 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           
           {/* Resources Section */}
           {((selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0) || selectedSubmission.resourceLinks) && (
-            <div style={{ marginBottom: '32px' }}>
+            <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E9E3DC' }}>
               <div style={{ 
                 fontSize: '11px', 
-                color: '#888888', 
+                color: '#8A8378', 
                 textTransform: 'uppercase', 
                 letterSpacing: '0.08em',
                 marginBottom: '16px',
@@ -2079,22 +2064,20 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               </div>
               {selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0 && (
                 <div style={{ marginBottom: '24px' }}>
-                  <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: '500' }}>Files Uploaded</div>
+                  <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: '500' }}>Files Uploaded</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                     {selectedSubmission.uploadedFiles.map((file, idx) => (
                       <div key={idx} style={{ 
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center',
-                        paddingBottom: '12px',
-                        borderBottom: idx < selectedSubmission.uploadedFiles.length - 1 ? '1px solid #f0f0f0' : 'none'
+                        alignItems: 'center'
                       }}>
                         <div>
-                          <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>
+                          <div style={{ fontSize: '15px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>
                             {file.name || 'Unnamed File'}
                           </div>
                           {file.size && (
-                            <div style={{ fontSize: '13px', color: '#888888', marginTop: '2px', lineHeight: '1.5' }}>
+                            <div style={{ fontSize: '13px', color: '#8A8378', marginTop: '2px', lineHeight: '1.5' }}>
                               {(file.size / 1024).toFixed(1)} KB
                             </div>
                           )}
@@ -2107,9 +2090,9 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                               padding: '8px 16px',
                               fontSize: '12px',
                               fontWeight: '500',
-                              color: '#3F3B34',
-                              backgroundColor: 'transparent',
-                              border: '1px solid #e8e8e3',
+                              color: '#3A3732',
+                              backgroundColor: 'white',
+                              border: '1px solid #D7D1C7',
                               borderRadius: '8px',
                               cursor: 'pointer',
                               textDecoration: 'none',
@@ -2117,12 +2100,10 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                               fontFamily: "'Neue Haas Unica', sans-serif"
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#FAF8F3';
-                              e.currentTarget.style.borderColor = '#d1d5db';
+                              e.currentTarget.style.backgroundColor = '#F5F2ED';
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                              e.currentTarget.style.borderColor = '#e8e8e3';
+                              e.currentTarget.style.backgroundColor = 'white';
                             }}
                           >
                             Download
@@ -2135,21 +2116,21 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               )}
               {selectedSubmission.resourceLinks && (
                 <div>
-                  <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: '500' }}>Links</div>
+                  <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: '500' }}>Links</div>
                   <div style={{ 
                     fontSize: '15px', 
-                    color: '#3F3B34', 
+                    color: '#3A3732', 
                     whiteSpace: 'pre-wrap', 
-                    lineHeight: '1.7',
+                    lineHeight: '1.5',
                     padding: '16px',
-                    backgroundColor: '#FAF8F3',
+                    backgroundColor: '#FAF9F7',
                     borderRadius: '8px',
-                    border: '1px solid #f0f0f0'
+                    border: '1px solid #E5E2DC'
                   }}>
                     {selectedSubmission.resourceLinks.split('\n').map((link, idx) => (
                       <div key={idx} style={{ marginBottom: idx < selectedSubmission.resourceLinks.split('\n').length - 1 ? '8px' : '0' }}>
                         {link.trim() && (
-                          <a href={link.trim().startsWith('http') ? link.trim() : `https://${link.trim()}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3F3B34', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                          <a href={link.trim().startsWith('http') ? link.trim() : `https://${link.trim()}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3A3732', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
                             {link.trim()}
                           </a>
                         )}
@@ -2163,10 +2144,10 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           
           {/* Notes Section */}
           {selectedSubmission.notes && selectedSubmission.notes.trim() && !selectedSubmission.notes.match(/^(www\.|http)/i) ? (
-            <div style={{ marginBottom: '32px' }}>
+            <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E9E3DC' }}>
               <div style={{ 
                 fontSize: '11px', 
-                color: '#888888', 
+                color: '#8A8378', 
                 textTransform: 'uppercase', 
                 letterSpacing: '0.08em',
                 marginBottom: '16px',
@@ -2177,22 +2158,21 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               </div>
               <div style={{ 
                 fontSize: '15px', 
-                color: '#3F3B34', 
+                color: '#3A3732', 
                 whiteSpace: 'pre-wrap', 
-                lineHeight: '1.7',
+                lineHeight: '1.5',
                 padding: '20px',
-                backgroundColor: '#FAF8F3',
-                borderRadius: '8px',
-                borderBottom: '1px solid #f0f0f0'
+                backgroundColor: '#FAF9F7',
+                borderRadius: '8px'
               }}>
                 {selectedSubmission.notes.trim()}
               </div>
             </div>
           ) : (
-            <div style={{ marginBottom: '32px' }}>
+            <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E9E3DC' }}>
               <div style={{ 
                 fontSize: '11px', 
-                color: '#888888', 
+                color: '#8A8378', 
                 textTransform: 'uppercase', 
                 letterSpacing: '0.08em',
                 marginBottom: '16px',
@@ -2203,11 +2183,11 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               </div>
               <div style={{ 
                 fontSize: '15px', 
-                color: '#999999', 
+                color: '#8A8378', 
                 fontStyle: 'italic',
-                lineHeight: '1.7',
+                lineHeight: '1.5',
                 padding: '20px',
-                backgroundColor: '#FAF8F3',
+                backgroundColor: '#FAF9F7',
                 borderRadius: '8px'
               }}>
                 No notes added yet.
@@ -2217,8 +2197,8 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           
           {/* Schedule Call */}
           <div style={{ marginBottom: '0' }}>
-            <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Schedule Call Requested</div>
-            <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{selectedSubmission.scheduleCall ? 'Yes' : 'No'}</div>
+            <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Schedule Call Requested</div>
+            <div style={{ fontSize: '15px', fontWeight: '400', color: '#3A3732', lineHeight: '1.5' }}>{selectedSubmission.scheduleCall ? 'Yes' : 'No'}</div>
           </div>
         </div>
       </div>
@@ -2226,55 +2206,97 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
   }
   
   return (
-    <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h2 style={{ fontSize: '24px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Domaine Text', serif" }}>
+    <div style={{ backgroundColor: 'white', borderRadius: '12px', padding: '32px', boxShadow: '0 8px 24px rgba(0,0,0,0.04)', border: '1px solid #E5E2DC' }}>
+      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ fontSize: '20px', fontWeight: '500', color: '#3A3732', fontFamily: "'Domaine Text', serif", margin: 0 }}>
           New Project Inquiries
         </h2>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <button onClick={onRefresh} style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+          <button onClick={onRefresh} style={{ 
+            padding: '8px 16px', 
+            backgroundColor: 'white', 
+            color: '#3A3732', 
+            border: '1px solid #D7D1C7', 
+            borderRadius: '8px', 
+            cursor: 'pointer', 
+            fontSize: '13px',
+            fontWeight: '500',
+            fontFamily: "'Neue Haas Unica', sans-serif",
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#F5F2ED';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'white';
+          }}
+          >
             ↻ Refresh
           </button>
-          <button onClick={onBack} style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+          <button onClick={onBack} style={{ 
+            padding: '8px 16px', 
+            backgroundColor: 'white', 
+            color: '#3A3732', 
+            border: '1px solid #D7D1C7', 
+            borderRadius: '8px', 
+            cursor: 'pointer', 
+            fontSize: '13px',
+            fontWeight: '500',
+            fontFamily: "'Neue Haas Unica', sans-serif",
+            transition: 'all 0.2s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.backgroundColor = '#F5F2ED';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = 'white';
+          }}
+          >
             ← Back to Proposals
           </button>
         </div>
       </div>
       
       {submissions.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#666' }}>
-          <p style={{ fontSize: '16px', marginBottom: '8px' }}>No project inquiries found.</p>
-          <p style={{ fontSize: '14px' }}>New project submissions from clients will appear here.</p>
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#8A8378' }}>
+          <p style={{ fontSize: '16px', marginBottom: '8px', color: '#3A3732' }}>No project inquiries found.</p>
+          <p style={{ fontSize: '14px', color: '#8A8378' }}>New project submissions from clients will appear here.</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           {submissions.map((submission, idx) => (
             <div
               key={idx}
               onClick={() => setSelectedSubmission(submission)}
               style={{
-                padding: '16px',
-                backgroundColor: '#f0f9ff',
-                borderRadius: '6px',
-                border: '2px solid #3b82f6',
+                padding: '20px',
+                backgroundColor: 'white',
+                borderRadius: '8px',
+                border: '1px solid #D7D1C7',
                 cursor: 'pointer',
-                transition: 'all 0.2s'
+                transition: 'all 0.2s ease'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
-              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f0f9ff'}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#F7F4F0';
+                e.currentTarget.style.borderColor = '#8A8378';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'white';
+                e.currentTarget.style.borderColor = '#D7D1C7';
+              }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '16px', fontWeight: '500', color: '#3A3732', marginBottom: '6px', lineHeight: '1.4' }}>
                     {submission.clientName || 'Unknown Client'}
                   </div>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal, marginBottom: '4px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: '400', color: '#3A3732', marginBottom: '6px', lineHeight: '1.4' }}>
                     {submission.venueName || 'Unnamed Venue'}
                   </div>
-                  <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '14px', color: '#8A8378', marginBottom: '12px', lineHeight: '1.5' }}>
                     {submission.venueAddress || 'No address provided'}
                   </div>
-                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#666' }}>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#8A8378', lineHeight: '1.5' }}>
                     <span>📅 {formatDateRange(submission.loadInDate, submission.loadOutDate)}</span>
                     {submission.products && submission.products.length > 0 && (
                       <span>📦 {submission.products.length} product(s)</span>
@@ -2282,7 +2304,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                     {submission.scheduleCall && <span>📞 Call requested</span>}
                   </div>
                 </div>
-                <div style={{ fontSize: '12px', color: '#666', textAlign: 'right' }}>
+                <div style={{ fontSize: '13px', color: '#8A8378', textAlign: 'right', lineHeight: '1.5' }}>
                   {formatDate(submission.timestamp)}
                 </div>
               </div>
