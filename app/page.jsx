@@ -1664,8 +1664,29 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
   const formatDateRange = (startDateStr, endDateStr) => {
     if (!startDateStr) return 'N/A';
     try {
-      const startDate = new Date(startDateStr);
-      const endDate = endDateStr ? new Date(endDateStr) : null;
+      // Handle YYYY-MM-DD format
+      let startDate;
+      if (typeof startDateStr === 'string' && startDateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+        startDate = new Date(startDateStr + 'T00:00:00');
+      } else {
+        startDate = new Date(startDateStr);
+      }
+      
+      if (isNaN(startDate.getTime())) {
+        return startDateStr; // Return original if invalid
+      }
+      
+      let endDate = null;
+      if (endDateStr) {
+        if (typeof endDateStr === 'string' && endDateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+          endDate = new Date(endDateStr + 'T00:00:00');
+        } else {
+          endDate = new Date(endDateStr);
+        }
+        if (isNaN(endDate.getTime())) {
+          endDate = null;
+        }
+      }
       
       if (endDate && startDate.getTime() !== endDate.getTime()) {
         const startMonth = startDate.toLocaleDateString('en-US', { month: 'short' });
@@ -1674,7 +1695,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
         const endDay = endDate.getDate();
         const year = startDate.getFullYear();
         
-        if (startMonth === endMonth) {
+        if (startMonth === endMonth && startDate.getFullYear() === endDate.getFullYear()) {
           return `${startMonth} ${startDay}-${endDay}, ${year}`;
         } else {
           return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
@@ -1690,24 +1711,45 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
   const formatDateTime = (dateStr, timeStr) => {
     if (!dateStr) return 'N/A';
     try {
-      const date = new Date(dateStr);
+      // Handle YYYY-MM-DD format
+      let date;
+      if (typeof dateStr === 'string' && dateStr.match(/^\d{4}-\d{2}-\d{2}/)) {
+        date = new Date(dateStr + 'T00:00:00');
+      } else {
+        date = new Date(dateStr);
+      }
+      
+      if (isNaN(date.getTime())) {
+        return dateStr; // Return original if invalid
+      }
+      
       const dateFormatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
       
-      if (timeStr) {
+      if (timeStr && timeStr.trim() && timeStr !== 'Invalid Date') {
         try {
-          // Handle time format (could be HH:MM or full datetime)
-          let timeFormatted = timeStr;
-          if (timeStr.includes('T')) {
-            const timeDate = new Date(timeStr);
-            timeFormatted = timeDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
-          } else if (timeStr.match(/^\d{2}:\d{2}$/)) {
-            // Format HH:MM to 12-hour format
+          // Handle time format (could be HH:MM, HH:MM AM/PM, or full datetime)
+          let timeFormatted = timeStr.trim();
+          
+          // If it's already formatted like "10:00 AM", use it
+          if (timeStr.match(/^\d{1,2}:\d{2}\s*(AM|PM)$/i)) {
+            timeFormatted = timeStr;
+          } 
+          // If it's HH:MM format (24-hour)
+          else if (timeStr.match(/^\d{2}:\d{2}$/)) {
             const [hours, minutes] = timeStr.split(':');
             const hour = parseInt(hours);
             const ampm = hour >= 12 ? 'PM' : 'AM';
             const displayHour = hour % 12 || 12;
             timeFormatted = `${displayHour}:${minutes} ${ampm}`;
           }
+          // If it's an ISO datetime string
+          else if (timeStr.includes('T')) {
+            const timeDate = new Date(timeStr);
+            if (!isNaN(timeDate.getTime())) {
+              timeFormatted = timeDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            }
+          }
+          
           return `${dateFormatted} at ${timeFormatted}`;
         } catch {
           return dateFormatted;
@@ -1864,11 +1906,11 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
         )}
         
         {/* Notes */}
-        {selectedSubmission.notes && (
+        {selectedSubmission.notes && selectedSubmission.notes.trim() && !selectedSubmission.notes.match(/^(www\.|http)/i) && (
           <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
             <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Notes</h3>
             <div style={{ fontSize: '14px', color: brandCharcoal, whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-              {selectedSubmission.notes}
+              {selectedSubmission.notes.trim()}
             </div>
           </div>
         )}
