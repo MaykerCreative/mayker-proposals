@@ -566,6 +566,9 @@ export default function ProposalApp() {
   const [viewingChangeRequests, setViewingChangeRequests] = useState(false);
   const [changeRequests, setChangeRequests] = useState([]);
   const [selectedChangeRequest, setSelectedChangeRequest] = useState(null);
+  const [viewingNewSubmissions, setViewingNewSubmissions] = useState(false);
+  const [newSubmissions, setNewSubmissions] = useState([]);
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [filters, setFilters] = useState({
     clientName: '',
     salesLead: '',
@@ -774,6 +777,24 @@ export default function ProposalApp() {
         console.error('Failed to fetch change requests:', crErr);
       }
       
+      // Also fetch new project submissions
+      try {
+        const subsResponse = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec?action=getNewProjectSubmissions', {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache'
+        });
+        if (subsResponse.ok) {
+          const subsData = await subsResponse.json();
+          if (subsData && subsData.submissions && Array.isArray(subsData.submissions)) {
+            const sorted = subsData.submissions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            setNewSubmissions(sorted);
+          }
+        }
+      } catch (subsErr) {
+        console.error('Failed to fetch new project submissions:', subsErr);
+      }
+      
       if (!data || !data.proposals || !Array.isArray(data.proposals) || data.proposals.length === 0) {
         setProposals([]);
         setCatalog([]);
@@ -910,6 +931,28 @@ export default function ProposalApp() {
     } catch (err) {
       console.error('Failed to fetch change requests:', err);
       setChangeRequests([]);
+    }
+  };
+  
+  const fetchNewSubmissions = async () => {
+    try {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec?action=getNewProjectSubmissions', {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache'
+      });
+      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      
+      if (data && data.submissions && Array.isArray(data.submissions)) {
+        const sorted = data.submissions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        setNewSubmissions(sorted);
+      } else {
+        setNewSubmissions([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch new project submissions:', err);
+      setNewSubmissions([]);
     }
   };
 
@@ -1366,6 +1409,7 @@ export default function ProposalApp() {
           <button onClick={async () => { 
             setViewingChangeRequests(true); 
             setIsCreatingNew(false);
+            setViewingNewSubmissions(false);
             setSelectedProposal(null);
             await fetchChangeRequests();
           }} style={{ padding: '10px 20px', backgroundColor: '#7693a9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', position: 'relative' }}>
@@ -1390,6 +1434,34 @@ export default function ProposalApp() {
               </span>
             )}
           </button>
+          <button onClick={async () => { 
+            setViewingNewSubmissions(true); 
+            setIsCreatingNew(false);
+            setViewingChangeRequests(false);
+            setSelectedProposal(null);
+            await fetchNewSubmissions();
+          }} style={{ padding: '10px 20px', backgroundColor: '#8B7355', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', position: 'relative' }}>
+            🎯 New Project Inquiries
+            {newSubmissions.length > 0 && (
+              <span style={{ 
+                position: 'absolute', 
+                top: '-6px', 
+                right: '-6px', 
+                backgroundColor: '#dc2626', 
+                color: 'white', 
+                borderRadius: '50%', 
+                width: '20px', 
+                height: '20px', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                fontSize: '11px', 
+                fontWeight: '600' 
+              }}>
+                {newSubmissions.length}
+              </span>
+            )}
+          </button>
           <div style={{ flex: 1, maxWidth: '400px' }}>
             <input type="text" placeholder="Search by client, venue, or location..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '10px 14px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }} />
           </div>
@@ -1406,6 +1478,12 @@ export default function ProposalApp() {
               setViewingChangeRequests(false);
             }}
             onRefresh={fetchChangeRequests}
+          />
+        ) : viewingNewSubmissions ? (
+          <NewProjectSubmissionsView 
+            submissions={newSubmissions}
+            onBack={() => setViewingNewSubmissions(false)}
+            onRefresh={fetchNewSubmissions}
           />
         ) : (
           <>
@@ -1565,6 +1643,200 @@ export default function ProposalApp() {
 }
 
 // ============================================
+// NEW PROJECT SUBMISSIONS VIEW
+// ============================================
+
+function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
+  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const brandCharcoal = '#2C2C2C';
+  const brandTaupe = '#545142';
+  
+  const formatDate = (dateStr) => {
+    if (!dateStr) return 'N/A';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return dateStr;
+    }
+  };
+  
+  if (selectedSubmission) {
+    return (
+      <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Domaine Text', serif" }}>
+            Project Inquiry Details
+          </h2>
+          <button
+            onClick={() => setSelectedSubmission(null)}
+            style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
+          >
+            ← Back to List
+          </button>
+        </div>
+        
+        <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Venue</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedSubmission.venueName || 'N/A'}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Submitted</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{formatDate(selectedSubmission.timestamp)}</div>
+            </div>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Address</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedSubmission.venueAddress || 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Timing */}
+        <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Timing</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Load-In</div>
+              <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                {selectedSubmission.loadInDate || 'N/A'}
+                {selectedSubmission.loadInTime && ` at ${selectedSubmission.loadInTime}`}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Load-Out</div>
+              <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                {selectedSubmission.loadOutDate || 'N/A'}
+                {selectedSubmission.loadOutTime && ` at ${selectedSubmission.loadOutTime}`}
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Products */}
+        {selectedSubmission.products && selectedSubmission.products.length > 0 && (
+          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Requested Products</h3>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {selectedSubmission.products.map((product, idx) => (
+                <div key={idx} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal }}>
+                    {product.name || 'Unnamed Product'}
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
+                    Quantity: {product.quantity || 1}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Resources */}
+        {(selectedSubmission.uploadedFilesCount > 0 || selectedSubmission.resourceLinks) && (
+          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Resources</h3>
+            {selectedSubmission.uploadedFilesCount > 0 && (
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Files Uploaded</div>
+                <div style={{ fontSize: '14px', color: brandCharcoal }}>{selectedSubmission.uploadedFilesCount} file(s)</div>
+              </div>
+            )}
+            {selectedSubmission.resourceLinks && (
+              <div>
+                <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Links</div>
+                <div style={{ fontSize: '14px', color: brandCharcoal, whiteSpace: 'pre-wrap' }}>{selectedSubmission.resourceLinks}</div>
+              </div>
+            )}
+          </div>
+        )}
+        
+        {/* Notes */}
+        {selectedSubmission.notes && (
+          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Notes</h3>
+            <div style={{ fontSize: '14px', color: brandCharcoal, whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+              {selectedSubmission.notes}
+            </div>
+          </div>
+        )}
+        
+        {/* Schedule Call */}
+        <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+          <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Schedule Call Requested</div>
+          <div style={{ fontSize: '14px', color: brandCharcoal }}>{selectedSubmission.scheduleCall ? 'Yes' : 'No'}</div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h2 style={{ fontSize: '24px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Domaine Text', serif" }}>
+          New Project Inquiries
+        </h2>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <button onClick={onRefresh} style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+            ↻ Refresh
+          </button>
+          <button onClick={onBack} style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+            ← Back to Proposals
+          </button>
+        </div>
+      </div>
+      
+      {submissions.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#666' }}>
+          <p style={{ fontSize: '16px', marginBottom: '8px' }}>No project inquiries found.</p>
+          <p style={{ fontSize: '14px' }}>New project submissions from clients will appear here.</p>
+        </div>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {submissions.map((submission, idx) => (
+            <div
+              key={idx}
+              onClick={() => setSelectedSubmission(submission)}
+              style={{
+                padding: '16px',
+                backgroundColor: '#f0f9ff',
+                borderRadius: '6px',
+                border: '2px solid #3b82f6',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#dbeafe'}
+              onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f0f9ff'}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '4px' }}>
+                    {submission.venueName || 'Unnamed Venue'}
+                  </div>
+                  <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                    {submission.venueAddress || 'No address provided'}
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#666' }}>
+                    <span>📅 {submission.loadInDate || 'N/A'} - {submission.loadOutDate || 'N/A'}</span>
+                    {submission.products && submission.products.length > 0 && (
+                      <span>📦 {submission.products.length} product(s)</span>
+                    )}
+                    {submission.scheduleCall && <span>📞 Call requested</span>}
+                  </div>
+                </div>
+                <div style={{ fontSize: '12px', color: '#666', textAlign: 'right' }}>
+                  {formatDate(submission.timestamp)}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // CHANGE REQUESTS REVIEW VIEW
 // ============================================
 
