@@ -426,6 +426,129 @@ function formatNumber(num) {
 }
 
 // ============================================
+// CONFIRM MODAL COMPONENT
+// ============================================
+
+function ConfirmModal({ isOpen, message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) {
+  if (!isOpen) return null;
+  
+  const brandCharcoal = '#2C2C2C';
+  const modalBackground = '#F7F6F0';
+  
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      backgroundColor: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 10000,
+      padding: '20px'
+    }} onClick={onCancel}>
+      <div style={{
+        backgroundColor: modalBackground,
+        borderRadius: '12px',
+        padding: '40px',
+        maxWidth: '500px',
+        width: '100%',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '24px'
+      }} onClick={(e) => e.stopPropagation()}>
+        {/* Logo */}
+        <img 
+          src="/mayker_round-stamp-lines-black.png" 
+          alt="Mayker" 
+          style={{ 
+            height: '60px', 
+            width: 'auto',
+            display: 'block'
+          }}
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+        
+        {/* Message */}
+        <p style={{
+          fontSize: '16px',
+          color: '#000000',
+          textAlign: 'center',
+          lineHeight: '1.6',
+          margin: 0,
+          fontFamily: "'NeueHaasUnica', sans-serif"
+        }}>
+          {message}
+        </p>
+        
+        {/* Buttons */}
+        <div style={{
+          display: 'flex',
+          gap: '12px',
+          width: '100%',
+          justifyContent: 'center'
+        }}>
+          <button
+            onClick={onCancel}
+            style={{
+              flex: 1,
+              padding: '12px 24px',
+              backgroundColor: 'white',
+              color: brandCharcoal,
+              border: '1px solid #e5e7eb',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontFamily: "'NeueHaasUnica', sans-serif",
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f9fafb';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+            }}
+          >
+            {cancelText}
+          </button>
+          <button
+            onClick={onConfirm}
+            style={{
+              flex: 1,
+              padding: '12px 24px',
+              backgroundColor: brandCharcoal,
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              fontSize: '14px',
+              fontWeight: '500',
+              cursor: 'pointer',
+              fontFamily: "'NeueHaasUnica', sans-serif",
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#1a1a1a';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = brandCharcoal;
+            }}
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================
 // MAIN COMPONENT
 // ============================================
 export default function ProposalApp() {
@@ -3856,6 +3979,7 @@ function ChangeRequestView({ proposal, sections, onCancel, catalog }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [newProduct, setNewProduct] = useState({
     section: '',
     name: '',
@@ -3939,10 +4063,12 @@ function ChangeRequestView({ proposal, sections, onCancel, catalog }) {
       return;
     }
 
-    if (!confirm('Are you sure you want to submit this change request? The team will review and respond to your request.')) {
-      return;
-    }
+    // Show confirmation modal
+    setShowConfirmModal(true);
+  };
 
+  const handleConfirmSubmit = async () => {
+    setShowConfirmModal(false);
     setSubmitting(true);
     try {
       const changeRequestData = {
@@ -4254,6 +4380,16 @@ function ChangeRequestView({ proposal, sections, onCancel, catalog }) {
           </div>
         </div>
       </div>
+      
+      {/* Confirm Modal */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        message="Are you sure you want to submit this change request? Once received, our team will review availability and circulate a revised proposal."
+        onConfirm={handleConfirmSubmit}
+        onCancel={() => setShowConfirmModal(false)}
+        confirmText="Confirm"
+        cancelText="Cancel"
+      />
     </div>
   );
 }
