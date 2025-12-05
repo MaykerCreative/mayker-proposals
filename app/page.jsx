@@ -1661,6 +1661,64 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
     }
   };
   
+  const formatDateRange = (startDateStr, endDateStr) => {
+    if (!startDateStr) return 'N/A';
+    try {
+      const startDate = new Date(startDateStr);
+      const endDate = endDateStr ? new Date(endDateStr) : null;
+      
+      if (endDate && startDate.getTime() !== endDate.getTime()) {
+        const startMonth = startDate.toLocaleDateString('en-US', { month: 'short' });
+        const endMonth = endDate.toLocaleDateString('en-US', { month: 'short' });
+        const startDay = startDate.getDate();
+        const endDay = endDate.getDate();
+        const year = startDate.getFullYear();
+        
+        if (startMonth === endMonth) {
+          return `${startMonth} ${startDay}-${endDay}, ${year}`;
+        } else {
+          return `${startMonth} ${startDay} - ${endMonth} ${endDay}, ${year}`;
+        }
+      } else {
+        return startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      }
+    } catch {
+      return startDateStr;
+    }
+  };
+  
+  const formatDateTime = (dateStr, timeStr) => {
+    if (!dateStr) return 'N/A';
+    try {
+      const date = new Date(dateStr);
+      const dateFormatted = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      
+      if (timeStr) {
+        try {
+          // Handle time format (could be HH:MM or full datetime)
+          let timeFormatted = timeStr;
+          if (timeStr.includes('T')) {
+            const timeDate = new Date(timeStr);
+            timeFormatted = timeDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+          } else if (timeStr.match(/^\d{2}:\d{2}$/)) {
+            // Format HH:MM to 12-hour format
+            const [hours, minutes] = timeStr.split(':');
+            const hour = parseInt(hours);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            timeFormatted = `${displayHour}:${minutes} ${ampm}`;
+          }
+          return `${dateFormatted} at ${timeFormatted}`;
+        } catch {
+          return dateFormatted;
+        }
+      }
+      return dateFormatted;
+    } catch {
+      return dateStr;
+    }
+  };
+  
   if (selectedSubmission) {
     return (
       <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -1679,12 +1737,16 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
         <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
             <div>
-              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Venue</div>
-              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedSubmission.venueName || 'N/A'}</div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Client</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedSubmission.clientName || 'N/A'}</div>
             </div>
             <div>
               <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Submitted</div>
               <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{formatDate(selectedSubmission.timestamp)}</div>
+            </div>
+            <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Venue</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedSubmission.venueName || 'N/A'}</div>
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Address</div>
@@ -1700,15 +1762,13 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
             <div>
               <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Load-In</div>
               <div style={{ fontSize: '14px', color: brandCharcoal }}>
-                {selectedSubmission.loadInDate || 'N/A'}
-                {selectedSubmission.loadInTime && ` at ${selectedSubmission.loadInTime}`}
+                {formatDateTime(selectedSubmission.loadInDate, selectedSubmission.loadInTime)}
               </div>
             </div>
             <div>
               <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Load-Out</div>
               <div style={{ fontSize: '14px', color: brandCharcoal }}>
-                {selectedSubmission.loadOutDate || 'N/A'}
-                {selectedSubmission.loadOutTime && ` at ${selectedSubmission.loadOutTime}`}
+                {formatDateTime(selectedSubmission.loadOutDate, selectedSubmission.loadOutTime)}
               </div>
             </div>
           </div>
@@ -1734,19 +1794,70 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
         )}
         
         {/* Resources */}
-        {(selectedSubmission.uploadedFilesCount > 0 || selectedSubmission.resourceLinks) && (
+        {((selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0) || selectedSubmission.resourceLinks) && (
           <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
             <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Resources</h3>
-            {selectedSubmission.uploadedFilesCount > 0 && (
-              <div style={{ marginBottom: '12px' }}>
-                <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Files Uploaded</div>
-                <div style={{ fontSize: '14px', color: brandCharcoal }}>{selectedSubmission.uploadedFilesCount} file(s)</div>
+            {selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0 && (
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '8px' }}>Files Uploaded</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {selectedSubmission.uploadedFiles.map((file, idx) => (
+                    <div key={idx} style={{ 
+                      padding: '12px', 
+                      backgroundColor: 'white', 
+                      borderRadius: '4px', 
+                      border: '1px solid #e5e7eb',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center'
+                    }}>
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal }}>
+                          {file.name || 'Unnamed File'}
+                        </div>
+                        {file.size && (
+                          <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                            {(file.size / 1024).toFixed(1)} KB
+                          </div>
+                        )}
+                      </div>
+                      {file.data && (
+                        <a
+                          href={file.data}
+                          download={file.name}
+                          style={{
+                            padding: '6px 12px',
+                            fontSize: '12px',
+                            fontWeight: '500',
+                            color: brandCharcoal,
+                            backgroundColor: 'transparent',
+                            border: `1px solid ${brandTaupe}`,
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            textDecoration: 'none',
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = brandTaupe;
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                            e.currentTarget.style.color = brandCharcoal;
+                          }}
+                        >
+                          Download
+                        </a>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
             {selectedSubmission.resourceLinks && (
               <div>
                 <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Links</div>
-                <div style={{ fontSize: '14px', color: brandCharcoal, whiteSpace: 'pre-wrap' }}>{selectedSubmission.resourceLinks}</div>
+                <div style={{ fontSize: '14px', color: brandCharcoal, whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{selectedSubmission.resourceLinks}</div>
               </div>
             )}
           </div>
@@ -1812,13 +1923,16 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '4px' }}>
+                    {submission.clientName || 'Unknown Client'}
+                  </div>
+                  <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal, marginBottom: '4px' }}>
                     {submission.venueName || 'Unnamed Venue'}
                   </div>
                   <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
                     {submission.venueAddress || 'No address provided'}
                   </div>
                   <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#666' }}>
-                    <span>📅 {submission.loadInDate || 'N/A'} - {submission.loadOutDate || 'N/A'}</span>
+                    <span>📅 {formatDateRange(submission.loadInDate, submission.loadOutDate)}</span>
                     {submission.products && submission.products.length > 0 && (
                       <span>📦 {submission.products.length} product(s)</span>
                     )}
