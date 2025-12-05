@@ -1424,6 +1424,8 @@ export default function ProposalApp() {
               <option value="">All Statuses</option>
               <option value="Pending">Pending</option>
               <option value="Approved">Approved</option>
+              <option value="Confirmed">Confirmed</option>
+              <option value="Completed">Completed</option>
               <option value="Cancelled">Cancelled</option>
             </select>
           </div>
@@ -1512,7 +1514,7 @@ export default function ProposalApp() {
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.city}, {proposal.state}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
-                    <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: proposal.status === 'Pending' ? '#f5f1e6' : proposal.status === 'Approved' ? '#e8f5e9' : '#ffebee', color: proposal.status === 'Pending' ? '#b8860b' : proposal.status === 'Approved' ? '#2e7d32' : '#c62828' }}>
+                    <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: proposal.status === 'Pending' ? '#f5f1e6' : proposal.status === 'Approved' ? '#e8f5e9' : proposal.status === 'Confirmed' ? '#e3f2fd' : proposal.status === 'Completed' ? '#e8f5e9' : proposal.status === 'Cancelled' ? '#fee2e2' : '#f3f4f6', color: proposal.status === 'Pending' ? '#b8860b' : proposal.status === 'Approved' ? '#2e7d32' : proposal.status === 'Confirmed' ? '#1976d2' : proposal.status === 'Completed' ? '#2e7d32' : proposal.status === 'Cancelled' ? '#dc2626' : '#666' }}>
                       {proposal.status || 'Pending'}
                     </span>
                   </td>
@@ -2439,6 +2441,8 @@ function CreateProposalView({ catalog, onSave, onCancel }) {
               <select name="status" value={formData.status} onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', boxSizing: 'border-box' }}>
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Completed">Completed</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
             </div>
@@ -5858,6 +5862,8 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
               <select name="status" value={formData.status} onChange={handleInputChange} style={{ width: '100%', padding: '12px', border: '1px solid #e5e7eb', borderRadius: '4px', fontSize: '14px', boxSizing: 'border-box', color: brandCharcoal, fontFamily: "'Inter', sans-serif", backgroundColor: 'white', transition: 'border-color 0.2s' }}>
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
+                <option value="Confirmed">Confirmed</option>
+                <option value="Completed">Completed</option>
                 <option value="Cancelled">Cancelled</option>
               </select>
             </div>
