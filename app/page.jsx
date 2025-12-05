@@ -1316,7 +1316,7 @@ export default function ProposalApp() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#fafaf8', padding: '32px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#F8F7F4', padding: '32px' }}>
       <style dangerouslySetInnerHTML={{ __html: `
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
         
@@ -1374,12 +1374,13 @@ export default function ProposalApp() {
         }
       ` }} />
 
-      <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
-        <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+      <div style={{ maxWidth: '1280px', margin: '0 auto', padding: '0 24px' }}>
+        {/* Header */}
+        <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '16px', paddingTop: '24px' }}>
           <img 
             src="/mayker_icon-black.svg" 
             alt="Mayker" 
-            style={{ height: '40px' }}
+            style={{ height: '36px' }}
             onError={(e) => {
               console.log('Dashboard logo failed, trying alternatives:', e.target.src);
               if (!e.target.src.includes('/assets/')) {
@@ -1394,78 +1395,227 @@ export default function ProposalApp() {
             onLoad={() => console.log('Dashboard logo loaded successfully:', '/mayker_icon-black.svg')}
           />
           <div>
-            <h1 style={{ fontSize: '28px', fontWeight: '600', color: '#2C2C2C', margin: '0' }}>Mayker Proposals</h1>
-            <p style={{ marginTop: '4px', color: '#888888', fontSize: '13px', margin: '0' }}>Manage and view all event proposals</p>
+            <h1 style={{ fontSize: '24px', fontWeight: '500', color: '#3F3B34', margin: '0', fontFamily: "'Domaine Text', serif" }}>Mayker Proposals</h1>
+            <p style={{ marginTop: '2px', color: '#888888', fontSize: '13px', margin: '0', fontWeight: '400' }}>Manage and view all event proposals</p>
           </div>
         </div>
 
-        <div style={{ marginBottom: '24px', display: 'flex', gap: '12px', alignItems: 'center' }}>
-          <button onClick={fetchProposals} style={{ padding: '10px 20px', backgroundColor: '#2C2C2C', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
+        {/* Action Bar */}
+        <div style={{ marginBottom: '32px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          <button 
+            onClick={fetchProposals} 
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: 'transparent', 
+              color: '#3F3B34', 
+              border: '1px solid #e8e8e3', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              fontSize: '13px', 
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', sans-serif",
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#FAF8F3';
+              e.currentTarget.style.borderColor = '#d1d5db';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = '#e8e8e3';
+            }}
+          >
             ↻ Refresh
           </button>
-          <button onClick={() => { setViewingChangeRequests(false); setIsCreatingNew(true); }} style={{ padding: '10px 20px', backgroundColor: '#545142', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>
+          <button 
+            onClick={() => { setViewingChangeRequests(false); setIsCreatingNew(true); }} 
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: '#FAF8F3', 
+              color: '#000000', 
+              border: '1px solid #e8e8e3', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              fontSize: '13px', 
+              fontWeight: '600',
+              fontFamily: "'Neue Haas Unica', sans-serif",
+              letterSpacing: '0.02em',
+              textTransform: 'uppercase',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#f5f5f2';
+              e.currentTarget.style.borderColor = '#d1d5db';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.12)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#FAF8F3';
+              e.currentTarget.style.borderColor = '#e8e8e3';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)';
+            }}
+          >
             + Create New Proposal
           </button>
-          <button onClick={async () => { 
-            setViewingChangeRequests(true); 
-            setIsCreatingNew(false);
-            setViewingNewSubmissions(false);
-            setSelectedProposal(null);
-            await fetchChangeRequests();
-          }} style={{ padding: '10px 20px', backgroundColor: '#7693a9', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', position: 'relative' }}>
+          <button 
+            onClick={async () => { 
+              setViewingChangeRequests(true); 
+              setIsCreatingNew(false);
+              setViewingNewSubmissions(false);
+              setSelectedProposal(null);
+              await fetchChangeRequests();
+            }} 
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: 'transparent', 
+              color: '#3F3B34', 
+              border: '1px solid #e8e8e3', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              fontSize: '13px', 
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', sans-serif",
+              position: 'relative',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#FAF8F3';
+              e.currentTarget.style.borderColor = '#d1d5db';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = '#e8e8e3';
+            }}
+          >
             📋 Change Requests
             {changeRequests.filter(cr => !cr.reviewed).length > 0 && (
               <span style={{ 
                 position: 'absolute', 
-                top: '-6px', 
-                right: '-6px', 
-                backgroundColor: '#dc2626', 
+                top: '-8px', 
+                right: '-8px', 
+                backgroundColor: '#c2410c', 
                 color: 'white', 
                 borderRadius: '50%', 
-                width: '20px', 
-                height: '20px', 
+                width: '18px', 
+                height: '18px', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
-                fontSize: '11px', 
-                fontWeight: '600' 
+                fontSize: '10px', 
+                fontWeight: '600',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
               }}>
                 {changeRequests.filter(cr => !cr.reviewed).length}
               </span>
             )}
           </button>
-          <button onClick={async () => { 
-            setViewingNewSubmissions(true); 
-            setIsCreatingNew(false);
-            setViewingChangeRequests(false);
-            setSelectedProposal(null);
-            await fetchNewSubmissions();
-          }} style={{ padding: '10px 20px', backgroundColor: '#8B7355', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500', position: 'relative' }}>
+          <button 
+            onClick={async () => { 
+              setViewingNewSubmissions(true); 
+              setIsCreatingNew(false);
+              setViewingChangeRequests(false);
+              setSelectedProposal(null);
+              await fetchNewSubmissions();
+            }} 
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: 'transparent', 
+              color: '#3F3B34', 
+              border: '1px solid #e8e8e3', 
+              borderRadius: '8px', 
+              cursor: 'pointer', 
+              fontSize: '13px', 
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', sans-serif",
+              position: 'relative',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#FAF8F3';
+              e.currentTarget.style.borderColor = '#d1d5db';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = '#e8e8e3';
+            }}
+          >
             🎯 New Project Inquiries
             {newSubmissions.length > 0 && (
               <span style={{ 
                 position: 'absolute', 
-                top: '-6px', 
-                right: '-6px', 
-                backgroundColor: '#dc2626', 
+                top: '-8px', 
+                right: '-8px', 
+                backgroundColor: '#c2410c', 
                 color: 'white', 
                 borderRadius: '50%', 
-                width: '20px', 
-                height: '20px', 
+                width: '18px', 
+                height: '18px', 
                 display: 'flex', 
                 alignItems: 'center', 
                 justifyContent: 'center', 
-                fontSize: '11px', 
-                fontWeight: '600' 
+                fontSize: '10px', 
+                fontWeight: '600',
+                boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
               }}>
                 {newSubmissions.length}
               </span>
             )}
           </button>
-          <div style={{ flex: 1, maxWidth: '400px' }}>
-            <input type="text" placeholder="Search by client, venue, or location..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} style={{ width: '100%', padding: '10px 14px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box', fontFamily: "'Inter', sans-serif" }} />
+          <div style={{ flex: 1, maxWidth: '400px', minWidth: '200px' }}>
+            <input 
+              type="text" 
+              placeholder="Search by client, venue, or location..." 
+              value={searchTerm} 
+              onChange={(e) => setSearchTerm(e.target.value)} 
+              style={{ 
+                width: '100%', 
+                padding: '10px 14px', 
+                border: '1px solid #e8e8e3', 
+                borderRadius: '8px', 
+                fontSize: '13px', 
+                boxSizing: 'border-box', 
+                fontFamily: "'Neue Haas Unica', sans-serif",
+                backgroundColor: 'white',
+                transition: 'all 0.2s ease',
+                outline: 'none'
+              }}
+              onFocus={(e) => {
+                e.currentTarget.style.borderColor = '#d1d5db';
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 0, 0, 0.05)';
+              }}
+              onBlur={(e) => {
+                e.currentTarget.style.borderColor = '#e8e8e3';
+                e.currentTarget.style.boxShadow = 'none';
+              }}
+            />
           </div>
-          {searchTerm && <button onClick={() => setSearchTerm('')} style={{ padding: '10px 14px', backgroundColor: '#f0ede5', color: '#888888', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '13px', fontWeight: '500' }}>Clear</button>}
+          {searchTerm && (
+            <button 
+              onClick={() => setSearchTerm('')} 
+              style={{ 
+                padding: '10px 16px', 
+                backgroundColor: 'transparent', 
+                color: '#888888', 
+                border: '1px solid #e8e8e3', 
+                borderRadius: '8px', 
+                cursor: 'pointer', 
+                fontSize: '13px', 
+                fontWeight: '500',
+                fontFamily: "'Neue Haas Unica', sans-serif",
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#FAF8F3';
+                e.currentTarget.style.color = '#3F3B34';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#888888';
+              }}
+            >
+              Clear
+            </button>
+          )}
         </div>
 
         {viewingChangeRequests ? (
@@ -1763,162 +1913,313 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
   
   if (selectedSubmission) {
     return (
-      <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '600', color: brandCharcoal, fontFamily: "'Domaine Text', serif" }}>
-            Project Inquiry Details
-          </h2>
-          <button
-            onClick={() => setSelectedSubmission(null)}
-            style={{ padding: '8px 16px', backgroundColor: '#f3f4f6', color: brandCharcoal, border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}
-          >
-            ← Back to List
-          </button>
-        </div>
-        
-        <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px', marginBottom: '16px' }}>
-            <div>
-              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Client</div>
-              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedSubmission.clientName || 'N/A'}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Submitted</div>
-              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{formatDate(selectedSubmission.timestamp)}</div>
-            </div>
-            <div>
-              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Venue</div>
-              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedSubmission.venueName || 'N/A'}</div>
-            </div>
-            <div style={{ gridColumn: '1 / -1' }}>
-              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Address</div>
-              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedSubmission.venueAddress || 'N/A'}</div>
-            </div>
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#F8F7F4', 
+        padding: '40px 24px',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'flex-start'
+      }}>
+        <div style={{ 
+          backgroundColor: 'white', 
+          borderRadius: '12px', 
+          padding: '40px', 
+          boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+          maxWidth: '800px',
+          width: '100%',
+          border: '1px solid rgba(0,0,0,0.04)'
+        }}>
+          {/* Header */}
+          <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ 
+              fontSize: '20px', 
+              fontWeight: '500', 
+              color: '#3F3B34', 
+              fontFamily: "'Domaine Text', serif",
+              margin: 0,
+              letterSpacing: '0.01em'
+            }}>
+              Project Inquiry Details
+            </h2>
+            <button
+              onClick={() => setSelectedSubmission(null)}
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: 'transparent', 
+                color: '#3F3B34', 
+                border: '1px solid #e8e8e3', 
+                borderRadius: '8px', 
+                cursor: 'pointer', 
+                fontSize: '13px',
+                fontWeight: '500',
+                fontFamily: "'Neue Haas Unica', sans-serif",
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#FAF8F3';
+                e.currentTarget.style.borderColor = '#d1d5db';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.borderColor = '#e8e8e3';
+              }}
+            >
+              ← Back to List
+            </button>
           </div>
-        </div>
-        
-        {/* Timing */}
-        <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Timing</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
-            <div>
-              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Load-In</div>
-              <div style={{ fontSize: '14px', color: brandCharcoal }}>
-                {formatDateTime(selectedSubmission.loadInDate, selectedSubmission.loadInTime)}
+          
+          {/* Client & Submission Section */}
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#888888', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.08em',
+              marginBottom: '16px',
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', sans-serif"
+            }}>
+              Client & Submission
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Client</div>
+                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{selectedSubmission.clientName || 'N/A'}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Submitted</div>
+                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{formatDate(selectedSubmission.timestamp)}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Venue</div>
+                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{selectedSubmission.venueName || 'N/A'}</div>
+              </div>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Address</div>
+                <div style={{ fontSize: '16px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{selectedSubmission.venueAddress || 'N/A'}</div>
               </div>
             </div>
-            <div>
-              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Load-Out</div>
-              <div style={{ fontSize: '14px', color: brandCharcoal }}>
-                {formatDateTime(selectedSubmission.loadOutDate, selectedSubmission.loadOutTime)}
-              </div>
-            </div>
           </div>
-        </div>
-        
-        {/* Products */}
-        {selectedSubmission.products && selectedSubmission.products.length > 0 && (
-          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Requested Products</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {selectedSubmission.products.map((product, idx) => (
-                <div key={idx} style={{ padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-                  <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal }}>
-                    {product.name || 'Unnamed Product'}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                    Quantity: {product.quantity || 1}
-                  </div>
+          
+          {/* Timing Section */}
+          <div style={{ marginBottom: '32px' }}>
+            <div style={{ 
+              fontSize: '11px', 
+              color: '#888888', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.08em',
+              marginBottom: '16px',
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', sans-serif"
+            }}>
+              Timing
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Load-In</div>
+                <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.6' }}>
+                  {formatDateTime(selectedSubmission.loadInDate, selectedSubmission.loadInTime)}
                 </div>
-              ))}
+              </div>
+              <div>
+                <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Load-Out</div>
+                <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.6' }}>
+                  {formatDateTime(selectedSubmission.loadOutDate, selectedSubmission.loadOutTime)}
+                </div>
+              </div>
             </div>
           </div>
-        )}
-        
-        {/* Resources */}
-        {((selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0) || selectedSubmission.resourceLinks) && (
-          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Resources</h3>
-            {selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
-                <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '8px' }}>Files Uploaded</div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {selectedSubmission.uploadedFiles.map((file, idx) => (
-                    <div key={idx} style={{ 
-                      padding: '12px', 
-                      backgroundColor: 'white', 
-                      borderRadius: '4px', 
-                      border: '1px solid #e5e7eb',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}>
-                      <div>
-                        <div style={{ fontSize: '14px', fontWeight: '500', color: brandCharcoal }}>
-                          {file.name || 'Unnamed File'}
-                        </div>
-                        {file.size && (
-                          <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
-                            {(file.size / 1024).toFixed(1)} KB
+          
+          {/* Products Section */}
+          {selectedSubmission.products && selectedSubmission.products.length > 0 && (
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#888888', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.08em',
+                marginBottom: '16px',
+                fontWeight: '500',
+                fontFamily: "'Neue Haas Unica', sans-serif"
+              }}>
+                Requested Products
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {selectedSubmission.products.map((product, idx) => (
+                  <div key={idx} style={{ 
+                    paddingBottom: idx < selectedSubmission.products.length - 1 ? '16px' : '0',
+                    borderBottom: idx < selectedSubmission.products.length - 1 ? '1px solid #f0f0f0' : 'none'
+                  }}>
+                    <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>
+                      {product.name || 'Unnamed Product'}
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#888888', marginTop: '4px', lineHeight: '1.5' }}>
+                      Quantity: {product.quantity || 1}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Resources Section */}
+          {((selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0) || selectedSubmission.resourceLinks) && (
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#888888', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.08em',
+                marginBottom: '16px',
+                fontWeight: '500',
+                fontFamily: "'Neue Haas Unica', sans-serif"
+              }}>
+                Resources
+              </div>
+              {selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0 && (
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: '500' }}>Files Uploaded</div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {selectedSubmission.uploadedFiles.map((file, idx) => (
+                      <div key={idx} style={{ 
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        paddingBottom: '12px',
+                        borderBottom: idx < selectedSubmission.uploadedFiles.length - 1 ? '1px solid #f0f0f0' : 'none'
+                      }}>
+                        <div>
+                          <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>
+                            {file.name || 'Unnamed File'}
                           </div>
+                          {file.size && (
+                            <div style={{ fontSize: '13px', color: '#888888', marginTop: '2px', lineHeight: '1.5' }}>
+                              {(file.size / 1024).toFixed(1)} KB
+                            </div>
+                          )}
+                        </div>
+                        {file.data && (
+                          <a
+                            href={file.data}
+                            download={file.name}
+                            style={{
+                              padding: '8px 16px',
+                              fontSize: '12px',
+                              fontWeight: '500',
+                              color: '#3F3B34',
+                              backgroundColor: 'transparent',
+                              border: '1px solid #e8e8e3',
+                              borderRadius: '8px',
+                              cursor: 'pointer',
+                              textDecoration: 'none',
+                              transition: 'all 0.2s ease',
+                              fontFamily: "'Neue Haas Unica', sans-serif"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#FAF8F3';
+                              e.currentTarget.style.borderColor = '#d1d5db';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.borderColor = '#e8e8e3';
+                            }}
+                          >
+                            Download
+                          </a>
                         )}
                       </div>
-                      {file.data && (
-                        <a
-                          href={file.data}
-                          download={file.name}
-                          style={{
-                            padding: '6px 12px',
-                            fontSize: '12px',
-                            fontWeight: '500',
-                            color: brandCharcoal,
-                            backgroundColor: 'transparent',
-                            border: `1px solid ${brandTaupe}`,
-                            borderRadius: '4px',
-                            cursor: 'pointer',
-                            textDecoration: 'none',
-                            transition: 'all 0.2s'
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.backgroundColor = brandTaupe;
-                            e.currentTarget.style.color = 'white';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.backgroundColor = 'transparent';
-                            e.currentTarget.style.color = brandCharcoal;
-                          }}
-                        >
-                          Download
-                        </a>
-                      )}
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-            {selectedSubmission.resourceLinks && (
-              <div>
-                <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Links</div>
-                <div style={{ fontSize: '14px', color: brandCharcoal, whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>{selectedSubmission.resourceLinks}</div>
-              </div>
-            )}
-          </div>
-        )}
-        
-        {/* Notes */}
-        {selectedSubmission.notes && selectedSubmission.notes.trim() && !selectedSubmission.notes.match(/^(www\.|http)/i) && (
-          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-            <h3 style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '12px' }}>Notes</h3>
-            <div style={{ fontSize: '14px', color: brandCharcoal, whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
-              {selectedSubmission.notes.trim()}
+              )}
+              {selectedSubmission.resourceLinks && (
+                <div>
+                  <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: '500' }}>Links</div>
+                  <div style={{ 
+                    fontSize: '15px', 
+                    color: '#3F3B34', 
+                    whiteSpace: 'pre-wrap', 
+                    lineHeight: '1.7',
+                    padding: '16px',
+                    backgroundColor: '#FAF8F3',
+                    borderRadius: '8px',
+                    border: '1px solid #f0f0f0'
+                  }}>
+                    {selectedSubmission.resourceLinks.split('\n').map((link, idx) => (
+                      <div key={idx} style={{ marginBottom: idx < selectedSubmission.resourceLinks.split('\n').length - 1 ? '8px' : '0' }}>
+                        {link.trim() && (
+                          <a href={link.trim().startsWith('http') ? link.trim() : `https://${link.trim()}`} target="_blank" rel="noopener noreferrer" style={{ color: '#3F3B34', textDecoration: 'underline', textUnderlineOffset: '2px' }}>
+                            {link.trim()}
+                          </a>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
+          )}
+          
+          {/* Notes Section */}
+          {selectedSubmission.notes && selectedSubmission.notes.trim() && !selectedSubmission.notes.match(/^(www\.|http)/i) ? (
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#888888', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.08em',
+                marginBottom: '16px',
+                fontWeight: '500',
+                fontFamily: "'Neue Haas Unica', sans-serif"
+              }}>
+                Notes
+              </div>
+              <div style={{ 
+                fontSize: '15px', 
+                color: '#3F3B34', 
+                whiteSpace: 'pre-wrap', 
+                lineHeight: '1.7',
+                padding: '20px',
+                backgroundColor: '#FAF8F3',
+                borderRadius: '8px',
+                borderBottom: '1px solid #f0f0f0'
+              }}>
+                {selectedSubmission.notes.trim()}
+              </div>
+            </div>
+          ) : (
+            <div style={{ marginBottom: '32px' }}>
+              <div style={{ 
+                fontSize: '11px', 
+                color: '#888888', 
+                textTransform: 'uppercase', 
+                letterSpacing: '0.08em',
+                marginBottom: '16px',
+                fontWeight: '500',
+                fontFamily: "'Neue Haas Unica', sans-serif"
+              }}>
+                Notes
+              </div>
+              <div style={{ 
+                fontSize: '15px', 
+                color: '#999999', 
+                fontStyle: 'italic',
+                lineHeight: '1.7',
+                padding: '20px',
+                backgroundColor: '#FAF8F3',
+                borderRadius: '8px'
+              }}>
+                No notes added yet.
+              </div>
+            </div>
+          )}
+          
+          {/* Schedule Call */}
+          <div style={{ marginBottom: '0' }}>
+            <div style={{ fontSize: '11px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', fontWeight: '500' }}>Schedule Call Requested</div>
+            <div style={{ fontSize: '15px', fontWeight: '400', color: '#3F3B34', lineHeight: '1.5' }}>{selectedSubmission.scheduleCall ? 'Yes' : 'No'}</div>
           </div>
-        )}
-        
-        {/* Schedule Call */}
-        <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-          <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Schedule Call Requested</div>
-          <div style={{ fontSize: '14px', color: brandCharcoal }}>{selectedSubmission.scheduleCall ? 'Yes' : 'No'}</div>
         </div>
       </div>
     );
