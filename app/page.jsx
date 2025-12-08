@@ -2029,6 +2029,13 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
   };
   
   if (selectedSubmission) {
+    // Debug: Log submission data
+    console.log('Selected submission:', selectedSubmission);
+    console.log('Has notes:', !!selectedSubmission.notes);
+    console.log('Has resourceLinks:', !!selectedSubmission.resourceLinks);
+    console.log('Has uploadedFiles:', selectedSubmission.uploadedFiles?.length || 0);
+    console.log('uploadedFiles:', selectedSubmission.uploadedFiles);
+    
     return (
       <div style={{ 
         minHeight: '100vh', 
@@ -2176,7 +2183,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           )}
           
           {/* Resources Section */}
-          {((selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0) || selectedSubmission.resourceLinks) && (
+          {((selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0) || (selectedSubmission.resourceLinks && selectedSubmission.resourceLinks.trim())) && (
             <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E9E3DC' }}>
               <div style={{ 
                 fontSize: '11px', 
@@ -2241,7 +2248,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                   </div>
                 </div>
               )}
-              {selectedSubmission.resourceLinks && (
+              {selectedSubmission.resourceLinks && selectedSubmission.resourceLinks.trim() && (
                 <div>
                   <div style={{ fontSize: '11px', color: '#8A8378', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px', fontWeight: '500' }}>Links</div>
                   <div style={{ 
@@ -2269,8 +2276,8 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
             </div>
           )}
           
-          {/* Notes Section */}
-          {selectedSubmission.notes && selectedSubmission.notes.trim() && !selectedSubmission.notes.match(/^(www\.|http)/i) ? (
+          {/* Notes Section - Show if notes exist */}
+          {selectedSubmission.notes && selectedSubmission.notes.trim() ? (
             <div style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid #E9E3DC' }}>
               <div style={{ 
                 fontSize: '11px', 
@@ -3682,8 +3689,15 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
       })
         .then(response => response.json())
         .then(data => {
+          console.log('Submission data fetched:', data);
           if (data.success && data.submission) {
+            console.log('Setting original submission:', data.submission);
+            console.log('Has notes:', !!data.submission.notes);
+            console.log('Has links:', !!data.submission.resourceLinks);
+            console.log('Has files:', data.submission.uploadedFiles?.length || 0);
             setOriginalSubmission(data.submission);
+          } else {
+            console.log('Failed to fetch submission:', data.error);
           }
         })
         .catch(error => {
