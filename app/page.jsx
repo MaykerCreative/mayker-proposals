@@ -569,6 +569,7 @@ export default function ProposalApp() {
   const [viewingNewSubmissions, setViewingNewSubmissions] = useState(false);
   const [newSubmissions, setNewSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [deleteConfirmModal, setDeleteConfirmModal] = useState({ isOpen: false, proposal: null });
   const [filters, setFilters] = useState({
     clientName: '',
     salesLead: '',
@@ -931,6 +932,41 @@ export default function ProposalApp() {
     } catch (err) {
       console.error('Failed to fetch change requests:', err);
       setChangeRequests([]);
+    }
+  };
+  
+  const handleDeleteProposal = async (proposal) => {
+    try {
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          type: 'deleteProposal',
+          projectNumber: proposal.projectNumber,
+          version: proposal.version || 1
+        }),
+        mode: 'cors'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        alert('Proposal deleted successfully!');
+        setDeleteConfirmModal({ isOpen: false, proposal: null });
+        // Refresh proposals list
+        fetchProposals();
+        // If the deleted proposal was selected, clear selection
+        if (selectedProposal && 
+            selectedProposal.projectNumber === proposal.projectNumber && 
+            selectedProposal.version === proposal.version) {
+          setSelectedProposal(null);
+          window.history.pushState({}, '', window.location.pathname);
+        }
+      } else {
+        throw new Error(result.error || 'Failed to delete proposal');
+      }
+    } catch (err) {
+      alert('Error deleting proposal: ' + err.message);
     }
   };
   
@@ -1775,6 +1811,10 @@ export default function ProposalApp() {
                       <button onClick={() => setSelectedProposal({ ...proposal, _isEditing: true })} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         Edit
                       </button>
+                      <span style={{ color: '#d1d5db' }}>|</span>
+                      <button onClick={() => setDeleteConfirmModal({ isOpen: true, proposal })} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
+                        Delete
+                      </button>
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.clientName}</td>
@@ -1828,6 +1868,20 @@ export default function ProposalApp() {
           </>
         )}
       </div>
+      
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteConfirmModal.isOpen}
+        message={`Are you sure you want to delete this proposal? This action cannot be undone.\n\nProject: ${deleteConfirmModal.proposal?.clientName || ''} (${deleteConfirmModal.proposal?.projectNumber || ''}${deleteConfirmModal.proposal?.version ? ` - V${deleteConfirmModal.proposal.version}` : ''})`}
+        onConfirm={() => {
+          if (deleteConfirmModal.proposal) {
+            handleDeleteProposal(deleteConfirmModal.proposal);
+          }
+        }}
+        onCancel={() => setDeleteConfirmModal({ isOpen: false, proposal: null })}
+        confirmText="Delete"
+        cancelText="Cancel"
+      />
     </div>
   );
 }
@@ -4073,16 +4127,26 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
         }
         
         .print-only { display: none !important; }
-        /* Ensure all text in proposal view uses black/charcoal (except for specific colored elements like discounts) */
+        /* Ensure all text in proposal view uses black/charcoal (except cover page and specific colored elements like discounts) */
         div[data-proposal-view="true"] {
           color: #2C2C2C !important;
         }
-        div[data-proposal-view="true"] p,
-        div[data-proposal-view="true"] td,
-        div[data-proposal-view="true"] th,
-        div[data-proposal-view="true"] li,
-        div[data-proposal-view="true"] div,
-        div[data-proposal-view="true"] span:not([style*="#059669"]):not([style*="green"]) {
+        /* Keep white text on cover page - use class selector for reliability */
+        div[data-proposal-view="true"] .cover-page p,
+        div[data-proposal-view="true"] .cover-page * {
+          color: white !important;
+        }
+        div[data-proposal-view="true"] p[style*="color: white"],
+        div[data-proposal-view="true"] p[style*="color:rgba(255"],
+        div[data-proposal-view="true"] p[style*="color: rgba(255"] {
+          color: white !important;
+        }
+        div[data-proposal-view="true"] p:not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+        div[data-proposal-view="true"] td:not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+        div[data-proposal-view="true"] th:not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+        div[data-proposal-view="true"] li:not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+        div[data-proposal-view="true"] div:not(.cover-page):not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+        div[data-proposal-view="true"] span:not([style*="#059669"]):not([style*="green"]):not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]) {
           color: #2C2C2C !important;
         }
         /* Keep green for discounts and waived fees */
@@ -4104,11 +4168,26 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
           thead td, thead th { background-color: white !important; } 
           tbody tr[style*="page-break-before"] { page-break-before: always !important; break-before: page !important; }
           .no-page-break { page-break-inside: avoid !important; break-inside: avoid !important; }
-          /* Ensure black text in print */
+          /* Ensure black text in print (except cover page) */
           div[data-proposal-view="true"] {
             color: #2C2C2C !important;
           }
-          div[data-proposal-view="true"] * {
+          /* Keep white text on cover page in print */
+          div[data-proposal-view="true"] .cover-page p,
+          div[data-proposal-view="true"] .cover-page * {
+            color: white !important;
+          }
+          div[data-proposal-view="true"] p[style*="color: white"],
+          div[data-proposal-view="true"] p[style*="color:rgba(255"],
+          div[data-proposal-view="true"] p[style*="color: rgba(255"] {
+            color: white !important;
+          }
+          div[data-proposal-view="true"] p:not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+          div[data-proposal-view="true"] td:not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+          div[data-proposal-view="true"] th:not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+          div[data-proposal-view="true"] li:not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+          div[data-proposal-view="true"] div:not(.cover-page):not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]),
+          div[data-proposal-view="true"] span:not([style*="#059669"]):not([style*="green"]):not([style*="color: white"]):not([style*="color:rgba(255"]):not([style*="color: rgba(255"]) {
             color: #2C2C2C !important;
           }
           /* Keep green for discounts in print */
@@ -4204,7 +4283,7 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
         />
       ) : (
         <>
-      <div className="print-break-after" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always', pageBreakBefore: 'auto', overflow: 'hidden' }}>
+      <div className="print-break-after cover-page" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always', pageBreakBefore: 'auto', overflow: 'hidden' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
             <img src="/mayker_wordmark-events-whisper.svg" alt="MAYKER EVENTS" style={{ height: '32px', marginBottom: '24px' }} />
