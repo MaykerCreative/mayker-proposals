@@ -4073,6 +4073,24 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
         }
         
         .print-only { display: none !important; }
+        /* Ensure all text in proposal view uses black/charcoal (except for specific colored elements like discounts) */
+        div[data-proposal-view="true"] {
+          color: #2C2C2C !important;
+        }
+        div[data-proposal-view="true"] p,
+        div[data-proposal-view="true"] td,
+        div[data-proposal-view="true"] th,
+        div[data-proposal-view="true"] li,
+        div[data-proposal-view="true"] div,
+        div[data-proposal-view="true"] span:not([style*="#059669"]):not([style*="green"]) {
+          color: #2C2C2C !important;
+        }
+        /* Keep green for discounts and waived fees */
+        div[data-proposal-view="true"] span[style*="#059669"],
+        div[data-proposal-view="true"] td[style*="#059669"] {
+          color: #059669 !important;
+        }
+        
         @media print { 
           .no-print { display: none !important; } 
           .print-only { display: block !important; }
@@ -4085,7 +4103,19 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
           thead tr { page-break-inside: avoid; } 
           thead td, thead th { background-color: white !important; } 
           tbody tr[style*="page-break-before"] { page-break-before: always !important; break-before: page !important; }
-          .no-page-break { page-break-inside: avoid !important; break-inside: avoid !important; } 
+          .no-page-break { page-break-inside: avoid !important; break-inside: avoid !important; }
+          /* Ensure black text in print */
+          div[data-proposal-view="true"] {
+            color: #2C2C2C !important;
+          }
+          div[data-proposal-view="true"] * {
+            color: #2C2C2C !important;
+          }
+          /* Keep green for discounts in print */
+          div[data-proposal-view="true"] span[style*="#059669"],
+          div[data-proposal-view="true"] td[style*="#059669"] {
+            color: #059669 !important;
+          }
         }
       ` }} />
 
