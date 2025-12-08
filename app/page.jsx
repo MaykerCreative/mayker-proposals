@@ -4129,7 +4129,7 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
               </button>
             )}
             {onEdit && !actualIsClientView && (
-              <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+              <button onClick={onEdit} style={{ padding: '8px 20px', backgroundColor: '#6B8E5A', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
                 Edit
               </button>
             )}
@@ -4139,12 +4139,12 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
               </button>
             )}
             {!actualIsClientView && (
-              <button onClick={handlePublishToggle} disabled={isPublishing} style={{ padding: '8px 20px', backgroundColor: isPublished ? '#dc2626' : '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: isPublishing ? 'not-allowed' : 'pointer', fontSize: '14px', opacity: isPublishing ? 0.6 : 1 }}>
+              <button onClick={handlePublishToggle} disabled={isPublishing} style={{ padding: '8px 20px', backgroundColor: isPublished ? '#dc2626' : '#8B7A5A', color: 'white', border: 'none', borderRadius: '4px', cursor: isPublishing ? 'not-allowed' : 'pointer', fontSize: '14px', opacity: isPublishing ? 0.6 : 1 }}>
                 {isPublishing ? 'Updating...' : (isPublished ? 'Unpublish from Portal' : 'Publish to Portal')}
               </button>
             )}
             {!actualIsClientView && (
-              <button onClick={handleExportSourcing} style={{ padding: '8px 20px', backgroundColor: '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
+              <button onClick={handleExportSourcing} style={{ padding: '8px 20px', backgroundColor: '#5A8E7D', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
                 Export Sourcing
               </button>
             )}
