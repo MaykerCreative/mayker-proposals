@@ -1762,13 +1762,17 @@ export default function ProposalApp() {
             <tbody>
               {filteredProposals.map((proposal, index) => {
                 const hasUnreviewed = hasUnreviewedChangeRequest(proposal);
+                const isNewSubmission = proposal.isFromNewSubmission === true;
+                // Priority: unreviewed change requests > new submissions > alternating rows
                 const rowBgColor = hasUnreviewed 
                   ? '#e6f0f7' // Light blue background for proposals with unreviewed change requests
+                  : isNewSubmission
+                  ? '#fef3c7' // Light yellow/amber background for new submissions
                   : (index % 2 === 0 ? 'white' : '#fafaf8');
-                const rowBorderColor = hasUnreviewed ? '#7693a9' : '#f0ede5';
+                const rowBorderColor = hasUnreviewed ? '#7693a9' : isNewSubmission ? '#f59e0b' : '#f0ede5';
                 
                 return (
-                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: hasUnreviewed ? '4px solid #7693a9' : 'none' }}>
+                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: hasUnreviewed ? '4px solid #7693a9' : isNewSubmission ? '4px solid #f59e0b' : 'none' }}>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => {
@@ -1817,7 +1821,26 @@ export default function ProposalApp() {
                       </button>
                     </div>
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.clientName}</td>
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>{proposal.clientName}</span>
+                      {proposal.isFromNewSubmission && (
+                        <span style={{ 
+                          display: 'inline-block', 
+                          padding: '2px 8px', 
+                          borderRadius: '3px', 
+                          fontSize: '10px', 
+                          fontWeight: '600', 
+                          backgroundColor: '#dbeafe', 
+                          color: '#1e40af',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          New
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', minWidth: '140px', width: '140px', whiteSpace: 'nowrap' }}>{proposal.eventDate}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.city}, {proposal.state}</td>
