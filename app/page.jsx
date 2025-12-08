@@ -944,6 +944,56 @@ export default function ProposalApp() {
       if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       
+      // DEBUG: Log debug info if available
+      if (data._debug) {
+        console.log('=== DEBUG INFO FROM BACKEND ===');
+        console.log('Sheet name:', data._debug.sheetName);
+        console.log('Total rows:', data._debug.totalRows);
+        console.log('Submissions found:', data._debug.submissionsFound);
+        console.log('Headers:', data._debug.headers);
+        console.log('Has Client Name column:', data._debug.hasClientNameColumn);
+        if (data._debug.sampleRow) {
+          console.log('Sample row length:', data._debug.sampleRow.rowLength);
+          console.log('Sample row columns:');
+          data._debug.sampleRow.columnValues.forEach(col => {
+            console.log(`  Column ${col.index} [${col.header}]: [${col.type}] "${col.value}"`);
+          });
+        }
+        console.log('================================');
+      }
+      
+      // Check for errors
+      if (data.error) {
+        console.error('=== ERROR FROM BACKEND ===');
+        console.error('Error:', data.error);
+        if (data.errorStack) {
+          console.error('Stack:', data.errorStack);
+        }
+        console.error('===========================');
+        alert('Error loading project inquiries: ' + data.error);
+      }
+      
+      // DEBUG: Log all submissions
+      console.log('=== ALL SUBMISSIONS ===');
+      console.log('Total submissions:', data.submissions ? data.submissions.length : 0);
+      if (data.submissions && data.submissions.length > 0) {
+        data.submissions.forEach((sub, idx) => {
+          console.log(`Submission ${idx + 1}:`, {
+            id: sub.id,
+            clientName: sub.clientName,
+            venueName: sub.venueName,
+            venueAddress: sub.venueAddress,
+            loadInDate: sub.loadInDate,
+            loadOutDate: sub.loadOutDate,
+            scheduleCall: sub.scheduleCall,
+            hasError: !!sub._error
+          });
+        });
+      } else {
+        console.log('No submissions found in response');
+      }
+      console.log('========================');
+      
       if (data && data.submissions && Array.isArray(data.submissions)) {
         const sorted = data.submissions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         setNewSubmissions(sorted);
@@ -3465,12 +3515,15 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefresh
     return <ProfitabilityView proposal={proposal} onBack={() => setShowProfitability(false)} />;
   }
 
-  return <ViewProposalView proposal={proposal} catalog={catalog} onBack={onBack} onPrint={onPrint} onEdit={isPublicView || isClientView ? undefined : () => setIsEditing(true)} onViewProfitability={isPublicView || isClientView ? undefined : () => setShowProfitability(true)} isPublicView={isPublicView} isClientView={isClientView} />;
+  return <ViewProposalView proposal={proposal} catalog={catalog} onBack={onBack} onPrint={onPrint} onEdit={isPublicView || isClientView ? undefined : () => setIsEditing(true)} onViewProfitability={isPublicView || isClientView ? undefined : () => setShowProfitability(true)} isPublicView={isPublicView} isClientView={isClientView} onRefresh={onRefresh} />;
 }
 
-function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewProfitability, isPublicView = false, isClientView = false }) {
+function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewProfitability, isPublicView = false, isClientView = false, onRefresh }) {
   // State for change request mode
   const [isChangeRequestMode, setIsChangeRequestMode] = useState(false);
+  // State for published status
+  const [isPublished, setIsPublished] = useState(proposal.published !== undefined ? proposal.published : true); // Default to true for backward compatibility
+  const [isPublishing, setIsPublishing] = useState(false);
   
   // Double-check if we're on a client route (safety check)
   const checkClientRoute = () => {
@@ -3546,6 +3599,44 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
   
   const handlePrintDownload = () => {
     window.print();
+  };
+  
+  const handlePublishToggle = async () => {
+    if (isPublishing) return;
+    
+    setIsPublishing(true);
+    try {
+      const newPublishedStatus = !isPublished;
+      
+      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          type: 'publishProposal',
+          projectNumber: proposal.projectNumber,
+          version: proposal.version || 1,
+          published: newPublishedStatus
+        }),
+        mode: 'cors'
+      });
+      
+      const result = await response.json();
+      
+      if (result.success) {
+        setIsPublished(newPublishedStatus);
+        alert(result.message || (newPublishedStatus ? 'Proposal published successfully!' : 'Proposal unpublished successfully!'));
+        // Refresh the proposal if onRefresh is provided
+        if (onRefresh) {
+          onRefresh();
+        }
+      } else {
+        throw new Error(result.error || 'Failed to update publish status');
+      }
+    } catch (error) {
+      alert('Error updating publish status: ' + error.message);
+    } finally {
+      setIsPublishing(false);
+    }
   };
   
   const handleExportSourcing = () => {
@@ -4045,6 +4136,11 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
             {onViewProfitability && !actualIsClientView && (
               <button onClick={onViewProfitability} style={{ padding: '8px 20px', backgroundColor: '#7c3aed', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px' }}>
                 View Profitability
+              </button>
+            )}
+            {!actualIsClientView && (
+              <button onClick={handlePublishToggle} disabled={isPublishing} style={{ padding: '8px 20px', backgroundColor: isPublished ? '#dc2626' : '#059669', color: 'white', border: 'none', borderRadius: '4px', cursor: isPublishing ? 'not-allowed' : 'pointer', fontSize: '14px', opacity: isPublishing ? 0.6 : 1 }}>
+                {isPublishing ? 'Updating...' : (isPublished ? 'Unpublish from Portal' : 'Publish to Portal')}
               </button>
             )}
             {!actualIsClientView && (
