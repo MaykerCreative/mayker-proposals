@@ -3601,6 +3601,9 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
   // State for published status
   const [isPublished, setIsPublished] = useState(proposal.published !== undefined ? proposal.published : true); // Default to true for backward compatibility
   const [isPublishing, setIsPublishing] = useState(false);
+  // State for original submission data (if proposal came from new submission)
+  const [originalSubmission, setOriginalSubmission] = useState(null);
+  const [loadingSubmission, setLoadingSubmission] = useState(false);
   
   // Double-check if we're on a client route (safety check)
   const checkClientRoute = () => {
@@ -3667,6 +3670,30 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
       imageDataPreview: ip.imageData ? ip.imageData.substring(0, 50) + '...' : 'none'
     })));
   }
+  
+  // Fetch original submission data if this proposal came from a new submission
+  useEffect(() => {
+    if (proposal.isFromNewSubmission && proposal.submissionId && !actualIsClientView) {
+      setLoadingSubmission(true);
+      fetch(`https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec?action=getSubmissionById&submissionId=${encodeURIComponent(proposal.submissionId)}`, {
+        method: 'GET',
+        mode: 'cors',
+        cache: 'no-cache'
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.submission) {
+            setOriginalSubmission(data.submission);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching submission data:', error);
+        })
+        .finally(() => {
+          setLoadingSubmission(false);
+        });
+    }
+  }, [proposal.isFromNewSubmission, proposal.submissionId, actualIsClientView]);
   
   const totals = calculateDetailedTotals(proposal);
   const brandTaupe = '#545142';
@@ -4306,6 +4333,102 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
         />
       ) : (
         <>
+      {/* Original Submission Data Section - Show notes, links, and files from original submission */}
+      {!actualIsClientView && originalSubmission && (
+        <div className="no-print" style={{ backgroundColor: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '8px', padding: '24px', margin: '24px', maxWidth: '1200px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#92400e', fontFamily: "'Neue Haas Unica', sans-serif", margin: 0 }}>
+              📎 Original Submission Details
+            </h3>
+            <button
+              onClick={() => setOriginalSubmission(null)}
+              style={{ 
+                padding: '4px 12px', 
+                backgroundColor: 'transparent', 
+                color: '#92400e', 
+                border: '1px solid #f59e0b', 
+                borderRadius: '4px', 
+                cursor: 'pointer', 
+                fontSize: '12px',
+                fontWeight: '500'
+              }}
+            >
+              Hide
+            </button>
+          </div>
+          
+          {originalSubmission.notes && originalSubmission.notes.trim() && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#92400e', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Notes</div>
+              <div style={{ fontSize: '14px', color: '#3A3732', whiteSpace: 'pre-wrap', padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #f59e0b' }}>
+                {originalSubmission.notes.trim()}
+              </div>
+            </div>
+          )}
+          
+          {originalSubmission.resourceLinks && originalSubmission.resourceLinks.trim() && (
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#92400e', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Resource Links</div>
+              <div style={{ padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #f59e0b' }}>
+                {originalSubmission.resourceLinks.split('\n').map((link, idx) => (
+                  link.trim() && (
+                    <div key={idx} style={{ marginBottom: '8px' }}>
+                      <a 
+                        href={link.trim().startsWith('http') ? link.trim() : `https://${link.trim()}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        style={{ color: '#2563eb', textDecoration: 'underline', fontSize: '14px' }}
+                      >
+                        {link.trim()}
+                      </a>
+                    </div>
+                  )
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {originalSubmission.uploadedFiles && originalSubmission.uploadedFiles.length > 0 && (
+            <div>
+              <div style={{ fontSize: '12px', fontWeight: '600', color: '#92400e', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Uploaded Files</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {originalSubmission.uploadedFiles.map((file, idx) => (
+                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: 'white', borderRadius: '4px', border: '1px solid #f59e0b' }}>
+                    <div>
+                      <div style={{ fontSize: '14px', fontWeight: '500', color: '#3A3732' }}>{file.name || 'Unnamed File'}</div>
+                      {file.size && (
+                        <div style={{ fontSize: '12px', color: '#666', marginTop: '2px' }}>
+                          {(file.size / 1024).toFixed(1)} KB
+                        </div>
+                      )}
+                    </div>
+                    {file.data && (
+                      <a
+                        href={file.data}
+                        download={file.name}
+                        style={{
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          fontWeight: '500',
+                          color: 'white',
+                          backgroundColor: '#2563eb',
+                          border: 'none',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          textDecoration: 'none'
+                        }}
+                      >
+                        Download
+                      </a>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      
       <div className="print-break-after cover-page" style={{ backgroundColor: brandTaupe, height: '100vh', width: '100%', maxWidth: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', padding: '60px 48px', position: 'relative', boxSizing: 'border-box', margin: 0, pageBreakAfter: 'always', pageBreakBefore: 'auto', overflow: 'hidden' }}>
         <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '80px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
