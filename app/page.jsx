@@ -1951,6 +1951,18 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
     }
   };
   
+  const formatSubmittedDate = (dateStr) => {
+    if (!dateStr) return { date: 'N/A', time: '' };
+    try {
+      const date = new Date(dateStr);
+      const dateFormatted = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+      const timeFormatted = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+      return { date: dateFormatted, time: timeFormatted };
+    } catch {
+      return { date: dateStr, time: '' };
+    }
+  };
+  
   const formatDateRange = (startDateStr, endDateStr) => {
     if (!startDateStr) return 'N/A';
     try {
@@ -2077,7 +2089,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           {/* Header */}
           <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h1 style={{ 
-              fontSize: '27px', 
+              fontSize: '20px', 
               fontWeight: '500', 
               color: '#2B2A28', 
               fontFamily: "'Domaine Text', serif",
@@ -2114,7 +2126,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           {/* Client & Submission Section */}
           <div style={{ marginTop: '40px', marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid #E5E2DC' }}>
             <div style={{ 
-              fontSize: '12.5px', 
+              fontSize: '11.5px', 
               color: '#8A8782', 
               textTransform: 'uppercase', 
               letterSpacing: '0.1em',
@@ -2127,20 +2139,16 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
               <div>
-                <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Client</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{selectedSubmission.clientName || 'N/A'}</div>
+                <div style={{ fontSize: '12px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Client</div>
+                <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{selectedSubmission.clientName || 'N/A'}</div>
               </div>
               <div>
-                <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Submitted</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{formatDate(selectedSubmission.timestamp)}</div>
-              </div>
-              <div>
-                <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Venue</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{selectedSubmission.venueName || 'N/A'}</div>
+                <div style={{ fontSize: '12px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Venue</div>
+                <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{selectedSubmission.venueName || 'N/A'}</div>
               </div>
               <div style={{ gridColumn: '1 / -1' }}>
-                <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Address</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{selectedSubmission.venueAddress || 'N/A'}</div>
+                <div style={{ fontSize: '12px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Address</div>
+                <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{selectedSubmission.venueAddress || 'N/A'}</div>
               </div>
             </div>
           </div>
@@ -2148,7 +2156,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           {/* Timing Section */}
           <div style={{ marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid #E5E2DC' }}>
             <div style={{ 
-              fontSize: '12.5px', 
+              fontSize: '11.5px', 
               color: '#8A8782', 
               textTransform: 'uppercase', 
               letterSpacing: '0.1em',
@@ -2161,14 +2169,14 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '24px' }}>
               <div>
-                <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Load-in</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>
+                <div style={{ fontSize: '12px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Load-in</div>
+                <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>
                   {formatDateTime(selectedSubmission.loadInDate, selectedSubmission.loadInTime)}
                 </div>
               </div>
               <div>
-                <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Load-out</div>
-                <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>
+                <div style={{ fontSize: '12px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Load-out</div>
+                <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>
                   {formatDateTime(selectedSubmission.loadOutDate, selectedSubmission.loadOutTime)}
                 </div>
               </div>
@@ -2179,7 +2187,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           {selectedSubmission.products && selectedSubmission.products.length > 0 && (
             <div style={{ marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid #E5E2DC' }}>
               <div style={{ 
-                fontSize: '12.5px', 
+                fontSize: '11.5px', 
                 color: '#8A8782', 
                 textTransform: 'uppercase', 
                 letterSpacing: '0.1em',
@@ -2192,11 +2200,11 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                 {selectedSubmission.products.map((product, idx) => (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5', flex: 1 }}>
+                  <div key={idx}>
+                    <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>
                       {product.name || 'Unnamed Product'}
                     </div>
-                    <div style={{ fontSize: '13px', color: '#8A8782', fontWeight: '400', letterSpacing: 'normal', textTransform: 'none', marginLeft: '16px', lineHeight: '1.5' }}>
+                    <div style={{ fontSize: '13px', color: '#8A8782', fontWeight: '400', letterSpacing: 'normal', textTransform: 'none', marginTop: '4px', lineHeight: '1.5' }}>
                       {product.quantity || 1}
                     </div>
                   </div>
@@ -2209,7 +2217,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           {((selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0) || (selectedSubmission.resourceLinks && selectedSubmission.resourceLinks.trim())) && (
             <div style={{ marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid #E5E2DC' }}>
               <div style={{ 
-                fontSize: '12.5px', 
+                fontSize: '11.5px', 
                 color: '#8A8782', 
                 textTransform: 'uppercase', 
                 letterSpacing: '0.1em',
@@ -2222,7 +2230,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               </div>
               {selectedSubmission.uploadedFiles && selectedSubmission.uploadedFiles.length > 0 && (
                 <div style={{ marginBottom: '28px' }}>
-                  <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '12px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Files Uploaded</div>
+                  <div style={{ fontSize: '12px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '12px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Files Uploaded</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     {selectedSubmission.uploadedFiles.map((file, idx) => (
                       <div key={idx} style={{ 
@@ -2231,7 +2239,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                         alignItems: 'center'
                       }}>
                         <div>
-                          <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>
+                          <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>
                             {file.name || 'Unnamed File'}
                           </div>
                           {file.size && (
@@ -2274,9 +2282,9 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
               )}
               {selectedSubmission.resourceLinks && selectedSubmission.resourceLinks.trim() && (
                 <div>
-                  <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '12px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Links</div>
+                  <div style={{ fontSize: '12px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '12px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Links</div>
                   <div style={{ 
-                    fontSize: '16px', 
+                    fontSize: '14.5px', 
                     color: '#2B2A28', 
                     fontWeight: '400',
                     whiteSpace: 'pre-wrap', 
@@ -2303,7 +2311,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           {selectedSubmission.notes && selectedSubmission.notes.trim() ? (
             <div style={{ marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid #E5E2DC' }}>
               <div style={{ 
-                fontSize: '12.5px', 
+                fontSize: '11.5px', 
                 color: '#8A8782', 
                 textTransform: 'uppercase', 
                 letterSpacing: '0.1em',
@@ -2315,7 +2323,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                 Notes
               </div>
               <div style={{ 
-                fontSize: '16px', 
+                fontSize: '14.5px', 
                 fontWeight: '400',
                 color: '#2B2A28', 
                 whiteSpace: 'pre-wrap', 
@@ -2329,7 +2337,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           ) : (
             <div style={{ marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid #E5E2DC' }}>
               <div style={{ 
-                fontSize: '12.5px', 
+                fontSize: '11.5px', 
                 color: '#8A8782', 
                 textTransform: 'uppercase', 
                 letterSpacing: '0.1em',
@@ -2341,7 +2349,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                 Notes
               </div>
               <div style={{ 
-                fontSize: '16px', 
+                fontSize: '14.5px', 
                 fontWeight: '400',
                 color: '#8A8782', 
                 fontStyle: 'italic',
@@ -2356,8 +2364,31 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           
           {/* Schedule Call */}
           <div style={{ marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid #E5E2DC' }}>
-            <div style={{ fontSize: '13px', color: '#6B6863', textTransform: 'none', letterSpacing: 'normal', marginBottom: '6px', fontWeight: '500', fontFamily: "'Neue Haas Unica', sans-serif" }}>Schedule Call Requested</div>
-            <div style={{ fontSize: '16px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{selectedSubmission.scheduleCall ? 'Yes' : 'No'}</div>
+            <div style={{ 
+              fontSize: '11.5px', 
+              color: '#8A8782', 
+              textTransform: 'uppercase', 
+              letterSpacing: '0.1em',
+              marginBottom: '20px',
+              marginTop: '0',
+              fontWeight: '600',
+              fontFamily: "'Neue Haas Unica', sans-serif"
+            }}>
+              Schedule Call Requested
+            </div>
+            <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>{selectedSubmission.scheduleCall ? 'Yes' : 'No'}</div>
+          </div>
+          
+          {/* Request Submitted */}
+          <div style={{ marginBottom: '40px', paddingBottom: '32px', borderBottom: '1px solid #E5E2DC' }}>
+            {(() => {
+              const submittedInfo = formatSubmittedDate(selectedSubmission.timestamp);
+              return (
+                <div style={{ fontSize: '14.5px', fontWeight: '400', color: '#2B2A28', lineHeight: '1.5' }}>
+                  Request submitted on {submittedInfo.date}{submittedInfo.time ? ` at ${submittedInfo.time}` : ''}.
+                </div>
+              );
+            })()}
           </div>
           
           {/* Mark as Reviewed Button */}
