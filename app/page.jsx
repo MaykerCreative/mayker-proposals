@@ -613,6 +613,12 @@ export default function ProposalApp() {
       link2.href = 'https://fonts.gstatic.com';
       link2.crossOrigin = 'anonymous';
       document.head.appendChild(link2);
+      
+      // Add font stylesheet link
+      const fontLink = document.createElement('link');
+      fontLink.rel = 'stylesheet';
+      fontLink.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap';
+      document.head.appendChild(fontLink);
     }
   }, []);
 
@@ -1437,10 +1443,7 @@ export default function ProposalApp() {
   }
 
   return (
-    <>
-      <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" as="style" />
-      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-      <div style={{ minHeight: '100vh', backgroundColor: '#FAF9F7', padding: '32px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FAF9F7', padding: '32px' }}>
         <style dangerouslySetInnerHTML={{ __html: `
           /* Google Fonts loaded via link tag above for better performance */ 
         
@@ -7596,6 +7599,5 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         </div>
       </div>
     </div>
-    </>
   );
 }
