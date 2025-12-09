@@ -596,6 +596,26 @@ export default function ProposalApp() {
     return { isClientRoute: false, projectNumber: null, version: null };
   };
 
+  // Optimize font loading with preconnect (runs once on mount)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // Add preconnect for Google Fonts to improve loading speed
+    const existingPreconnect = document.querySelector('link[rel="preconnect"][href="https://fonts.googleapis.com"]');
+    if (!existingPreconnect) {
+      const link1 = document.createElement('link');
+      link1.rel = 'preconnect';
+      link1.href = 'https://fonts.googleapis.com';
+      document.head.appendChild(link1);
+      
+      const link2 = document.createElement('link');
+      link2.rel = 'preconnect';
+      link2.href = 'https://fonts.gstatic.com';
+      link2.crossOrigin = 'anonymous';
+      document.head.appendChild(link2);
+    }
+  }, []);
+
   useEffect(() => {
     // Only run on client-side
     if (typeof window === 'undefined') return;
@@ -752,48 +772,63 @@ export default function ProposalApp() {
 
   const fetchProposals = async (updateSelected = false) => {
     try {
-      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
-        method: 'GET',
-        mode: 'cors',
-        cache: 'no-cache'
-      });
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
+      const API_BASE = 'https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec';
       
-      // Also fetch change requests
-      try {
-        const crResponse = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec?action=getChangeRequests', {
+      // Parallelize all API calls for faster loading
+      const [proposalsResponse, crResponse, subsResponse] = await Promise.allSettled([
+        fetch(API_BASE, {
           method: 'GET',
           mode: 'cors',
-          cache: 'no-cache'
-        });
-        if (crResponse.ok) {
-          const crData = await crResponse.json();
+          cache: 'default' // Allow browser caching for better performance
+        }),
+        fetch(`${API_BASE}?action=getChangeRequests`, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'default'
+        }),
+        fetch(`${API_BASE}?action=getNewProjectSubmissions`, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'default'
+        })
+      ]);
+      
+      // Process proposals response
+      let data = null;
+      if (proposalsResponse.status === 'fulfilled' && proposalsResponse.value.ok) {
+        data = await proposalsResponse.value.json();
+      } else {
+        throw new Error(`HTTP error! status: ${proposalsResponse.value?.status || 'unknown'}`);
+      }
+      
+      // Process change requests response (non-blocking)
+      if (crResponse.status === 'fulfilled' && crResponse.value.ok) {
+        try {
+          const crData = await crResponse.value.json();
           if (crData && crData.changeRequests && Array.isArray(crData.changeRequests)) {
             const sorted = crData.changeRequests.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             setChangeRequests(sorted);
           }
+        } catch (crErr) {
+          console.error('Failed to parse change requests:', crErr);
         }
-      } catch (crErr) {
-        console.error('Failed to fetch change requests:', crErr);
+      } else if (crResponse.status === 'rejected') {
+        console.error('Failed to fetch change requests:', crResponse.reason);
       }
       
-      // Also fetch new project submissions
-      try {
-        const subsResponse = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec?action=getNewProjectSubmissions', {
-          method: 'GET',
-          mode: 'cors',
-          cache: 'no-cache'
-        });
-        if (subsResponse.ok) {
-          const subsData = await subsResponse.json();
+      // Process new project submissions response (non-blocking)
+      if (subsResponse.status === 'fulfilled' && subsResponse.value.ok) {
+        try {
+          const subsData = await subsResponse.value.json();
           if (subsData && subsData.submissions && Array.isArray(subsData.submissions)) {
             const sorted = subsData.submissions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
             setNewSubmissions(sorted);
           }
+        } catch (subsErr) {
+          console.error('Failed to parse new project submissions:', subsErr);
         }
-      } catch (subsErr) {
-        console.error('Failed to fetch new project submissions:', subsErr);
+      } else if (subsResponse.status === 'rejected') {
+        console.error('Failed to fetch new project submissions:', subsResponse.reason);
       }
       
       if (!data || !data.proposals || !Array.isArray(data.proposals) || data.proposals.length === 0) {
@@ -1402,9 +1437,12 @@ export default function ProposalApp() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FAF9F7', padding: '32px' }}>
-      <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
+    <>
+      <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" as="style" />
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+      <div style={{ minHeight: '100vh', backgroundColor: '#FAF9F7', padding: '32px' }}>
+        <style dangerouslySetInnerHTML={{ __html: `
+          /* Google Fonts loaded via link tag above for better performance */ 
         
         /* Font loading with fallbacks - fonts will fall back to system fonts if files aren't found */
         /* Custom fonts - using WOFF2 for optimal web performance */
@@ -4304,7 +4342,7 @@ function ViewProposalView({ proposal, catalog, onBack, onPrint, onEdit, onViewPr
   return (
     <div data-proposal-view="true" style={{ minHeight: '100vh', backgroundColor: 'white', width: '100%', overflowX: 'hidden' }}>
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        /* Google Fonts loaded via link tag above for better performance */
         
         /* Font loading with fallbacks - fonts will fall back to system fonts if files aren't found */
         /* Custom fonts - using WOFF2 for optimal web performance */
@@ -5806,7 +5844,7 @@ function ProfitabilityView({ proposal, onBack }) {
   return (
     <div data-profitability-view="true" style={{ minHeight: '100vh', backgroundColor: 'white', width: '100%' }}>
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+        /* Google Fonts loaded via link tag above for better performance */
         
         /* Custom fonts - using WOFF2 for optimal web performance */
         @font-face {
@@ -6899,7 +6937,7 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#fafaf8', padding: '40px 24px 24px' }}>
       <style dangerouslySetInnerHTML={{ __html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap'); 
+        /* Google Fonts loaded via link tag above for better performance */ 
         * { font-family: 'Inter', sans-serif; }
         /* Hide number input spinners */
         input[type="number"]::-webkit-inner-spin-button,
@@ -7558,5 +7596,6 @@ function EditProposalView({ proposal, catalog, onSave, onCancel, saving }) {
         </div>
       </div>
     </div>
+    </>
   );
 }
