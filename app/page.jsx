@@ -1929,7 +1929,7 @@ export default function ProposalApp() {
             </tbody>
           </table>
         </div>
-          </>
+        </>
         )}
       </div>
       
@@ -2575,7 +2575,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                         {formatDate(submission.timestamp)}
                       </div>
                     </div>
-                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #E9E3DC' }}>
+                    <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #E9E3DC', display: 'flex', gap: '12px' }}>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -2594,6 +2594,33 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                         }}
                       >
                         Click to Review →
+                      </button>
+                      <button
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          if (window.confirm('Mark this submission as reviewed?')) {
+                            await handleMarkReviewed(submission.id);
+                          }
+                        }}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: '#059669',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          fontFamily: "'Neue Haas Unica', sans-serif"
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.backgroundColor = '#047857';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.backgroundColor = '#059669';
+                        }}
+                      >
+                        ✓ Mark as Reviewed
                       </button>
                     </div>
                   </div>
@@ -3036,7 +3063,7 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#fef3c7'}
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
-                        <div>
+                        <div style={{ flex: 1 }}>
                           <div style={{ fontSize: '16px', fontWeight: '600', color: brandCharcoal, marginBottom: '4px' }}>
                             {cr.originalProposal?.clientName || 'Unknown Client'}
                           </div>
@@ -3049,8 +3076,53 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
                             {cr.changes?.miscNotes && 'Has notes'}
                           </div>
                         </div>
-                        <div style={{ fontSize: '14px', color: brandTaupe, fontWeight: '500' }}>
-                          Click to review →
+                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedChangeRequest(cr);
+                            }}
+                            style={{
+                              padding: '8px 16px',
+                              backgroundColor: '#3A3732',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              fontFamily: "'Neue Haas Unica', sans-serif"
+                            }}
+                          >
+                            Click to Review →
+                          </button>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (window.confirm('Mark this change request as reviewed?')) {
+                                await handleMarkReviewed(cr.id || cr.timestamp);
+                              }
+                            }}
+                            style={{
+                              padding: '8px 16px',
+                              backgroundColor: '#059669',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '6px',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              fontWeight: '500',
+                              fontFamily: "'Neue Haas Unica', sans-serif"
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor = '#047857';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = '#059669';
+                            }}
+                          >
+                            ✓ Mark as Reviewed
+                          </button>
                         </div>
                       </div>
                     </div>
