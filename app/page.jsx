@@ -2863,6 +2863,10 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
               <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedChangeRequest.originalProposal?.clientName || 'N/A'}</div>
             </div>
             <div>
+              <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Venue</div>
+              <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{proposal?.venueName || selectedChangeRequest.originalProposal?.venueName || 'N/A'}</div>
+            </div>
+            <div>
               <div style={{ fontSize: '12px', color: brandTaupe, textTransform: 'uppercase', marginBottom: '4px' }}>Project Number</div>
               <div style={{ fontSize: '16px', fontWeight: '500', color: brandCharcoal }}>{selectedChangeRequest.originalProposal?.projectNumber || 'N/A'}</div>
             </div>
@@ -2993,6 +2997,19 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
           </div>
         )}
         
+        {/* Info Message */}
+        <div style={{ 
+          marginBottom: '16px', 
+          padding: '12px 16px', 
+          backgroundColor: '#e0f2fe', 
+          borderRadius: '6px', 
+          border: '1px solid #0ea5e9',
+          fontSize: '14px',
+          color: '#0c4a6e'
+        }}>
+          <strong>ℹ️ Auto-Created:</strong> A new proposal version has been automatically created from this change request and is available in your proposals dashboard for review.
+        </div>
+        
         {/* Action Buttons */}
         <div style={{ display: 'flex', gap: '12px', paddingTop: '24px', borderTop: '1px solid #e5e7eb' }}>
           <button
@@ -3002,7 +3019,7 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
                 return;
               }
               
-              if (!window.confirm('This will create a new version of the proposal with all requested changes applied. Continue?')) {
+              if (!window.confirm('A proposal version should have been auto-created. This will create another version. Continue?')) {
                 return;
               }
               
@@ -3074,8 +3091,15 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
                   customRentalMultiplier: proposal.customRentalMultiplier || '',
                   taxExempt: proposal.taxExempt || false,
                   miscFees: proposal.miscFees || '[]',
-                  customProjectNotes: changes.miscNotes ? (proposal.customProjectNotes || '') + '\n\nChange Request Notes:\n' + changes.miscNotes : (proposal.customProjectNotes || '')
+                  customProjectNotes: changes.miscNotes ? (proposal.customProjectNotes || '') + '\n\nChange Request Notes:\n' + changes.miscNotes : (proposal.customProjectNotes || ''),
+                  published: false // Don't auto-publish - admin needs to review first
                 };
+                
+                console.log('[Change Request] Creating new proposal version:', {
+                  projectNumber: updatedProposalData.projectNumber,
+                  clientName: updatedProposalData.clientName,
+                  sectionsCount: updatedSections.length
+                });
                 
                 // Save as new version
                 const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
@@ -3086,11 +3110,18 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
                 });
                 
                 const result = await response.json();
+                console.log('[Change Request] Backend response:', result);
+                
                 if (result.success === false) {
                   throw new Error(result.error || 'Failed to create updated proposal');
                 }
                 
-                window.alert('New proposal version created successfully! You can now review and edit it.');
+                if (!result.projectNumber || !result.version) {
+                  console.error('[Change Request] Missing projectNumber or version in response:', result);
+                  throw new Error('Backend did not return projectNumber or version. Response: ' + JSON.stringify(result));
+                }
+                
+                window.alert(`New proposal version created successfully!\n\nProject #${result.projectNumber} - Version ${result.version}\n\nYou can now review and edit it in the proposals list.`);
                 
                 // Mark change request as reviewed
                 await handleMarkReviewed(selectedChangeRequest.id || selectedChangeRequest.timestamp);
@@ -3104,9 +3135,10 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
                 console.error('Error:', err);
               }
             }}
-            style={{ padding: '12px 24px', backgroundColor: '#2563eb', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '500' }}
+            style={{ padding: '12px 24px', backgroundColor: '#64748b', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '14px', fontWeight: '500', opacity: 0.7 }}
+            title="Proposals are now auto-created. Use this only if auto-creation failed."
           >
-            📝 Update Proposal (Create New Version)
+            🔄 Re-create Proposal (Fallback)
           </button>
           <button
             onClick={() => handleMarkReviewed(selectedChangeRequest.id || selectedChangeRequest.timestamp)}
