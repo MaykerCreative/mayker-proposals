@@ -1802,18 +1802,12 @@ export default function ProposalApp() {
             </thead>
             <tbody>
               {filteredProposals.map((proposal, index) => {
-                const hasUnreviewed = hasUnreviewedChangeRequest(proposal);
-                const isNewSubmission = proposal.isFromNewSubmission === true;
-                // Priority: unreviewed change requests > new submissions > alternating rows
-                const rowBgColor = hasUnreviewed 
-                  ? '#e6f0f7' // Light blue background for proposals with unreviewed change requests
-                  : isNewSubmission
-                  ? '#fef3c7' // Light yellow/amber background for new submissions
-                  : (index % 2 === 0 ? 'white' : '#fafaf8');
-                const rowBorderColor = hasUnreviewed ? '#7693a9' : isNewSubmission ? '#f59e0b' : '#f0ede5';
+                // Removed highlighting - use standard alternating rows
+                const rowBgColor = index % 2 === 0 ? 'white' : '#fafaf8';
+                const rowBorderColor = '#f0ede5';
                 
                 return (
-                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: hasUnreviewed ? '4px solid #7693a9' : isNewSubmission ? '4px solid #f59e0b' : 'none' }}>
+                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor }}>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={() => {
@@ -1863,24 +1857,7 @@ export default function ProposalApp() {
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span>{proposal.clientName}</span>
-                      {proposal.isFromNewSubmission && (
-                        <span style={{ 
-                          display: 'inline-block', 
-                          padding: '2px 8px', 
-                          borderRadius: '3px', 
-                          fontSize: '10px', 
-                          fontWeight: '600', 
-                          backgroundColor: '#dbeafe', 
-                          color: '#1e40af',
-                          textTransform: 'uppercase',
-                          letterSpacing: '0.05em'
-                        }}>
-                          New
-                        </span>
-                      )}
-                    </div>
+                    {proposal.clientName}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', minWidth: '140px', width: '140px', whiteSpace: 'nowrap' }}>{proposal.eventDate}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}</td>
@@ -2557,10 +2534,30 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
         </div>
       </div>
       
+      {/* Debug Info - Always show */}
+      <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f0f0f0', borderRadius: '6px', fontSize: '12px', color: '#666' }}>
+        <strong>Debug Info:</strong> Total submissions: {localSubmissions.length} | 
+        Pending: {localSubmissions.filter(s => !s.reviewed).length} | 
+        Reviewed: {localSubmissions.filter(s => s.reviewed).length}
+        {localSubmissions.length === 0 && (
+          <div style={{ marginTop: '8px', padding: '8px', backgroundColor: '#fff3cd', borderRadius: '4px', fontSize: '11px' }}>
+            ⚠️ No submissions found. Check browser console (F12) for detailed logs. 
+            Yellow proposals indicate they came from new submissions - the submissions may have been marked as reviewed or deleted.
+          </div>
+        )}
+      </div>
+      
       {localSubmissions.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: '#8A8378' }}>
           <p style={{ fontSize: '16px', marginBottom: '8px', color: '#3A3732' }}>No project inquiries found.</p>
-          <p style={{ fontSize: '14px', color: '#8A8378' }}>New project submissions from clients will appear here.</p>
+          <p style={{ fontSize: '14px', color: '#8A8378', marginBottom: '16px' }}>New project submissions from clients will appear here.</p>
+          <div style={{ fontSize: '12px', color: '#999', padding: '16px', backgroundColor: '#f9fafb', borderRadius: '8px', maxWidth: '600px', margin: '0 auto', textAlign: 'left' }}>
+            <p style={{ marginBottom: '8px', fontWeight: '500' }}>Possible Reasons:</p>
+            <p style={{ marginBottom: '4px' }}>• Submissions may have been marked as reviewed (check "Reviewed" section below)</p>
+            <p style={{ marginBottom: '4px' }}>• Submissions may not exist in the "New Project Submissions" sheet</p>
+            <p style={{ marginBottom: '4px' }}>• Yellow proposals indicate they came from new submissions</p>
+            <p>• Check browser console (F12) for detailed submission data from the API</p>
+          </div>
         </div>
       ) : (
         <>
