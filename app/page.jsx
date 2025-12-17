@@ -2828,6 +2828,16 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
     }
   }, [markingAsReviewed, selectedChangeRequest, onRefresh]);
   
+  // Calculate filtered lists BEFORE early return (hooks must be called consistently)
+  const pendingRequests = useMemo(() => 
+    localChangeRequests.filter(cr => !cr.reviewed),
+    [localChangeRequests]
+  );
+  const reviewedRequests = useMemo(() => 
+    localChangeRequests.filter(cr => cr.reviewed),
+    [localChangeRequests]
+  );
+  
   if (selectedChangeRequest) {
     const proposal = getProposalForChangeRequest(selectedChangeRequest);
     const changes = selectedChangeRequest.changes || {};
@@ -3108,15 +3118,6 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
       </div>
     );
   }
-  
-  const pendingRequests = useMemo(() => 
-    localChangeRequests.filter(cr => !cr.reviewed),
-    [localChangeRequests]
-  );
-  const reviewedRequests = useMemo(() => 
-    localChangeRequests.filter(cr => cr.reviewed),
-    [localChangeRequests]
-  );
   
   return (
     <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
