@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // ============================================
 // CLIENT PORTAL CONFIGURATION
@@ -1956,10 +1956,33 @@ export default function ProposalApp() {
 
 function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
   const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [localSubmissions, setLocalSubmissions] = useState(submissions);
+  const [markingAsReviewed, setMarkingAsReviewed] = useState(new Set());
   const brandCharcoal = '#2C2C2C';
   const brandTaupe = '#545142';
   
-  const handleMarkReviewed = async (submissionId) => {
+  // Sync local state when submissions prop changes
+  useEffect(() => {
+    setLocalSubmissions(submissions);
+  }, [submissions]);
+  
+  const handleMarkReviewed = useCallback(async (submissionId) => {
+    // Prevent double-clicks
+    if (markingAsReviewed.has(submissionId)) return;
+    
+    // Optimistically update UI immediately
+    setLocalSubmissions(prev => 
+      prev.map(sub => 
+        sub.id === submissionId ? { ...sub, reviewed: true } : sub
+      )
+    );
+    setMarkingAsReviewed(prev => new Set(prev).add(submissionId));
+    
+    // Close detail view if this submission is selected
+    if (selectedSubmission?.id === submissionId) {
+      setSelectedSubmission(null);
+    }
+    
     try {
       const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
         method: 'POST',
@@ -1971,16 +1994,33 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
         mode: 'cors'
       });
       const result = await response.json();
-      if (result.success !== false) {
-        await onRefresh();
-        setSelectedSubmission(null);
-      } else {
+      if (result.success === false) {
+        // Revert on error
+        setLocalSubmissions(prev => 
+          prev.map(sub => 
+            sub.id === submissionId ? { ...sub, reviewed: false } : sub
+          )
+        );
         alert('Error marking as reviewed: ' + (result.error || 'Unknown error'));
       }
+      // Refresh in background to sync with server (non-blocking)
+      onRefresh().catch(err => console.error('Background refresh failed:', err));
     } catch (err) {
+      // Revert on error
+      setLocalSubmissions(prev => 
+        prev.map(sub => 
+          sub.id === submissionId ? { ...sub, reviewed: false } : sub
+        )
+      );
       alert('Error marking as reviewed: ' + err.message);
+    } finally {
+      setMarkingAsReviewed(prev => {
+        const next = new Set(prev);
+        next.delete(submissionId);
+        return next;
+      });
     }
-  };
+  }, [markingAsReviewed, selectedSubmission, onRefresh]);
   
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
@@ -2517,7 +2557,7 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
         </div>
       </div>
       
-      {submissions.length === 0 ? (
+      {localSubmissions.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: '#8A8378' }}>
           <p style={{ fontSize: '16px', marginBottom: '8px', color: '#3A3732' }}>No project inquiries found.</p>
           <p style={{ fontSize: '14px', color: '#8A8378' }}>New project submissions from clients will appear here.</p>
@@ -2525,13 +2565,13 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
       ) : (
         <>
           {/* Pending Review Section */}
-          {submissions.filter(s => !s.reviewed).length > 0 && (
+          {localSubmissions.filter(s => !s.reviewed).length > 0 && (
             <div style={{ marginBottom: '32px' }}>
               <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#3A3732', marginBottom: '16px', fontFamily: "'Domaine Text', serif" }}>
-                Pending Review ({submissions.filter(s => !s.reviewed).length})
+                Pending Review ({localSubmissions.filter(s => !s.reviewed).length})
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {submissions.filter(s => !s.reviewed).map((submission, idx) => (
+                {localSubmissions.filter(s => !s.reviewed).map((submission, idx) => (
                   <div
                     key={submission.id || idx}
                     onClick={() => setSelectedSubmission(submission)}
@@ -2599,28 +2639,35 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
                         onClick={async (e) => {
                           e.stopPropagation();
                           if (window.confirm('Mark this submission as reviewed?')) {
-                            await handleMarkReviewed(submission.id);
+                            handleMarkReviewed(submission.id);
                           }
                         }}
+                        disabled={markingAsReviewed.has(submission.id)}
                         style={{
                           padding: '8px 16px',
-                          backgroundColor: '#059669',
+                          backgroundColor: markingAsReviewed.has(submission.id) ? '#9ca3af' : '#059669',
                           color: 'white',
                           border: 'none',
                           borderRadius: '6px',
-                          cursor: 'pointer',
+                          cursor: markingAsReviewed.has(submission.id) ? 'not-allowed' : 'pointer',
                           fontSize: '13px',
                           fontWeight: '500',
-                          fontFamily: "'Neue Haas Unica', sans-serif"
+                          fontFamily: "'Neue Haas Unica', sans-serif",
+                          opacity: markingAsReviewed.has(submission.id) ? 0.7 : 1,
+                          transition: 'all 0.2s ease'
                         }}
                         onMouseEnter={(e) => {
-                          e.currentTarget.style.backgroundColor = '#047857';
+                          if (!markingAsReviewed.has(submission.id)) {
+                            e.currentTarget.style.backgroundColor = '#047857';
+                          }
                         }}
                         onMouseLeave={(e) => {
-                          e.currentTarget.style.backgroundColor = '#059669';
+                          if (!markingAsReviewed.has(submission.id)) {
+                            e.currentTarget.style.backgroundColor = '#059669';
+                          }
                         }}
                       >
-                        ✓ Mark as Reviewed
+                        {markingAsReviewed.has(submission.id) ? '⏳ Processing...' : '✓ Mark as Reviewed'}
                       </button>
                     </div>
                   </div>
@@ -2630,13 +2677,13 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
           )}
           
           {/* Reviewed Section */}
-          {submissions.filter(s => s.reviewed).length > 0 && (
+          {localSubmissions.filter(s => s.reviewed).length > 0 && (
             <div>
               <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#3A3732', marginBottom: '16px', fontFamily: "'Domaine Text', serif" }}>
-                Reviewed ({submissions.filter(s => s.reviewed).length})
+                Reviewed ({localSubmissions.filter(s => s.reviewed).length})
               </h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {submissions.filter(s => s.reviewed).map((submission, idx) => (
+                {localSubmissions.filter(s => s.reviewed).map((submission, idx) => (
                   <div
                     key={submission.id || idx}
                     onClick={() => setSelectedSubmission(submission)}
@@ -2697,10 +2744,17 @@ function NewProjectSubmissionsView({ submissions, onBack, onRefresh }) {
 
 function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewProposal, onRefresh }) {
   const [selectedChangeRequest, setSelectedChangeRequest] = useState(null);
+  const [localChangeRequests, setLocalChangeRequests] = useState(changeRequests);
+  const [markingAsReviewed, setMarkingAsReviewed] = useState(new Set());
   const brandCharcoal = '#2C2C2C';
   const brandTaupe = '#545142';
   
-  const formatDate = (dateStr) => {
+  // Sync local state when changeRequests prop changes
+  useEffect(() => {
+    setLocalChangeRequests(changeRequests);
+  }, [changeRequests]);
+  
+  const formatDate = useCallback((dateStr) => {
     if (!dateStr) return 'N/A';
     try {
       const date = new Date(dateStr);
@@ -2708,16 +2762,34 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
     } catch {
       return dateStr;
     }
-  };
+  }, []);
   
-  const getProposalForChangeRequest = (cr) => {
+  const getProposalForChangeRequest = useCallback((cr) => {
     return proposals.find(p => 
       p.projectNumber === cr.originalProposal?.projectNumber && 
       p.version === cr.originalProposal?.version
     );
-  };
+  }, [proposals]);
   
-  const handleMarkReviewed = async (changeRequestId) => {
+  const handleMarkReviewed = useCallback(async (changeRequestId) => {
+    // Prevent double-clicks
+    if (markingAsReviewed.has(changeRequestId)) return;
+    
+    // Optimistically update UI immediately
+    setLocalChangeRequests(prev => 
+      prev.map(cr => {
+        const id = cr.id || cr.timestamp;
+        return id === changeRequestId ? { ...cr, reviewed: true } : cr;
+      })
+    );
+    setMarkingAsReviewed(prev => new Set(prev).add(changeRequestId));
+    
+    // Close detail view if this change request is selected
+    const selectedId = selectedChangeRequest?.id || selectedChangeRequest?.timestamp;
+    if (selectedId === changeRequestId) {
+      setSelectedChangeRequest(null);
+    }
+    
     try {
       const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
         method: 'POST',
@@ -2729,16 +2801,35 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
         mode: 'cors'
       });
       const result = await response.json();
-      if (result.success !== false) {
-        await onRefresh();
-        setSelectedChangeRequest(null);
-      } else {
+      if (result.success === false) {
+        // Revert on error
+        setLocalChangeRequests(prev => 
+          prev.map(cr => {
+            const id = cr.id || cr.timestamp;
+            return id === changeRequestId ? { ...cr, reviewed: false } : cr;
+          })
+        );
         alert('Error marking as reviewed: ' + (result.error || 'Unknown error'));
       }
+      // Refresh in background to sync with server (non-blocking)
+      onRefresh().catch(err => console.error('Background refresh failed:', err));
     } catch (err) {
+      // Revert on error
+      setLocalChangeRequests(prev => 
+        prev.map(cr => {
+          const id = cr.id || cr.timestamp;
+          return id === changeRequestId ? { ...cr, reviewed: false } : cr;
+        })
+      );
       alert('Error marking as reviewed: ' + err.message);
+    } finally {
+      setMarkingAsReviewed(prev => {
+        const next = new Set(prev);
+        next.delete(changeRequestId);
+        return next;
+      });
     }
-  };
+  }, [markingAsReviewed, selectedChangeRequest, onRefresh]);
   
   if (selectedChangeRequest) {
     const proposal = getProposalForChangeRequest(selectedChangeRequest);
@@ -3014,8 +3105,14 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
     );
   }
   
-  const pendingRequests = changeRequests.filter(cr => !cr.reviewed);
-  const reviewedRequests = changeRequests.filter(cr => cr.reviewed);
+  const pendingRequests = useMemo(() => 
+    localChangeRequests.filter(cr => !cr.reviewed),
+    [localChangeRequests]
+  );
+  const reviewedRequests = useMemo(() => 
+    localChangeRequests.filter(cr => cr.reviewed),
+    [localChangeRequests]
+  );
   
   return (
     <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '32px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
@@ -3031,7 +3128,7 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
         </button>
       </div>
       
-      {changeRequests.length === 0 ? (
+      {localChangeRequests.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '60px 20px', color: '#666' }}>
           <p style={{ fontSize: '16px', marginBottom: '8px' }}>No change requests found.</p>
           <p style={{ fontSize: '14px' }}>Change requests submitted by clients will appear here.</p>
@@ -3099,29 +3196,37 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
                           <button
                             onClick={async (e) => {
                               e.stopPropagation();
+                              const crId = cr.id || cr.timestamp;
                               if (window.confirm('Mark this change request as reviewed?')) {
-                                await handleMarkReviewed(cr.id || cr.timestamp);
+                                handleMarkReviewed(crId);
                               }
                             }}
+                            disabled={markingAsReviewed.has(cr.id || cr.timestamp)}
                             style={{
                               padding: '8px 16px',
-                              backgroundColor: '#059669',
+                              backgroundColor: markingAsReviewed.has(cr.id || cr.timestamp) ? '#9ca3af' : '#059669',
                               color: 'white',
                               border: 'none',
                               borderRadius: '6px',
-                              cursor: 'pointer',
+                              cursor: markingAsReviewed.has(cr.id || cr.timestamp) ? 'not-allowed' : 'pointer',
                               fontSize: '13px',
                               fontWeight: '500',
-                              fontFamily: "'Neue Haas Unica', sans-serif"
+                              fontFamily: "'Neue Haas Unica', sans-serif",
+                              opacity: markingAsReviewed.has(cr.id || cr.timestamp) ? 0.7 : 1,
+                              transition: 'all 0.2s ease'
                             }}
                             onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor = '#047857';
+                              if (!markingAsReviewed.has(cr.id || cr.timestamp)) {
+                                e.currentTarget.style.backgroundColor = '#047857';
+                              }
                             }}
                             onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = '#059669';
+                              if (!markingAsReviewed.has(cr.id || cr.timestamp)) {
+                                e.currentTarget.style.backgroundColor = '#059669';
+                              }
                             }}
                           >
-                            ✓ Mark as Reviewed
+                            {markingAsReviewed.has(cr.id || cr.timestamp) ? '⏳ Processing...' : '✓ Mark as Reviewed'}
                           </button>
                         </div>
                       </div>
