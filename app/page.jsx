@@ -2878,50 +2878,57 @@ function ChangeRequestsReviewView({ changeRequests, proposals, onBack, onViewPro
         </div>
         
         {/* Date/Time Changes */}
-        {(changes.dateTimeChanges && (
-          changes.dateTimeChanges.startDate !== proposal?.startDate ||
-          changes.dateTimeChanges.endDate !== proposal?.endDate ||
-          changes.dateTimeChanges.deliveryTime !== proposal?.deliveryTime ||
-          changes.dateTimeChanges.strikeTime !== proposal?.strikeTime
-        )) && (
-          <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#fef3c7', borderRadius: '6px', border: '1px solid #fbbf24' }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '16px' }}>Date & Time Changes</h3>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-              {changes.dateTimeChanges.startDate !== proposal?.startDate && (
-                <div>
-                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Event Start Date</div>
-                  <div style={{ fontSize: '14px', color: brandCharcoal }}>
-                    {proposal?.startDate || 'N/A'} → {changes.dateTimeChanges.startDate}
-                  </div>
+        {(() => {
+          const dt = changes.dateTimeChanges || {};
+          const originalProposal = selectedChangeRequest.originalProposal || {};
+          const hasStartDateChange = dt.startDate && dt.startDate !== (proposal?.startDate || originalProposal.startDate);
+          const hasEndDateChange = dt.endDate && dt.endDate !== (proposal?.endDate || originalProposal.endDate);
+          const hasDeliveryTimeChange = dt.deliveryTime && dt.deliveryTime !== (proposal?.deliveryTime || originalProposal.deliveryTime);
+          const hasStrikeTimeChange = dt.strikeTime && dt.strikeTime !== (proposal?.strikeTime || originalProposal.strikeTime);
+          
+          if (hasStartDateChange || hasEndDateChange || hasDeliveryTimeChange || hasStrikeTimeChange) {
+            return (
+              <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#fef3c7', borderRadius: '6px', border: '1px solid #fbbf24' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', color: brandCharcoal, marginBottom: '16px' }}>Date & Time Changes</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  {hasStartDateChange && (
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Event Start Date</div>
+                      <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                        {proposal?.startDate || originalProposal.startDate || 'N/A'} → {dt.startDate}
+                      </div>
+                    </div>
+                  )}
+                  {hasEndDateChange && (
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Event End Date</div>
+                      <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                        {proposal?.endDate || originalProposal.endDate || 'N/A'} → {dt.endDate}
+                      </div>
+                    </div>
+                  )}
+                  {hasDeliveryTimeChange && (
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Load-In Time</div>
+                      <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                        {proposal?.deliveryTime || originalProposal.deliveryTime || 'N/A'} → {dt.deliveryTime}
+                      </div>
+                    </div>
+                  )}
+                  {hasStrikeTimeChange && (
+                    <div>
+                      <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Strike Time</div>
+                      <div style={{ fontSize: '14px', color: brandCharcoal }}>
+                        {proposal?.strikeTime || originalProposal.strikeTime || 'N/A'} → {dt.strikeTime}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-              {changes.dateTimeChanges.endDate !== proposal?.endDate && (
-                <div>
-                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Event End Date</div>
-                  <div style={{ fontSize: '14px', color: brandCharcoal }}>
-                    {proposal?.endDate || 'N/A'} → {changes.dateTimeChanges.endDate}
-                  </div>
-                </div>
-              )}
-              {changes.dateTimeChanges.deliveryTime !== proposal?.deliveryTime && (
-                <div>
-                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Load-In Time</div>
-                  <div style={{ fontSize: '14px', color: brandCharcoal }}>
-                    {proposal?.deliveryTime || 'N/A'} → {changes.dateTimeChanges.deliveryTime}
-                  </div>
-                </div>
-              )}
-              {changes.dateTimeChanges.strikeTime !== proposal?.strikeTime && (
-                <div>
-                  <div style={{ fontSize: '12px', color: '#92400e', marginBottom: '4px' }}>Strike Time</div>
-                  <div style={{ fontSize: '14px', color: brandCharcoal }}>
-                    {proposal?.strikeTime || 'N/A'} → {changes.dateTimeChanges.strikeTime}
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
+              </div>
+            );
+          }
+          return null;
+        })()}
         
         {/* Quantity Changes */}
         {changes.quantityChanges && Object.keys(changes.quantityChanges).length > 0 && (
