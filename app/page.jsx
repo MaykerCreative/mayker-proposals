@@ -1802,15 +1802,37 @@ export default function ProposalApp() {
             </thead>
             <tbody>
               {filteredProposals.map((proposal, index) => {
-                // Removed highlighting - use standard alternating rows
-                const rowBgColor = index % 2 === 0 ? 'white' : '#fafaf8';
-                const rowBorderColor = '#f0ede5';
+                // Highlight proposals created from change requests in blue
+                const isFromChangeRequest = proposal.isFromChangeRequest === true;
+                const rowBgColor = isFromChangeRequest 
+                  ? '#e6f0f7' // Light blue background for proposals from change requests
+                  : (index % 2 === 0 ? 'white' : '#fafaf8');
+                const rowBorderColor = isFromChangeRequest ? '#7693a9' : '#f0ede5';
                 
                 return (
-                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor }}>
+                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: isFromChangeRequest ? '4px solid #7693a9' : 'none' }}>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => {
+                      <button onClick={async () => {
+                        // Clear change request flag when viewing
+                        if (proposal.isFromChangeRequest && proposal.changeRequestId) {
+                          try {
+                            await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'text/plain' },
+                              body: JSON.stringify({
+                                type: 'clearChangeRequestFlag',
+                                projectNumber: proposal.projectNumber,
+                                version: proposal.version
+                              }),
+                              mode: 'cors'
+                            });
+                            // Refresh proposals to update highlighting
+                            fetchProposals();
+                          } catch (e) {
+                            console.error('Error clearing change request flag:', e);
+                          }
+                        }
                         setSelectedProposal(proposal);
                         // Update URL with proposal parameters for internal view
                         const params = new URLSearchParams();
@@ -1847,7 +1869,28 @@ export default function ProposalApp() {
                         Share
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
-                      <button onClick={() => setSelectedProposal({ ...proposal, _isEditing: true })} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
+                      <button onClick={async () => {
+                        // Clear change request flag when editing
+                        if (proposal.isFromChangeRequest && proposal.changeRequestId) {
+                          try {
+                            await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'text/plain' },
+                              body: JSON.stringify({
+                                type: 'clearChangeRequestFlag',
+                                projectNumber: proposal.projectNumber,
+                                version: proposal.version
+                              }),
+                              mode: 'cors'
+                            });
+                            // Refresh proposals to update highlighting
+                            fetchProposals();
+                          } catch (e) {
+                            console.error('Error clearing change request flag:', e);
+                          }
+                        }
+                        setSelectedProposal({ ...proposal, _isEditing: true });
+                      }} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         Edit
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
@@ -1857,7 +1900,24 @@ export default function ProposalApp() {
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>
-                    {proposal.clientName}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>{proposal.clientName}</span>
+                      {proposal.isFromChangeRequest && (
+                        <span style={{ 
+                          display: 'inline-block', 
+                          padding: '2px 8px', 
+                          borderRadius: '3px', 
+                          fontSize: '10px', 
+                          fontWeight: '600', 
+                          backgroundColor: '#dbeafe', 
+                          color: '#1e40af',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          Change Request
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', minWidth: '140px', width: '140px', whiteSpace: 'nowrap' }}>{proposal.eventDate}</td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}</td>
