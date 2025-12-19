@@ -776,35 +776,74 @@ export default function ProposalApp() {
     }
   }, [proposals, loading, isCreatingNew]);
 
+  // Helper function to add timeout to fetch requests
+  const fetchWithTimeout = (url, options = {}, timeoutMs = 30000) => {
+    return Promise.race([
+      fetch(url, options),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error(`Request timeout after ${timeoutMs}ms`)), timeoutMs)
+      )
+    ]);
+  };
+
   const fetchProposals = async (updateSelected = false) => {
     try {
       const API_BASE = 'https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec';
       
-      // Parallelize all API calls for faster loading
+      // Set loading state immediately
+      setLoading(true);
+      setError(null);
+      
+      // Use 30 second timeout for main proposals (critical), 15 seconds for secondary data
+      const TIMEOUT_MAIN = 30000; // 30 seconds
+      const TIMEOUT_SECONDARY = 15000; // 15 seconds
+      
+      console.log('🔄 Starting to fetch proposals...', { updateSelected, timestamp: new Date().toISOString() });
+      const startTime = Date.now();
+      
+      // Parallelize all API calls for faster loading, but with timeouts
       const [proposalsResponse, crResponse, subsResponse] = await Promise.allSettled([
-        fetch(API_BASE, {
+        fetchWithTimeout(API_BASE, {
           method: 'GET',
           mode: 'cors',
           cache: 'default' // Allow browser caching for better performance
-        }),
-        fetch(`${API_BASE}?action=getChangeRequests`, {
+        }, TIMEOUT_MAIN),
+        fetchWithTimeout(`${API_BASE}?action=getChangeRequests`, {
           method: 'GET',
           mode: 'cors',
           cache: 'default'
-        }),
-        fetch(`${API_BASE}?action=getNewProjectSubmissions`, {
+        }, TIMEOUT_SECONDARY),
+        fetchWithTimeout(`${API_BASE}?action=getNewProjectSubmissions`, {
           method: 'GET',
           mode: 'cors',
           cache: 'default'
-        })
+        }, TIMEOUT_SECONDARY)
       ]);
+      
+      const loadTime = Date.now() - startTime;
+      console.log(`⏱️ API calls completed in ${loadTime}ms`);
       
       // Process proposals response
       let data = null;
       if (proposalsResponse.status === 'fulfilled' && proposalsResponse.value.ok) {
-        data = await proposalsResponse.value.json();
+        try {
+          const jsonStartTime = Date.now();
+          data = await proposalsResponse.value.json();
+          const jsonTime = Date.now() - jsonStartTime;
+          console.log(`📦 Parsed proposals JSON in ${jsonTime}ms`, { 
+            proposalCount: data?.proposals?.length || 0,
+            catalogCount: data?.catalog?.length || 0
+          });
+        } catch (jsonErr) {
+          console.error('❌ Failed to parse proposals JSON:', jsonErr);
+          throw new Error(`Failed to parse proposals response: ${jsonErr.message}`);
+        }
       } else {
-        throw new Error(`HTTP error! status: ${proposalsResponse.value?.status || 'unknown'}`);
+        const errorMsg = proposalsResponse.status === 'rejected' 
+          ? proposalsResponse.reason?.message || 'Request failed'
+          : `HTTP error! status: ${proposalsResponse.value?.status || 'unknown'}`;
+        console.error('❌ Proposals fetch failed:', errorMsg);
+        throw new Error(errorMsg);
       }
       
       // Process change requests response (non-blocking)
@@ -838,10 +877,19 @@ export default function ProposalApp() {
       }
       
       if (!data || !data.proposals || !Array.isArray(data.proposals) || data.proposals.length === 0) {
+        console.log('⚠️ No proposals found in response');
         setProposals([]);
         setCatalog([]);
       } else {
-        const sortedProposals = data.proposals.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        const sortStartTime = Date.now();
+        const sortedProposals = data.proposals.sort((a, b) => {
+          const dateA = new Date(a.timestamp || 0);
+          const dateB = new Date(b.timestamp || 0);
+          return dateB - dateA;
+        });
+        const sortTime = Date.now() - sortStartTime;
+        console.log(`🔢 Sorted ${sortedProposals.length} proposals in ${sortTime}ms`);
+        
         setProposals(sortedProposals);
         setCatalog(data.catalog || []);
         
@@ -947,10 +995,33 @@ export default function ProposalApp() {
           }
         }
       }
+      
+      const totalTime = Date.now() - startTime;
+      console.log(`✅ Proposals loaded successfully in ${totalTime}ms`);
       setLoading(false);
     } catch (err) {
-      setError(`Failed to fetch proposals: ${err.message}`);
+      const errorMessage = err.message || 'Unknown error occurred';
+      console.error('❌ Error fetching proposals:', {
+        error: errorMessage,
+        stack: err.stack,
+        timestamp: new Date().toISOString()
+      });
+      
+      // Provide more helpful error messages
+      let userFriendlyError = 'Failed to load proposals. ';
+      if (errorMessage.includes('timeout')) {
+        userFriendlyError += 'The request took too long. This might be due to a large number of proposals. Please try refreshing the page.';
+      } else if (errorMessage.includes('Failed to fetch')) {
+        userFriendlyError += 'Unable to connect to the server. Please check your internet connection and try again.';
+      } else {
+        userFriendlyError += errorMessage;
+      }
+      
+      setError(userFriendlyError);
       setLoading(false);
+      
+      // If we have cached proposals, keep them visible
+      // Don't clear existing data on error
     }
   };
   
@@ -1188,12 +1259,142 @@ export default function ProposalApp() {
     // On client route, we should only show the proposal, not the dashboard
     // If no proposal is selected yet, wait for it to load
     if (loading) {
-      return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></div>;
+      return (
+        <div style={{ 
+          minHeight: '100vh', 
+          backgroundColor: '#f9fafb', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center' 
+        }}>
+          <p>Loading...</p>
+        </div>
+      );
     }
   }
   
-  if (loading) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p>Loading...</p></div>;
-  if (error) return <div style={{ minHeight: '100vh', backgroundColor: '#f9fafb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><p style={{ color: '#dc2626' }}>{error}</p></div>;
+  if (loading) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#f9fafb', 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        padding: '40px',
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        <div style={{
+          textAlign: 'center',
+          maxWidth: '500px'
+        }}>
+          <div style={{
+            fontSize: '18px',
+            fontWeight: '500',
+            color: '#374151',
+            marginBottom: '12px'
+          }}>
+            Loading proposals...
+          </div>
+          <div style={{
+            fontSize: '14px',
+            color: '#6b7280',
+            marginBottom: '24px'
+          }}>
+            This may take a moment if you have many proposals.
+          </div>
+          <div style={{
+            width: '200px',
+            height: '4px',
+            backgroundColor: '#e5e7eb',
+            borderRadius: '2px',
+            margin: '0 auto',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              width: '100%',
+              height: '100%',
+              backgroundColor: '#545142',
+              animation: 'pulse 1.5s ease-in-out infinite',
+              transform: 'translateX(-100%)',
+              animationName: 'loading',
+              animationDuration: '1.5s',
+              animationTimingFunction: 'ease-in-out',
+              animationIterationCount: 'infinite'
+            }} />
+          </div>
+          <style>{`
+            @keyframes loading {
+              0% { transform: translateX(-100%); }
+              50% { transform: translateX(100%); }
+              100% { transform: translateX(100%); }
+            }
+          `}</style>
+        </div>
+      </div>
+    );
+  }
+  
+  if (error) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        backgroundColor: '#f9fafb', 
+        display: 'flex', 
+        flexDirection: 'column',
+        alignItems: 'center', 
+        justifyContent: 'center',
+        padding: '40px',
+        fontFamily: "'Inter', sans-serif"
+      }}>
+        <div style={{
+          textAlign: 'center',
+          maxWidth: '600px',
+          backgroundColor: 'white',
+          padding: '32px',
+          borderRadius: '8px',
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)'
+        }}>
+          <div style={{
+            fontSize: '20px',
+            fontWeight: '600',
+            color: '#dc2626',
+            marginBottom: '16px'
+          }}>
+            Error Loading Proposals
+          </div>
+          <div style={{
+            fontSize: '14px',
+            color: '#6b7280',
+            marginBottom: '24px',
+            lineHeight: '1.6'
+          }}>
+            {error}
+          </div>
+          <button
+            onClick={() => {
+              setError(null);
+              fetchProposals();
+            }}
+            style={{
+              padding: '10px 24px',
+              backgroundColor: '#545142',
+              color: 'white',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              fontFamily: "'Inter', sans-serif"
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   // Prevent creating new proposals on client routes
   if (isCreatingNew && !clientRouteInfo.isClientRoute) {
