@@ -2193,7 +2193,8 @@ export default function ProposalApp() {
                             <button 
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setArchiveMenuOpen(archiveMenuOpen === proposal.projectNumber ? null : proposal.projectNumber);
+                                const uniqueId = `${proposal.projectNumber}-${proposal.version || 1}-${index}`;
+                                setArchiveMenuOpen(archiveMenuOpen === uniqueId ? null : uniqueId);
                               }}
                               style={{ 
                                 color: '#8b5cf6', 
@@ -2212,7 +2213,7 @@ export default function ProposalApp() {
                               Archive
                               <span style={{ fontSize: '10px' }}>▼</span>
                             </button>
-                            {archiveMenuOpen === proposal.projectNumber && (
+                            {archiveMenuOpen === `${proposal.projectNumber}-${proposal.version || 1}-${index}` && (
                               <div style={{
                                 position: 'absolute',
                                 top: '100%',
