@@ -570,6 +570,8 @@ export default function ProposalApp() {
   const [newSubmissions, setNewSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [deleteConfirmModal, setDeleteConfirmModal] = useState({ isOpen: false, proposal: null });
+  const [showArchived, setShowArchived] = useState(false);
+  const [archivingProposal, setArchivingProposal] = useState(null);
   const [filters, setFilters] = useState({
     clientName: '',
     salesLead: '',
@@ -1164,6 +1166,13 @@ export default function ProposalApp() {
   };
 
   const filteredProposals = proposals.filter(proposal => {
+    // Filter by archived status based on showArchived toggle
+    // The backend already filters archived proposals when showArchived=false,
+    // but we also filter here for safety and when showArchived=true to show all
+    if (!showArchived && proposal.archived) {
+      return false;
+    }
+    
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch = !searchTerm || (
       proposal.clientName.toLowerCase().includes(searchLower) ||
@@ -1955,6 +1964,26 @@ export default function ProposalApp() {
           />
         ) : (
           <>
+        <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: 'white', padding: '12px 16px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '500', color: '#374151', cursor: 'pointer' }}>
+            <input 
+              type="checkbox" 
+              checked={showArchived} 
+              onChange={async (e) => {
+                setShowArchived(e.target.checked);
+                // Refresh proposals with new archive filter
+                await fetchProposals();
+              }}
+              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+            />
+            <span>Show Archived Proposals</span>
+          </label>
+          {showArchived && (
+            <span style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }}>
+              ({proposals.filter(p => p.archived).length} archived)
+            </span>
+          )}
+        </div>
         <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', backgroundColor: 'white', padding: '16px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
           <div>
             <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client Name</label>
@@ -2005,13 +2034,18 @@ export default function ProposalApp() {
               {filteredProposals.map((proposal, index) => {
                 // Highlight proposals created from change requests in blue
                 const isFromChangeRequest = proposal.isFromChangeRequest === true;
+                // Highlight archived proposals with gray styling
+                const isArchived = proposal.archived === true;
                 const rowBgColor = isFromChangeRequest 
                   ? '#e6f0f7' // Light blue background for proposals from change requests
+                  : isArchived
+                  ? '#f3f4f6' // Gray background for archived proposals
                   : (index % 2 === 0 ? 'white' : '#fafaf8');
-                const rowBorderColor = isFromChangeRequest ? '#7693a9' : '#f0ede5';
+                const rowBorderColor = isFromChangeRequest ? '#7693a9' : isArchived ? '#d1d5db' : '#f0ede5';
+                const rowOpacity = isArchived ? 0.75 : 1;
                 
                 return (
-                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: isFromChangeRequest ? '4px solid #7693a9' : 'none' }}>
+                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: isFromChangeRequest ? '4px solid #7693a9' : isArchived ? '4px solid #9ca3af' : 'none', opacity: rowOpacity }}>
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
                       <button onClick={async () => {
@@ -2095,14 +2129,78 @@ export default function ProposalApp() {
                         Edit
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
+                      <button 
+                        onClick={async () => {
+                          if (archivingProposal) return; // Prevent double-click
+                          setArchivingProposal(proposal.projectNumber);
+                          try {
+                            const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({
+                                action: proposal.archived ? 'unarchiveProposal' : 'archiveProposal',
+                                projectNumber: proposal.projectNumber,
+                                version: proposal.version
+                              }),
+                              mode: 'cors'
+                            });
+                            const result = await response.json();
+                            if (result.success) {
+                              // Refresh proposals list
+                              await fetchProposals();
+                              // If viewing archived and unarchiving, might need to switch view
+                              if (proposal.archived && !showArchived) {
+                                // Proposal was unarchived, it will now appear in active view
+                              }
+                            } else {
+                              alert('Error: ' + (result.error || 'Failed to archive proposal'));
+                            }
+                          } catch (err) {
+                            console.error('Error archiving proposal:', err);
+                            alert('Error archiving proposal: ' + err.message);
+                          } finally {
+                            setArchivingProposal(null);
+                          }
+                        }}
+                        disabled={archivingProposal === proposal.projectNumber}
+                        style={{ 
+                          color: proposal.archived ? '#059669' : '#8b5cf6', 
+                          background: 'none', 
+                          border: 'none', 
+                          cursor: archivingProposal === proposal.projectNumber ? 'wait' : 'pointer', 
+                          textDecoration: 'underline', 
+                          fontSize: '13px', 
+                          fontWeight: '500', 
+                          padding: '0',
+                          opacity: archivingProposal === proposal.projectNumber ? 0.5 : 1
+                        }}
+                      >
+                        {archivingProposal === proposal.projectNumber ? '...' : (proposal.archived ? 'Unarchive' : 'Archive')}
+                      </button>
+                      <span style={{ color: '#d1d5db' }}>|</span>
                       <button onClick={() => setDeleteConfirmModal({ isOpen: true, proposal })} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         Delete
                       </button>
                     </div>
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span>{proposal.clientName}</span>
+                      {proposal.archived && (
+                        <span style={{ 
+                          display: 'inline-block', 
+                          padding: '2px 8px', 
+                          borderRadius: '3px', 
+                          fontSize: '10px', 
+                          fontWeight: '600', 
+                          backgroundColor: '#e5e7eb', 
+                          color: '#6b7280',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em'
+                        }}>
+                          Archived
+                        </span>
+                      )}
                       {proposal.isFromChangeRequest && (
                         <span style={{ 
                           display: 'inline-block', 
