@@ -2273,7 +2273,7 @@ export default function ProposalApp() {
                                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
                                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
                                 >
-                                  Archive this version {proposal.version ? `(V${proposal.version})` : ''}
+                                  Archive this version
                                 </button>
                                 <button
                                   onClick={async (e) => {
