@@ -570,6 +570,7 @@ export default function ProposalApp() {
   const [newSubmissions, setNewSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [deleteConfirmModal, setDeleteConfirmModal] = useState({ isOpen: false, proposal: null });
+  const [archiveMenuOpen, setArchiveMenuOpen] = useState(null); // Stores projectNumber when menu is open
   const [showArchived, setShowArchived] = useState(false);
   const [archivingProposal, setArchivingProposal] = useState(null);
   const [filters, setFilters] = useState({
@@ -671,6 +672,20 @@ export default function ProposalApp() {
       setIsCreatingNew(true);
     }
   }, []);
+
+  // Close archive menu when clicking outside
+  useEffect(() => {
+    if (!archiveMenuOpen) return;
+    
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('[data-archive-menu]')) {
+        setArchiveMenuOpen(null);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [archiveMenuOpen]);
   
   // Handle URL parameters to open specific proposal - runs when proposals load and when loading completes
   useEffect(() => {
@@ -2129,54 +2144,189 @@ export default function ProposalApp() {
                         Edit
                       </button>
                       <span style={{ color: '#d1d5db' }}>|</span>
-                      <button 
-                        onClick={async () => {
-                          if (archivingProposal) return; // Prevent double-click
-                          setArchivingProposal(proposal.projectNumber);
-                          try {
-                            const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
-                              method: 'POST',
-                              headers: { 'Content-Type': 'text/plain' },
-                              body: JSON.stringify({
-                                action: proposal.archived ? 'unarchiveProposal' : 'archiveProposal',
-                                projectNumber: proposal.projectNumber,
-                                version: proposal.version
-                              }),
-                              mode: 'cors'
-                            });
-                            const result = await response.json();
-                            if (result.success) {
-                              // Refresh proposals list
-                              await fetchProposals();
-                              // If viewing archived and unarchiving, might need to switch view
-                              if (proposal.archived && !showArchived) {
-                                // Proposal was unarchived, it will now appear in active view
+                      <div style={{ position: 'relative', display: 'inline-block' }} data-archive-menu>
+                        {proposal.archived ? (
+                          <button 
+                            onClick={async () => {
+                              if (archivingProposal) return;
+                              setArchivingProposal(proposal.projectNumber);
+                              try {
+                                const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'text/plain' },
+                                  body: JSON.stringify({
+                                    action: 'unarchiveProposal',
+                                    projectNumber: proposal.projectNumber
+                                  }),
+                                  mode: 'cors'
+                                });
+                                const result = await response.json();
+                                if (result.success) {
+                                  await fetchProposals();
+                                } else {
+                                  alert('Error: ' + (result.error || 'Failed to unarchive proposal'));
+                                }
+                              } catch (err) {
+                                console.error('Error unarchiving proposal:', err);
+                                alert('Error unarchiving proposal: ' + err.message);
+                              } finally {
+                                setArchivingProposal(null);
                               }
-                            } else {
-                              alert('Error: ' + (result.error || 'Failed to archive proposal'));
-                            }
-                          } catch (err) {
-                            console.error('Error archiving proposal:', err);
-                            alert('Error archiving proposal: ' + err.message);
-                          } finally {
-                            setArchivingProposal(null);
-                          }
-                        }}
-                        disabled={archivingProposal === proposal.projectNumber}
-                        style={{ 
-                          color: proposal.archived ? '#059669' : '#8b5cf6', 
-                          background: 'none', 
-                          border: 'none', 
-                          cursor: archivingProposal === proposal.projectNumber ? 'wait' : 'pointer', 
-                          textDecoration: 'underline', 
-                          fontSize: '13px', 
-                          fontWeight: '500', 
-                          padding: '0',
-                          opacity: archivingProposal === proposal.projectNumber ? 0.5 : 1
-                        }}
-                      >
-                        {archivingProposal === proposal.projectNumber ? '...' : (proposal.archived ? 'Unarchive' : 'Archive')}
-                      </button>
+                            }}
+                            disabled={archivingProposal === proposal.projectNumber}
+                            style={{ 
+                              color: '#059669', 
+                              background: 'none', 
+                              border: 'none', 
+                              cursor: archivingProposal === proposal.projectNumber ? 'wait' : 'pointer', 
+                              textDecoration: 'underline', 
+                              fontSize: '13px', 
+                              fontWeight: '500', 
+                              padding: '0',
+                              opacity: archivingProposal === proposal.projectNumber ? 0.5 : 1
+                            }}
+                          >
+                            {archivingProposal === proposal.projectNumber ? '...' : 'Unarchive'}
+                          </button>
+                        ) : (
+                          <>
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setArchiveMenuOpen(archiveMenuOpen === proposal.projectNumber ? null : proposal.projectNumber);
+                              }}
+                              style={{ 
+                                color: '#8b5cf6', 
+                                background: 'none', 
+                                border: 'none', 
+                                cursor: 'pointer', 
+                                textDecoration: 'underline', 
+                                fontSize: '13px', 
+                                fontWeight: '500', 
+                                padding: '0',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              Archive
+                              <span style={{ fontSize: '10px' }}>▼</span>
+                            </button>
+                            {archiveMenuOpen === proposal.projectNumber && (
+                              <div style={{
+                                position: 'absolute',
+                                top: '100%',
+                                left: '0',
+                                marginTop: '4px',
+                                backgroundColor: 'white',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+                                zIndex: 1000,
+                                minWidth: '180px',
+                                overflow: 'hidden'
+                              }}>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setArchiveMenuOpen(null);
+                                    if (archivingProposal) return;
+                                    setArchivingProposal(proposal.projectNumber);
+                                    try {
+                                      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'text/plain' },
+                                        body: JSON.stringify({
+                                          action: 'archiveProposal',
+                                          projectNumber: proposal.projectNumber,
+                                          version: proposal.version
+                                        }),
+                                        mode: 'cors'
+                                      });
+                                      const result = await response.json();
+                                      if (result.success) {
+                                        await fetchProposals();
+                                      } else {
+                                        alert('Error: ' + (result.error || 'Failed to archive proposal'));
+                                      }
+                                    } catch (err) {
+                                      console.error('Error archiving proposal:', err);
+                                      alert('Error archiving proposal: ' + err.message);
+                                    } finally {
+                                      setArchivingProposal(null);
+                                    }
+                                  }}
+                                  disabled={archivingProposal === proposal.projectNumber}
+                                  style={{
+                                    width: '100%',
+                                    padding: '10px 16px',
+                                    textAlign: 'left',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: archivingProposal === proposal.projectNumber ? 'wait' : 'pointer',
+                                    fontSize: '13px',
+                                    color: '#374151',
+                                    fontFamily: "'Inter', sans-serif",
+                                    transition: 'background-color 0.2s',
+                                    borderBottom: '1px solid #e5e7eb'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >
+                                  Archive this version {proposal.version ? `(V${proposal.version})` : ''}
+                                </button>
+                                <button
+                                  onClick={async (e) => {
+                                    e.stopPropagation();
+                                    setArchiveMenuOpen(null);
+                                    if (archivingProposal) return;
+                                    setArchivingProposal(proposal.projectNumber);
+                                    try {
+                                      const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'text/plain' },
+                                        body: JSON.stringify({
+                                          action: 'archiveProposal',
+                                          projectNumber: proposal.projectNumber
+                                        }),
+                                        mode: 'cors'
+                                      });
+                                      const result = await response.json();
+                                      if (result.success) {
+                                        await fetchProposals();
+                                      } else {
+                                        alert('Error: ' + (result.error || 'Failed to archive proposals'));
+                                      }
+                                    } catch (err) {
+                                      console.error('Error archiving proposals:', err);
+                                      alert('Error archiving proposals: ' + err.message);
+                                    } finally {
+                                      setArchivingProposal(null);
+                                    }
+                                  }}
+                                  disabled={archivingProposal === proposal.projectNumber}
+                                  style={{
+                                    width: '100%',
+                                    padding: '10px 16px',
+                                    textAlign: 'left',
+                                    background: 'none',
+                                    border: 'none',
+                                    cursor: archivingProposal === proposal.projectNumber ? 'wait' : 'pointer',
+                                    fontSize: '13px',
+                                    color: '#374151',
+                                    fontFamily: "'Inter', sans-serif",
+                                    transition: 'background-color 0.2s'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f3f4f6'}
+                                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'white'}
+                                >
+                                  Archive all versions
+                                </button>
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
                       <span style={{ color: '#d1d5db' }}>|</span>
                       <button onClick={() => setDeleteConfirmModal({ isOpen: true, proposal })} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         Delete
