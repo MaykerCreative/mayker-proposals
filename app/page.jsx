@@ -1180,85 +1180,83 @@ export default function ProposalApp() {
     );
   };
 
-  const filteredProposals = proposals.filter(proposal => {
-    // Filter by archived status based on showArchived toggle
-    // The backend already filters archived proposals when showArchived=false,
-    // but we also filter here for safety and when showArchived=true to show all
-    if (!showArchived && proposal.archived) {
-      return false;
-    }
-    
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = !searchTerm || (
-      proposal.clientName.toLowerCase().includes(searchLower) ||
-      proposal.venueName.toLowerCase().includes(searchLower) ||
-      proposal.city.toLowerCase().includes(searchLower) ||
-      proposal.state.toLowerCase().includes(searchLower)
-    );
-
-    const matchesClientName = !filters.clientName || proposal.clientName.toLowerCase().includes(filters.clientName.toLowerCase());
-    const matchesSalesLead = !filters.salesLead || (proposal.salesLead && proposal.salesLead.toLowerCase().includes(filters.salesLead.toLowerCase()));
-    const matchesStatus = !filters.status || proposal.status === filters.status;
-    const matchesLocation = !filters.location || `${proposal.venueName}, ${proposal.city}, ${proposal.state}`.toLowerCase().includes(filters.location.toLowerCase());
-
-    return matchesSearch && matchesClientName && matchesSalesLead && matchesStatus && matchesLocation;
-  }).sort((a, b) => {
-    // Sort proposals with unreviewed change requests to the top
-    const aHasUnreviewed = hasUnreviewedChangeRequest(a);
-    const bHasUnreviewed = hasUnreviewedChangeRequest(b);
-    
-    if (aHasUnreviewed && !bHasUnreviewed) return -1;
-    if (!aHasUnreviewed && bHasUnreviewed) return 1;
-    
-    // If both have or both don't have unreviewed change requests, sort by timestamp (newest first)
-    return new Date(b.timestamp) - new Date(a.timestamp);
-  });
-
-  // Deduplicate: Keep only the most recent version of each project
-  // Group by projectNumber and keep the proposal with the highest version number
-  const proposalsByProject = {};
-  filteredProposals.forEach(proposal => {
-    const projectNumber = proposal.projectNumber || '';
-    if (!projectNumber) {
-      // If no project number, include it (might be incomplete proposals)
-      if (!proposalsByProject['_no_project']) {
-        proposalsByProject['_no_project'] = [];
+  // Memoize filtered and deduplicated proposals to avoid recalculating on every render
+  const deduplicatedProposals = useMemo(() => {
+    // Filter proposals
+    const filtered = proposals.filter(proposal => {
+      // Filter by archived status based on showArchived toggle
+      if (!showArchived && proposal.archived) {
+        return false;
       }
-      proposalsByProject['_no_project'].push(proposal);
-      return;
-    }
-    
-    const currentVersion = proposal.version || 1;
-    const existing = proposalsByProject[projectNumber];
-    
-    // Keep the proposal with the highest version number
-    if (!existing || !existing.version || currentVersion > existing.version) {
-      proposalsByProject[projectNumber] = proposal;
-    } else if (currentVersion === existing.version) {
-      // If same version, keep the one with the most recent timestamp
-      const currentTimestamp = new Date(proposal.timestamp || 0);
-      const existingTimestamp = new Date(existing.timestamp || 0);
-      if (currentTimestamp > existingTimestamp) {
+      
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = !searchTerm || (
+        proposal.clientName.toLowerCase().includes(searchLower) ||
+        proposal.venueName.toLowerCase().includes(searchLower) ||
+        proposal.city.toLowerCase().includes(searchLower) ||
+        proposal.state.toLowerCase().includes(searchLower)
+      );
+
+      const matchesClientName = !filters.clientName || proposal.clientName.toLowerCase().includes(filters.clientName.toLowerCase());
+      const matchesSalesLead = !filters.salesLead || (proposal.salesLead && proposal.salesLead.toLowerCase().includes(filters.salesLead.toLowerCase()));
+      const matchesStatus = !filters.status || proposal.status === filters.status;
+      const matchesLocation = !filters.location || `${proposal.venueName}, ${proposal.city}, ${proposal.state}`.toLowerCase().includes(filters.location.toLowerCase());
+
+      return matchesSearch && matchesClientName && matchesSalesLead && matchesStatus && matchesLocation;
+    });
+
+    // Deduplicate: Keep only the most recent version of each project
+    const proposalsByProject = {};
+    filtered.forEach(proposal => {
+      const projectNumber = proposal.projectNumber || '';
+      if (!projectNumber) {
+        // If no project number, include it (might be incomplete proposals)
+        if (!proposalsByProject['_no_project']) {
+          proposalsByProject['_no_project'] = [];
+        }
+        proposalsByProject['_no_project'].push(proposal);
+        return;
+      }
+      
+      const currentVersion = proposal.version || 1;
+      const existing = proposalsByProject[projectNumber];
+      
+      // Keep the proposal with the highest version number
+      if (!existing || !existing.version || currentVersion > existing.version) {
         proposalsByProject[projectNumber] = proposal;
+      } else if (currentVersion === existing.version) {
+        // If same version, keep the one with the most recent timestamp
+        // Use numeric comparison instead of Date objects for better performance
+        const currentTimestamp = proposal.timestamp ? new Date(proposal.timestamp).getTime() : 0;
+        const existingTimestamp = existing.timestamp ? new Date(existing.timestamp).getTime() : 0;
+        if (currentTimestamp > existingTimestamp) {
+          proposalsByProject[projectNumber] = proposal;
+        }
       }
-    }
-  });
-  
-  // Convert back to array (only latest versions)
-  const deduplicatedProposals = Object.values(proposalsByProject).flat();
-  
-  // Re-sort after deduplication to maintain "most recently edited first" order
-  deduplicatedProposals.sort((a, b) => {
-    // Sort proposals with unreviewed change requests to the top
-    const aHasUnreviewed = hasUnreviewedChangeRequest(a);
-    const bHasUnreviewed = hasUnreviewedChangeRequest(b);
+    });
     
-    if (aHasUnreviewed && !bHasUnreviewed) return -1;
-    if (!aHasUnreviewed && bHasUnreviewed) return 1;
+    // Convert back to array (only latest versions)
+    const deduplicated = Object.values(proposalsByProject).flat();
     
-    // If both have or both don't have unreviewed change requests, sort by timestamp (newest first)
-    return new Date(b.timestamp) - new Date(a.timestamp);
-  });
+    // Sort: unreviewed change requests first, then by timestamp (newest first)
+    // Pre-compute timestamps once for better performance
+    const proposalsWithTimestamps = deduplicated.map(p => ({
+      proposal: p,
+      timestamp: p.timestamp ? new Date(p.timestamp).getTime() : 0,
+      hasUnreviewed: hasUnreviewedChangeRequest(p)
+    }));
+    
+    proposalsWithTimestamps.sort((a, b) => {
+      // Sort proposals with unreviewed change requests to the top
+      if (a.hasUnreviewed && !b.hasUnreviewed) return -1;
+      if (!a.hasUnreviewed && b.hasUnreviewed) return 1;
+      
+      // If both have or both don't have unreviewed change requests, sort by timestamp (newest first)
+      return b.timestamp - a.timestamp;
+    });
+    
+    return proposalsWithTimestamps.map(item => item.proposal);
+  }, [proposals, showArchived, searchTerm, filters]);
 
   // Enforce client route restrictions - prevent dashboard access on client routes
   // Only check on client-side to avoid SSR errors
