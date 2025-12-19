@@ -2136,7 +2136,7 @@ export default function ProposalApp() {
                           try {
                             const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
                               method: 'POST',
-                              headers: { 'Content-Type': 'application/json' },
+                              headers: { 'Content-Type': 'text/plain' },
                               body: JSON.stringify({
                                 action: proposal.archived ? 'unarchiveProposal' : 'archiveProposal',
                                 projectNumber: proposal.projectNumber,
