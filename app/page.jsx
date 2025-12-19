@@ -1998,6 +1998,46 @@ export default function ProposalApp() {
               ({proposals.filter(p => p.archived).length} archived)
             </span>
           )}
+          <button
+            onClick={async () => {
+              if (!confirm('Are you sure you want to unarchive ALL proposals? This will make all archived proposals visible again.')) {
+                return;
+              }
+              try {
+                const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'text/plain' },
+                  body: JSON.stringify({
+                    action: 'unarchiveAll'
+                  }),
+                  mode: 'cors'
+                });
+                const result = await response.json();
+                if (result.success) {
+                  alert('Successfully unarchived ' + result.unarchivedCount + ' proposals');
+                  await fetchProposals();
+                } else {
+                  alert('Error: ' + (result.error || 'Failed to unarchive proposals'));
+                }
+              } catch (err) {
+                console.error('Error unarchiving all proposals:', err);
+                alert('Error unarchiving all proposals: ' + err.message);
+              }
+            }}
+            style={{
+              marginLeft: '16px',
+              padding: '6px 12px',
+              backgroundColor: '#059669',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '12px',
+              fontWeight: '500'
+            }}
+          >
+            Unarchive All
+          </button>
         </div>
         <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', backgroundColor: 'white', padding: '16px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
           <div>
