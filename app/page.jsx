@@ -1246,6 +1246,19 @@ export default function ProposalApp() {
   
   // Convert back to array (only latest versions)
   const deduplicatedProposals = Object.values(proposalsByProject).flat();
+  
+  // Re-sort after deduplication to maintain "most recently edited first" order
+  deduplicatedProposals.sort((a, b) => {
+    // Sort proposals with unreviewed change requests to the top
+    const aHasUnreviewed = hasUnreviewedChangeRequest(a);
+    const bHasUnreviewed = hasUnreviewedChangeRequest(b);
+    
+    if (aHasUnreviewed && !bHasUnreviewed) return -1;
+    if (!aHasUnreviewed && bHasUnreviewed) return 1;
+    
+    // If both have or both don't have unreviewed change requests, sort by timestamp (newest first)
+    return new Date(b.timestamp) - new Date(a.timestamp);
+  });
 
   // Enforce client route restrictions - prevent dashboard access on client routes
   // Only check on client-side to avoid SSR errors
