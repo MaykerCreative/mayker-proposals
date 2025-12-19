@@ -1214,6 +1214,39 @@ export default function ProposalApp() {
     return new Date(b.timestamp) - new Date(a.timestamp);
   });
 
+  // Deduplicate: Keep only the most recent version of each project
+  // Group by projectNumber and keep the proposal with the highest version number
+  const proposalsByProject = {};
+  filteredProposals.forEach(proposal => {
+    const projectNumber = proposal.projectNumber || '';
+    if (!projectNumber) {
+      // If no project number, include it (might be incomplete proposals)
+      if (!proposalsByProject['_no_project']) {
+        proposalsByProject['_no_project'] = [];
+      }
+      proposalsByProject['_no_project'].push(proposal);
+      return;
+    }
+    
+    const currentVersion = proposal.version || 1;
+    const existing = proposalsByProject[projectNumber];
+    
+    // Keep the proposal with the highest version number
+    if (!existing || !existing.version || currentVersion > existing.version) {
+      proposalsByProject[projectNumber] = proposal;
+    } else if (currentVersion === existing.version) {
+      // If same version, keep the one with the most recent timestamp
+      const currentTimestamp = new Date(proposal.timestamp || 0);
+      const existingTimestamp = new Date(existing.timestamp || 0);
+      if (currentTimestamp > existingTimestamp) {
+        proposalsByProject[projectNumber] = proposal;
+      }
+    }
+  });
+  
+  // Convert back to array (only latest versions)
+  const deduplicatedProposals = Object.values(proposalsByProject).flat();
+
   // Enforce client route restrictions - prevent dashboard access on client routes
   // Only check on client-side to avoid SSR errors
   const clientRouteInfo = typeof window !== 'undefined' ? parseClientRoute() : { isClientRoute: false, projectNumber: null, version: null };
@@ -2086,7 +2119,7 @@ export default function ProposalApp() {
               </tr>
             </thead>
             <tbody>
-              {filteredProposals.map((proposal, index) => {
+              {deduplicatedProposals.map((proposal, index) => {
                 // Highlight proposals created from change requests in blue
                 const isFromChangeRequest = proposal.isFromChangeRequest === true;
                 // Highlight archived proposals with gray styling
