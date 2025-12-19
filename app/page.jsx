@@ -1180,8 +1180,8 @@ export default function ProposalApp() {
     );
   };
 
-  // Memoize filtered and deduplicated proposals to avoid recalculating on every render
-  const deduplicatedProposals = useMemo(() => {
+  // Memoize filtered and sorted proposals to avoid recalculating on every render
+  const filteredProposals = useMemo(() => {
     // Filter proposals
     const filtered = proposals.filter(proposal => {
       // Filter by archived status based on showArchived toggle
@@ -1204,43 +1204,10 @@ export default function ProposalApp() {
 
       return matchesSearch && matchesClientName && matchesSalesLead && matchesStatus && matchesLocation;
     });
-
-    // Deduplicate: Keep only the most recent version of each project
-    const proposalsByProject = {};
-    filtered.forEach(proposal => {
-      const projectNumber = proposal.projectNumber || '';
-      if (!projectNumber) {
-        // If no project number, include it (might be incomplete proposals)
-        if (!proposalsByProject['_no_project']) {
-          proposalsByProject['_no_project'] = [];
-        }
-        proposalsByProject['_no_project'].push(proposal);
-        return;
-      }
-      
-      const currentVersion = proposal.version || 1;
-      const existing = proposalsByProject[projectNumber];
-      
-      // Keep the proposal with the highest version number
-      if (!existing || !existing.version || currentVersion > existing.version) {
-        proposalsByProject[projectNumber] = proposal;
-      } else if (currentVersion === existing.version) {
-        // If same version, keep the one with the most recent timestamp
-        // Use numeric comparison instead of Date objects for better performance
-        const currentTimestamp = proposal.timestamp ? new Date(proposal.timestamp).getTime() : 0;
-        const existingTimestamp = existing.timestamp ? new Date(existing.timestamp).getTime() : 0;
-        if (currentTimestamp > existingTimestamp) {
-          proposalsByProject[projectNumber] = proposal;
-        }
-      }
-    });
-    
-    // Convert back to array (only latest versions)
-    const deduplicated = Object.values(proposalsByProject).flat();
     
     // Sort: unreviewed change requests first, then by timestamp (newest first)
     // Pre-compute timestamps once for better performance
-    const proposalsWithTimestamps = deduplicated.map(p => ({
+    const proposalsWithTimestamps = filtered.map(p => ({
       proposal: p,
       timestamp: p.timestamp ? new Date(p.timestamp).getTime() : 0,
       hasUnreviewed: hasUnreviewedChangeRequest(p)
@@ -2130,7 +2097,7 @@ export default function ProposalApp() {
               </tr>
             </thead>
             <tbody>
-              {deduplicatedProposals.map((proposal, index) => {
+              {filteredProposals.map((proposal, index) => {
                 // Highlight proposals created from change requests in blue
                 const isFromChangeRequest = proposal.isFromChangeRequest === true;
                 // Highlight archived proposals with gray styling
