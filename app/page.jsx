@@ -686,6 +686,10 @@ export default function ProposalApp() {
   });
   const [sortBy, setSortBy] = useState(null); // Column to sort by
   const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
+  
+  // Refs for synchronized scrollbars
+  const tableContainerRef = useRef(null);
+  const topScrollbarRef = useRef(null);
 
   // Helper function to detect and parse client routes
   const parseClientRoute = () => {
@@ -794,9 +798,10 @@ export default function ProposalApp() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [archiveMenuOpen]);
   
-  // Handle URL parameters to open specific proposal - runs when proposals load and when loading completes
   // Sync scrollbars on mount and when table content changes
   useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
     if (tableContainerRef.current && topScrollbarRef.current) {
       const syncScrollbars = () => {
         if (tableContainerRef.current && topScrollbarRef.current) {
@@ -808,7 +813,9 @@ export default function ProposalApp() {
       window.addEventListener('resize', syncScrollbars);
       return () => window.removeEventListener('resize', syncScrollbars);
     }
-  }, [filteredProposals]);
+  }, [proposals.length]); // Sync when proposals change
+  
+  // Handle URL parameters to open specific proposal - runs when proposals load and when loading completes
 
   useEffect(() => {
     // Only run on client-side
