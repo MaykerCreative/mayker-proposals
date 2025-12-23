@@ -2548,9 +2548,9 @@ export default function ProposalApp() {
             }
           `}</style>
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: '2000px' }}>
-            <thead style={{ backgroundColor: '#FAF9F6' }}>
+            <thead style={{ backgroundColor: '#FCFBF9' }}>
               <tr>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #E5E0D9' }}>Actions</th>
+                <th style={{ padding: '16px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '400', color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #F0EDE5' }}>Actions</th>
                 <th 
                   onClick={() => {
                     if (sortBy === 'client') {
@@ -2561,21 +2561,21 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s',
                     position: 'relative'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Client
@@ -2842,7 +2842,7 @@ export default function ProposalApp() {
                     </span>
                   </div>
                 </th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #E5E0D9', minWidth: '200px', width: '200px' }}>Exceptions</th>
+                <th style={{ padding: '16px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '400', color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.08em', borderBottom: '1px solid #F0EDE5', minWidth: '200px', width: '200px' }}>Exceptions</th>
                 <th 
                   onClick={() => {
                     if (sortBy === 'cogs') {
@@ -2948,17 +2948,17 @@ export default function ProposalApp() {
                 // Highlight archived proposals with gray styling
                 const isArchived = proposal.archived === true;
                 const rowBgColor = isFromChangeRequest 
-                  ? '#e6f0f7' // Light blue background for proposals from change requests
+                  ? '#F5F7F9' // Very subtle blue background for proposals from change requests
                   : isArchived
-                  ? '#f3f4f6' // Gray background for archived proposals
-                  : (index % 2 === 0 ? 'white' : '#fafaf8');
-                const rowBorderColor = isFromChangeRequest ? '#7693a9' : isArchived ? '#d1d5db' : '#f0ede5';
-                const rowOpacity = isArchived ? 0.75 : 1;
+                  ? '#FAFAFA' // Very subtle gray background for archived proposals
+                  : 'white'; // No striping - cleaner look
+                const rowBorderColor = isFromChangeRequest ? '#E8EDF2' : isArchived ? '#F0F0F0' : '#F8F7F4';
+                const rowOpacity = isArchived ? 0.85 : 1;
                 
                 return (
-                <tr key={index} style={{ borderBottom: `2px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: isFromChangeRequest ? '4px solid #7693a9' : isArchived ? '4px solid #9ca3af' : 'none', opacity: rowOpacity }}>
-                  <td style={{ padding: '12px 16px', fontSize: '13px' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                <tr key={index} style={{ borderBottom: `1px solid ${rowBorderColor}`, backgroundColor: rowBgColor, borderLeft: isFromChangeRequest ? '3px solid #C8D6E3' : isArchived ? '3px solid #D8D8D8' : 'none', opacity: rowOpacity }}>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', lineHeight: '1.6' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                       <button onClick={async () => {
                         // Clear change request flag when viewing
                         if (proposal.isFromChangeRequest && proposal.changeRequestId) {
@@ -2987,10 +2987,10 @@ export default function ProposalApp() {
                           params.set('version', proposal.version.toString());
                         }
                         window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
-                      }} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
+                      }} style={{ color: '#2C2C2C', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         View
                       </button>
-                      <span style={{ color: '#d1d5db' }}>|</span>
+                      <span style={{ color: '#E8E6E0', fontSize: '12px' }}>|</span>
                       <button onClick={() => {
                         // Generate client-specific URL using client domain: maykerevents.com/client/:projectNumber/:version
                         const clientPath = `/client/${proposal.projectNumber || ''}${proposal.version ? `/${proposal.version}` : ''}`;
@@ -3011,10 +3011,10 @@ export default function ProposalApp() {
                           document.body.removeChild(textArea);
                           alert('Client link copied to clipboard!');
                         });
-                      }} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
+                      }} style={{ color: '#8A8378', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px', fontWeight: '400', padding: '0' }}>
                         Share
                       </button>
-                      <span style={{ color: '#d1d5db' }}>|</span>
+                      <span style={{ color: '#E8E6E0', fontSize: '12px' }}>|</span>
                       <button onClick={async () => {
                         // Clear change request flag when editing
                         if (proposal.isFromChangeRequest && proposal.changeRequestId) {
@@ -3036,10 +3036,10 @@ export default function ProposalApp() {
                           }
                         }
                         setSelectedProposal({ ...proposal, _isEditing: true });
-                      }} style={{ color: '#545142', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
+                      }} style={{ color: '#8A8378', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px', fontWeight: '400', padding: '0' }}>
                         Edit
                       </button>
-                      <span style={{ color: '#d1d5db' }}>|</span>
+                      <span style={{ color: '#E8E6E0', fontSize: '12px' }}>|</span>
                       <div style={{ position: 'relative', display: 'inline-block' }} data-archive-menu>
                         {proposal.archived ? (
                           <button 
@@ -3093,13 +3093,13 @@ export default function ProposalApp() {
                                 setArchiveMenuOpen(archiveMenuOpen === uniqueId ? null : uniqueId);
                               }}
                               style={{ 
-                                color: '#8b5cf6', 
+                                color: '#8A8378', 
                                 background: 'none', 
                                 border: 'none', 
                                 cursor: 'pointer', 
                                 textDecoration: 'underline', 
-                                fontSize: '13px', 
-                                fontWeight: '500', 
+                                fontSize: '12px', 
+                                fontWeight: '400', 
                                 padding: '0',
                                 display: 'inline',
                                 lineHeight: '1.2',
@@ -3223,14 +3223,14 @@ export default function ProposalApp() {
                           </>
                         )}
                       </div>
-                      <span style={{ color: '#d1d5db' }}>|</span>
-                      <button onClick={() => setDeleteConfirmModal({ isOpen: true, proposal })} style={{ color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
+                      <span style={{ color: '#E8E6E0', fontSize: '12px' }}>|</span>
+                      <button onClick={() => setDeleteConfirmModal({ isOpen: true, proposal })} style={{ color: '#B8AFA0', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px', fontWeight: '400', padding: '0' }}>
                         Delete
                       </button>
                     </div>
                   </td>
                   {/* Client */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#1A1A1A', fontWeight: '500', lineHeight: '1.6' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span>{proposal.clientName}</span>
                       {proposal.archived && (
@@ -3266,27 +3266,27 @@ export default function ProposalApp() {
                     </div>
                   </td>
                   {/* Project # */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.projectNumber || '-'}</td>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#8A8378', fontWeight: '400', lineHeight: '1.6' }}>{proposal.projectNumber || '-'}</td>
                   {/* Version */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.version ? `V${proposal.version}` : '-'}</td>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#8A8378', fontWeight: '400', lineHeight: '1.6' }}>{proposal.version ? `V${proposal.version}` : '-'}</td>
                   {/* Event Date */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', minWidth: '140px', width: '140px', whiteSpace: 'nowrap' }}>{proposal.eventDate || formatDateRange(proposal)}</td>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#3A3732', minWidth: '140px', width: '140px', whiteSpace: 'nowrap', lineHeight: '1.6' }}>{proposal.eventDate || formatDateRange(proposal)}</td>
                   {/* Venue */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}</td>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#3A3732', lineHeight: '1.6' }}>{proposal.venueName}</td>
                   {/* City, State */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.city}, {proposal.state}</td>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#3A3732', lineHeight: '1.6' }}>{proposal.city}, {proposal.state}</td>
                   {/* Status */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px' }}>
-                    <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: proposal.status === 'Pending' ? '#f5f1e6' : proposal.status === 'Approved' ? '#e8f5e9' : proposal.status === 'Confirmed' ? '#e3f2fd' : proposal.status === 'Completed' ? '#e8f5e9' : proposal.status === 'Cancelled' ? '#fee2e2' : '#f3f4f6', color: proposal.status === 'Pending' ? '#b8860b' : proposal.status === 'Approved' ? '#2e7d32' : proposal.status === 'Confirmed' ? '#1976d2' : proposal.status === 'Completed' ? '#2e7d32' : proposal.status === 'Cancelled' ? '#dc2626' : '#666' }}>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', lineHeight: '1.6' }}>
+                    <span style={{ display: 'inline-block', padding: '6px 12px', borderRadius: '6px', fontSize: '11px', fontWeight: '500', backgroundColor: proposal.status === 'Pending' ? '#F7F4ED' : proposal.status === 'Approved' ? '#F0F7F1' : proposal.status === 'Confirmed' ? '#E8F2FA' : proposal.status === 'Completed' ? '#F0F7F1' : proposal.status === 'Cancelled' ? '#FDF2F2' : '#F5F5F5', color: proposal.status === 'Pending' ? '#9A7A3A' : proposal.status === 'Approved' ? '#4A7C59' : proposal.status === 'Confirmed' ? '#5A8FC2' : proposal.status === 'Completed' ? '#4A7C59' : proposal.status === 'Cancelled' ? '#C85A5A' : '#8A8378' }}>
                       {proposal.status || 'Pending'}
                     </span>
                   </td>
                   {/* Total */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', fontWeight: '500' }}>${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#3A3732', fontWeight: '500', lineHeight: '1.6' }}>${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   {/* Discount */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{getDiscountApplied(proposal)}</td>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#3A3732', lineHeight: '1.6' }}>{getDiscountApplied(proposal)}</td>
                   {/* Exceptions */}
-                  <td style={{ padding: '12px 16px', fontSize: '12px', color: '#666', lineHeight: '1.6', minWidth: '200px', width: '200px' }}>
+                  <td style={{ padding: '16px 16px', fontSize: '12px', color: '#8A8378', lineHeight: '1.6', minWidth: '200px', width: '200px' }}>
                     {(() => {
                       const exceptions = getProposalExceptions(proposal);
                       if (exceptions.length === 0) {
@@ -3305,7 +3305,7 @@ export default function ProposalApp() {
                   {(() => {
                     const profitability = calculateProposalProfitability(proposal);
                     return (
-                        <td style={{ padding: '12px 16px', fontSize: '13px', color: '#92400e', fontWeight: '500', textAlign: 'right' }}>
+                        <td style={{ padding: '16px 16px', fontSize: '13px', color: '#92400e', fontWeight: '500', textAlign: 'right', lineHeight: '1.6' }}>
                           ${profitability.totalCOGS.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                     );
@@ -3314,13 +3314,13 @@ export default function ProposalApp() {
                   {(() => {
                     const profitability = calculateProposalProfitability(proposal);
                     return (
-                        <td style={{ padding: '12px 16px', fontSize: '13px', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', fontWeight: '500', textAlign: 'right' }}>
+                        <td style={{ padding: '16px 16px', fontSize: '13px', color: profitability.profitMargin >= 0 ? '#5A8FC2' : '#C85A5A', fontWeight: '500', textAlign: 'right', lineHeight: '1.6' }}>
                           {profitability.profitMargin.toFixed(2)}%
                         </td>
                     );
                   })()}
                   {/* Last Edited */}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#888888' }}>{proposal.lastUpdated || proposal.timestamp ? (proposal.lastUpdated || new Date(proposal.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })) : '-'}</td>
+                  <td style={{ padding: '16px 16px', fontSize: '13px', color: '#8A8378', lineHeight: '1.6' }}>{proposal.lastUpdated || proposal.timestamp ? (proposal.lastUpdated || new Date(proposal.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })) : '-'}</td>
                 </tr>
                 );
               })}
