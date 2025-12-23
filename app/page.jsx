@@ -684,6 +684,8 @@ export default function ProposalApp() {
     status: '',
     location: ''
   });
+  const [sortBy, setSortBy] = useState(null); // Column to sort by
+  const [sortOrder, setSortOrder] = useState('desc'); // 'asc' or 'desc'
 
   // Helper function to detect and parse client routes
   const parseClientRoute = () => {
@@ -1421,17 +1423,82 @@ export default function ProposalApp() {
       hasUnreviewed: hasUnreviewedChangeRequest(p)
     }));
     
+    // Apply column sorting if specified
+    if (sortBy) {
     proposalsWithTimestamps.sort((a, b) => {
-      // Sort proposals with unreviewed change requests to the top
+        const proposalA = a.proposal;
+        const proposalB = b.proposal;
+        let comparison = 0;
+        
+        switch (sortBy) {
+          case 'client':
+            comparison = (proposalA.clientName || '').localeCompare(proposalB.clientName || '');
+            break;
+          case 'projectNumber':
+            comparison = String(proposalA.projectNumber || '').localeCompare(String(proposalB.projectNumber || ''));
+            break;
+          case 'version':
+            comparison = (proposalA.version || 0) - (proposalB.version || 0);
+            break;
+          case 'eventDate':
+            // Use startDate for sorting (most recent first by default)
+            const dateA = proposalA.startDate ? new Date(proposalA.startDate).getTime() : 0;
+            const dateB = proposalB.startDate ? new Date(proposalB.startDate).getTime() : 0;
+            comparison = dateA - dateB;
+            break;
+          case 'venue':
+            comparison = (proposalA.venueName || '').localeCompare(proposalB.venueName || '');
+            break;
+          case 'cityState':
+            const locationA = `${proposalA.city || ''}, ${proposalA.state || ''}`;
+            const locationB = `${proposalB.city || ''}, ${proposalB.state || ''}`;
+            comparison = locationA.localeCompare(locationB);
+            break;
+          case 'status':
+            comparison = (proposalA.status || '').localeCompare(proposalB.status || '');
+            break;
+          case 'total':
+            comparison = calculateTotal(proposalA) - calculateTotal(proposalB);
+            break;
+          case 'discount':
+            const discountA = parseFloat(getDiscountApplied(proposalA).replace(/[^0-9.-]/g, '')) || 0;
+            const discountB = parseFloat(getDiscountApplied(proposalB).replace(/[^0-9.-]/g, '')) || 0;
+            comparison = discountA - discountB;
+            break;
+          case 'cogs':
+            const cogsA = calculateProposalProfitability(proposalA).totalCOGS;
+            const cogsB = calculateProposalProfitability(proposalB).totalCOGS;
+            comparison = cogsA - cogsB;
+            break;
+          case 'profitMargin':
+            const marginA = calculateProposalProfitability(proposalA).profitMargin;
+            const marginB = calculateProposalProfitability(proposalB).profitMargin;
+            comparison = marginA - marginB;
+            break;
+          case 'lastEdited':
+            comparison = a.timestamp - b.timestamp;
+            break;
+          default:
+            // Default: unreviewed change requests first, then by timestamp
       if (a.hasUnreviewed && !b.hasUnreviewed) return -1;
       if (!a.hasUnreviewed && b.hasUnreviewed) return 1;
-      
-      // If both have or both don't have unreviewed change requests, sort by timestamp (most recently edited first)
+            comparison = b.timestamp - a.timestamp;
+        }
+        
+        // Apply sort order
+        return sortOrder === 'asc' ? comparison : -comparison;
+      });
+    } else {
+      // Default sorting: unreviewed change requests first, then by timestamp (most recently edited first)
+      proposalsWithTimestamps.sort((a, b) => {
+        if (a.hasUnreviewed && !b.hasUnreviewed) return -1;
+        if (!a.hasUnreviewed && b.hasUnreviewed) return 1;
       return b.timestamp - a.timestamp;
     });
+    }
     
     return proposalsWithTimestamps.map(item => item.proposal);
-  }, [proposals, showArchived, searchTerm, filters, changeRequests]);
+  }, [proposals, showArchived, searchTerm, filters, changeRequests, sortBy, sortOrder]);
 
   // Enforce client route restrictions - prevent dashboard access on client routes
   // Only check on client-side to avoid SSR errors
@@ -2335,24 +2402,452 @@ export default function ProposalApp() {
           </div>
         </div>
 
-        <div style={{ backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', borderRadius: '4px', overflowX: 'auto', border: '1px solid #e5e7eb' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: '1400px' }}>
+        <div style={{ 
+          backgroundColor: 'white', 
+          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', 
+          borderRadius: '4px', 
+          overflowX: 'auto', 
+          border: '1px solid #e5e7eb',
+          position: 'relative'
+        }}>
+          <style>{`
+            /* Custom scrollbar styling */
+            div::-webkit-scrollbar {
+              height: 12px;
+            }
+            div::-webkit-scrollbar-track {
+              background: #f1f1f1;
+              border-radius: 6px;
+            }
+            div::-webkit-scrollbar-thumb {
+              background: #545142;
+              border-radius: 6px;
+            }
+            div::-webkit-scrollbar-thumb:hover {
+              background: #3d3a2f;
+            }
+            /* Firefox scrollbar */
+            div {
+              scrollbar-width: thin;
+              scrollbar-color: #545142 #f1f1f1;
+            }
+          `}</style>
+          <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: '2000px' }}>
             <thead style={{ backgroundColor: '#f8f7f4' }}>
               <tr>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Client</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', minWidth: '140px', width: '140px' }}>Event Date</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Venue</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>City, State</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Status</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Total</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Discount</th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'client') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('client');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s',
+                    position: 'relative'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Client
+                    {sortBy === 'client' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'projectNumber') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('projectNumber');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Project #
+                    {sortBy === 'projectNumber' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'version') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('version');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Version
+                    {sortBy === 'version' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'eventDate') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('eventDate');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb', 
+                    minWidth: '140px', 
+                    width: '140px',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Event Date
+                    {sortBy === 'eventDate' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'venue') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('venue');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Venue
+                    {sortBy === 'venue' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'cityState') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('cityState');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    City, State
+                    {sortBy === 'cityState' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'status') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('status');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Status
+                    {sortBy === 'status' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'total') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('total');
+                      setSortOrder('desc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Total
+                    {sortBy === 'total' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'discount') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('discount');
+                      setSortOrder('asc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Discount
+                    {sortBy === 'discount' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', minWidth: '200px', width: '200px' }}>Exceptions</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>COGS</th>
-                <th style={{ padding: '12px 16px', textAlign: 'right', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Profit Margin</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Project #</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Version</th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Last Edited</th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'cogs') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('cogs');
+                      setSortOrder('desc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'right', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                    COGS
+                    {sortBy === 'cogs' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'profitMargin') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('profitMargin');
+                      setSortOrder('desc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'right', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                    Profit Margin
+                    {sortBy === 'profitMargin' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
+                <th 
+                  onClick={() => {
+                    if (sortBy === 'lastEdited') {
+                      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+                    } else {
+                      setSortBy('lastEdited');
+                      setSortOrder('desc');
+                    }
+                  }}
+                  style={{ 
+                    padding: '12px 16px', 
+                    textAlign: 'left', 
+                    fontSize: '11px', 
+                    fontWeight: '600', 
+                    color: '#888888', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
+                    borderBottom: '1px solid #e5e7eb',
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    Last Edited
+                    {sortBy === 'lastEdited' && (
+                      <span style={{ fontSize: '10px', color: '#545142' }}>
+                        {sortOrder === 'asc' ? '↑' : '↓'}
+                      </span>
+                    )}
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -2517,11 +3012,10 @@ export default function ProposalApp() {
                                 padding: '0',
                                 display: 'inline-flex',
                                 alignItems: 'center',
-                                gap: '4px'
+                                gap: '2px'
                               }}
                             >
-                              Archive
-                              <span style={{ fontSize: '10px' }}>▼</span>
+                              Archive<span style={{ fontSize: '10px', marginLeft: '2px' }}>▼</span>
                             </button>
                             {archiveMenuOpen === `${proposal.projectNumber}-${proposal.version || 1}-${index}` && (
                               <div style={{
@@ -2644,6 +3138,7 @@ export default function ProposalApp() {
                       </button>
                     </div>
                   </td>
+                  {/* Client */}
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                       <span>{proposal.clientName}</span>
@@ -2679,16 +3174,27 @@ export default function ProposalApp() {
                       )}
                     </div>
                   </td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', minWidth: '140px', width: '140px', whiteSpace: 'nowrap' }}>{proposal.eventDate}</td>
+                  {/* Project # */}
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.projectNumber || '-'}</td>
+                  {/* Version */}
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.version ? `V${proposal.version}` : '-'}</td>
+                  {/* Event Date */}
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', minWidth: '140px', width: '140px', whiteSpace: 'nowrap' }}>{proposal.eventDate || formatDateRange(proposal)}</td>
+                  {/* Venue */}
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.venueName}</td>
+                  {/* City, State */}
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.city}, {proposal.state}</td>
+                  {/* Status */}
                   <td style={{ padding: '12px 16px', fontSize: '13px' }}>
                     <span style={{ display: 'inline-block', padding: '4px 10px', borderRadius: '3px', fontSize: '11px', fontWeight: '600', backgroundColor: proposal.status === 'Pending' ? '#f5f1e6' : proposal.status === 'Approved' ? '#e8f5e9' : proposal.status === 'Confirmed' ? '#e3f2fd' : proposal.status === 'Completed' ? '#e8f5e9' : proposal.status === 'Cancelled' ? '#fee2e2' : '#f3f4f6', color: proposal.status === 'Pending' ? '#b8860b' : proposal.status === 'Approved' ? '#2e7d32' : proposal.status === 'Confirmed' ? '#1976d2' : proposal.status === 'Completed' ? '#2e7d32' : proposal.status === 'Cancelled' ? '#dc2626' : '#666' }}>
                       {proposal.status || 'Pending'}
                     </span>
                   </td>
+                  {/* Total */}
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C', fontWeight: '500' }}>${calculateTotal(proposal).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                  {/* Discount */}
                   <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{getDiscountApplied(proposal)}</td>
+                  {/* Exceptions */}
                   <td style={{ padding: '12px 16px', fontSize: '12px', color: '#666', lineHeight: '1.6', minWidth: '200px', width: '200px' }}>
                     {(() => {
                       const exceptions = getProposalExceptions(proposal);
@@ -2704,22 +3210,26 @@ export default function ProposalApp() {
                       );
                     })()}
                   </td>
+                  {/* COGS */}
                   {(() => {
                     const profitability = calculateProposalProfitability(proposal);
                     return (
-                      <>
                         <td style={{ padding: '12px 16px', fontSize: '13px', color: '#92400e', fontWeight: '500', textAlign: 'right' }}>
                           ${profitability.totalCOGS.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
+                    );
+                  })()}
+                  {/* Profit Margin */}
+                  {(() => {
+                    const profitability = calculateProposalProfitability(proposal);
+                    return (
                         <td style={{ padding: '12px 16px', fontSize: '13px', color: profitability.profitMargin >= 0 ? '#2563eb' : '#dc2626', fontWeight: '500', textAlign: 'right' }}>
                           {profitability.profitMargin.toFixed(2)}%
                         </td>
-                      </>
                     );
                   })()}
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.projectNumber || '-'}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#2C2C2C' }}>{proposal.version ? `V${proposal.version}` : '-'}</td>
-                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#888888' }}>{proposal.lastUpdated || '-'}</td>
+                  {/* Last Edited */}
+                  <td style={{ padding: '12px 16px', fontSize: '13px', color: '#888888' }}>{proposal.lastUpdated || proposal.timestamp ? (proposal.lastUpdated || new Date(proposal.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })) : '-'}</td>
                 </tr>
                 );
               })}
