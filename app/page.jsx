@@ -2027,7 +2027,7 @@ export default function ProposalApp() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FAF9F7', padding: '32px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: '#FBF9F7', padding: '40px 48px' }}>
         <style dangerouslySetInnerHTML={{ __html: `
           /* Google Fonts loaded via link tag above for better performance */ 
         
@@ -2106,162 +2106,166 @@ export default function ProposalApp() {
             onLoad={() => console.log('Dashboard logo loaded successfully:', '/mayker_icon-black.svg')}
           />
           <div>
-            <h1 style={{ fontSize: '24px', fontWeight: '500', color: '#3A3732', margin: '0', fontFamily: "'Domaine Text', serif" }}>Mayker Proposals</h1>
-            <p style={{ marginTop: '2px', color: '#8A8378', fontSize: '13px', margin: '0', fontWeight: '400' }}>Manage and view all event proposals</p>
+            <h1 style={{ fontSize: '28px', fontWeight: '500', color: '#2C2C2C', margin: '0', fontFamily: "'Domaine Text', serif", letterSpacing: '-0.01em' }}>Mayker Proposals</h1>
+            <p style={{ marginTop: '4px', color: '#8A8378', fontSize: '13px', margin: '0', fontWeight: '400', opacity: 0.7 }}>Manage and view all event proposals</p>
           </div>
         </div>
 
         {/* Action Bar */}
-        <div style={{ marginBottom: '32px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button 
-            onClick={fetchProposals} 
-            style={{ 
-              padding: '10px 20px', 
-              backgroundColor: 'white', 
-              color: '#3A3732', 
-              border: '1px solid #D7D1C7', 
-              borderRadius: '8px', 
-              cursor: 'pointer', 
-              fontSize: '13px', 
-              fontWeight: '500',
-              fontFamily: "'Neue Haas Unica', sans-serif",
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F5F2ED';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-            }}
-          >
-            ↻ Refresh
-          </button>
+        <div style={{ marginBottom: '40px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Secondary Actions Group */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button 
+              onClick={fetchProposals} 
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: 'transparent', 
+                color: '#6B6B6B', 
+                border: 'none', 
+                borderRadius: '6px', 
+                cursor: 'pointer', 
+                fontSize: '13px', 
+                fontWeight: '400',
+                fontFamily: "'Neue Haas Unica', sans-serif",
+                transition: 'all 0.2s ease',
+                textTransform: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#3A3732';
+                e.currentTarget.style.backgroundColor = '#F5F2ED';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#6B6B6B';
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              Refresh
+            </button>
+            <div style={{ width: '1px', height: '16px', backgroundColor: '#E5E0D9', margin: '0 4px' }}></div>
+            <button 
+              onClick={async () => { 
+                setViewingChangeRequests(true); 
+                setIsCreatingNew(false);
+                setViewingNewSubmissions(false);
+                setSelectedProposal(null);
+                await fetchChangeRequests();
+              }} 
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: 'transparent', 
+                color: '#6B6B6B', 
+                border: 'none', 
+                borderRadius: '6px', 
+                cursor: 'pointer', 
+                fontSize: '13px', 
+                fontWeight: '400',
+                fontFamily: "'Neue Haas Unica', sans-serif",
+                position: 'relative',
+                transition: 'all 0.2s ease',
+                textTransform: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#3A3732';
+                e.currentTarget.style.backgroundColor = '#F5F2ED';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#6B6B6B';
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              Change requests
+              {changeRequests.filter(cr => !cr.reviewed).length > 0 && (
+                <span style={{ 
+                  marginLeft: '6px',
+                  padding: '2px 6px',
+                  backgroundColor: '#B15B3C', 
+                  color: 'white', 
+                  borderRadius: '10px', 
+                  fontSize: '10px', 
+                  fontWeight: '500'
+                }}>
+                  {changeRequests.filter(cr => !cr.reviewed).length}
+                </span>
+              )}
+            </button>
+            <button 
+              onClick={async () => { 
+                setViewingNewSubmissions(true); 
+                setIsCreatingNew(false);
+                setViewingChangeRequests(false);
+                setSelectedProposal(null);
+                await fetchNewSubmissions();
+              }} 
+              style={{ 
+                padding: '8px 16px', 
+                backgroundColor: 'transparent', 
+                color: '#6B6B6B', 
+                border: 'none', 
+                borderRadius: '6px', 
+                cursor: 'pointer', 
+                fontSize: '13px', 
+                fontWeight: '400',
+                fontFamily: "'Neue Haas Unica', sans-serif",
+                position: 'relative',
+                transition: 'all 0.2s ease',
+                textTransform: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#3A3732';
+                e.currentTarget.style.backgroundColor = '#F5F2ED';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#6B6B6B';
+                e.currentTarget.style.backgroundColor = 'transparent';
+              }}
+            >
+              New project inquiries
+              {newSubmissions.filter(s => !s.reviewed).length > 0 && (
+                <span style={{ 
+                  marginLeft: '6px',
+                  padding: '2px 6px',
+                  backgroundColor: '#B15B3C', 
+                  color: 'white', 
+                  borderRadius: '10px', 
+                  fontSize: '10px', 
+                  fontWeight: '500'
+                }}>
+                  {newSubmissions.filter(s => !s.reviewed).length}
+                </span>
+              )}
+            </button>
+          </div>
+          
+          {/* Primary Action */}
           <button 
             onClick={() => { setViewingChangeRequests(false); setIsCreatingNew(true); }} 
             style={{ 
-              padding: '10px 20px', 
-              backgroundColor: '#37332E', 
+              padding: '12px 24px', 
+              backgroundColor: '#4A4843', // Refined charcoal/warm gray
               color: 'white', 
               border: 'none', 
-              borderRadius: '8px', 
+              borderRadius: '6px', // Tailored corner radius
               cursor: 'pointer', 
-              fontSize: '13px', 
-              fontWeight: '600',
-              fontFamily: "'Neue Haas Unica', sans-serif",
-              letterSpacing: '0.02em',
-              textTransform: 'uppercase',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#3A3732';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.12)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = '#37332E';
-              e.currentTarget.style.boxShadow = 'none';
-            }}
-          >
-            + Create New Proposal
-          </button>
-          <button 
-            onClick={async () => { 
-              setViewingChangeRequests(true); 
-              setIsCreatingNew(false);
-              setViewingNewSubmissions(false);
-              setSelectedProposal(null);
-              await fetchChangeRequests();
-            }} 
-            style={{ 
-              padding: '10px 20px', 
-              backgroundColor: 'white', 
-              color: '#3A3732', 
-              border: '1px solid #D7D1C7', 
-              borderRadius: '8px', 
-              cursor: 'pointer', 
-              fontSize: '13px', 
+              fontSize: '14px', 
               fontWeight: '500',
               fontFamily: "'Neue Haas Unica', sans-serif",
-              position: 'relative',
-              transition: 'all 0.2s ease'
+              letterSpacing: '0',
+              textTransform: 'none', // Sentence case
+              transition: 'all 0.2s ease',
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' // Subtle shadow instead of heavy contrast
             }}
             onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F5F2ED';
+              e.currentTarget.style.backgroundColor = '#545142';
+              e.currentTarget.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.12)';
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.backgroundColor = '#4A4843';
+              e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.08)';
             }}
           >
-            📋 Change Requests
-            {changeRequests.filter(cr => !cr.reviewed).length > 0 && (
-              <span style={{ 
-                position: 'absolute', 
-                top: '-8px', 
-                right: '-8px', 
-                backgroundColor: '#B15B3C', 
-                color: 'white', 
-                borderRadius: '50%', 
-                width: '16px', 
-                height: '16px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                fontSize: '10px', 
-                fontWeight: '600'
-              }}>
-                {changeRequests.filter(cr => !cr.reviewed).length}
-              </span>
-            )}
+            Create new proposal
           </button>
-          <button 
-            onClick={async () => { 
-              setViewingNewSubmissions(true); 
-              setIsCreatingNew(false);
-              setViewingChangeRequests(false);
-              setSelectedProposal(null);
-              await fetchNewSubmissions();
-            }} 
-            style={{ 
-              padding: '10px 20px', 
-              backgroundColor: 'white', 
-              color: '#3A3732', 
-              border: '1px solid #D7D1C7', 
-              borderRadius: '8px', 
-              cursor: 'pointer', 
-              fontSize: '13px', 
-              fontWeight: '500',
-              fontFamily: "'Neue Haas Unica', sans-serif",
-              position: 'relative',
-              transition: 'all 0.2s ease'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = '#F5F2ED';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = 'white';
-            }}
-          >
-            🎯 New Project Inquiries
-            {newSubmissions.filter(s => !s.reviewed).length > 0 && (
-              <span style={{ 
-                position: 'absolute', 
-                top: '-8px', 
-                right: '-8px', 
-                backgroundColor: '#B15B3C', 
-                color: 'white', 
-                borderRadius: '50%', 
-                width: '16px', 
-                height: '16px', 
-                display: 'flex', 
-                alignItems: 'center', 
-                justifyContent: 'center', 
-                fontSize: '10px', 
-                fontWeight: '600'
-              }}>
-                {newSubmissions.filter(s => !s.reviewed).length}
-              </span>
-            )}
-          </button>
-          <div style={{ flex: 1, maxWidth: '400px', minWidth: '200px' }}>
+          <div style={{ flex: '1', maxWidth: '400px', minWidth: '200px', marginLeft: 'auto' }}>
             <input 
               type="text" 
               placeholder="Search by client, venue, or location..." 
@@ -2270,8 +2274,8 @@ export default function ProposalApp() {
               style={{ 
                 width: '100%', 
                 padding: '10px 14px', 
-                border: '1px solid #D7D1C7', 
-                borderRadius: '8px', 
+                border: '1px solid #E5E0D9', // Lighter border
+                borderRadius: '6px', 
                 fontSize: '13px', 
                 boxSizing: 'border-box', 
                 fontFamily: "'Neue Haas Unica', sans-serif",
@@ -2281,11 +2285,11 @@ export default function ProposalApp() {
                 outline: 'none'
               }}
               onFocus={(e) => {
-                e.currentTarget.style.borderColor = '#8A8378';
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0, 0, 0, 0.04)';
+                e.currentTarget.style.borderColor = '#D7D1C7';
+                e.currentTarget.style.boxShadow = '0 0 0 2px rgba(74, 72, 67, 0.06)';
               }}
               onBlur={(e) => {
-                e.currentTarget.style.borderColor = '#D7D1C7';
+                e.currentTarget.style.borderColor = '#E5E0D9';
                 e.currentTarget.style.boxShadow = 'none';
               }}
             />
@@ -2338,79 +2342,115 @@ export default function ProposalApp() {
           />
         ) : (
           <>
-        <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', alignItems: 'center', backgroundColor: 'white', padding: '12px 16px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
-          <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '500', color: '#374151', cursor: 'pointer' }}>
-            <input 
-              type="checkbox" 
-              checked={showArchived} 
-              onChange={async (e) => {
-                setShowArchived(e.target.checked);
-                // Refresh proposals with new archive filter
+        <div style={{ marginBottom: '24px', display: 'flex', gap: '16px', alignItems: 'center', backgroundColor: 'white', padding: '16px 20px', borderRadius: '6px', border: 'none', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' }}>
+          {/* Toggle-style control for archived */}
+          <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', fontWeight: '400', color: '#6B6B6B', cursor: 'pointer' }}>
+            <div
+              onClick={async () => {
+                const newValue = !showArchived;
+                setShowArchived(newValue);
                 await fetchProposals();
               }}
-              style={{ width: '16px', height: '16px', cursor: 'pointer' }}
-            />
-            <span>Show Archived Proposals</span>
+              style={{
+                position: 'relative',
+                width: '40px',
+                height: '22px',
+                backgroundColor: showArchived ? '#4A4843' : '#E5E0D9',
+                borderRadius: '11px',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                flexShrink: 0
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '2px',
+                  left: showArchived ? '20px' : '2px',
+                  width: '18px',
+                  height: '18px',
+                  backgroundColor: 'white',
+                  borderRadius: '50%',
+                  transition: 'left 0.2s ease',
+                  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.2)'
+                }}
+              />
+            </div>
+            <span style={{ textTransform: 'none' }}>Show archived proposals</span>
           </label>
           {showArchived && (
-            <span style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }}>
-              ({proposals.filter(p => p.archived).length} archived)
+            <span style={{ fontSize: '12px', color: '#8A8378', opacity: 0.7 }}>
+              {proposals.filter(p => p.archived).length} archived
             </span>
           )}
-          <button
-            onClick={async () => {
-              if (!confirm('Are you sure you want to unarchive ALL proposals? This will make all archived proposals visible again.')) {
-                return;
-              }
-              try {
-                const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'text/plain' },
-                  body: JSON.stringify({
-                    action: 'unarchiveAll'
-                  }),
-                  mode: 'cors'
-                });
-                const result = await response.json();
-                if (result.success) {
-                  alert('Successfully unarchived ' + result.unarchivedCount + ' proposals');
-                  await fetchProposals();
-                } else {
-                  alert('Error: ' + (result.error || 'Failed to unarchive proposals'));
+          {showArchived && (
+            <button
+              onClick={async () => {
+                if (!confirm('Are you sure you want to unarchive ALL proposals? This will make all archived proposals visible again.')) {
+                  return;
                 }
-              } catch (err) {
-                console.error('Error unarchiving all proposals:', err);
-                alert('Error unarchiving all proposals: ' + err.message);
-              }
-            }}
-            style={{
-              marginLeft: '16px',
-              padding: '6px 12px',
-              backgroundColor: '#059669',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer',
-              fontSize: '12px',
-              fontWeight: '500'
-            }}
-          >
-            Unarchive All
-          </button>
+                try {
+                  const response = await fetch('https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/plain' },
+                    body: JSON.stringify({
+                      action: 'unarchiveAll'
+                    }),
+                    mode: 'cors'
+                  });
+                  const result = await response.json();
+                  if (result.success) {
+                    alert('Successfully unarchived ' + result.unarchivedCount + ' proposals');
+                    await fetchProposals();
+                  } else {
+                    alert('Error: ' + (result.error || 'Failed to unarchive proposals'));
+                  }
+                } catch (err) {
+                  console.error('Error unarchiving all proposals:', err);
+                  alert('Error unarchiving all proposals: ' + err.message);
+                }
+              }}
+              style={{
+                marginLeft: 'auto',
+                padding: '6px 14px',
+                backgroundColor: 'transparent',
+                color: '#6B6B6B',
+                border: '1px solid #E5E0D9',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '12px',
+                fontWeight: '400',
+                transition: 'all 0.2s ease',
+                textTransform: 'none'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = '#F5F2ED';
+                e.currentTarget.style.color = '#3A3732';
+                e.currentTarget.style.borderColor = '#D7D1C7';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
+                e.currentTarget.style.color = '#6B6B6B';
+                e.currentTarget.style.borderColor = '#E5E0D9';
+              }}
+            >
+              Unarchive all
+            </button>
+          )}
         </div>
-        <div style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', backgroundColor: 'white', padding: '16px', borderRadius: '4px', border: '1px solid #e5e7eb' }}>
+        <div style={{ marginBottom: '32px', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', backgroundColor: 'white', padding: '24px', borderRadius: '6px', border: 'none', boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Client Name</label>
-            <input type="text" placeholder="Filter..." value={filters.clientName} onChange={(e) => setFilters({...filters, clientName: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '400', marginBottom: '8px', color: '#6B6B6B', textTransform: 'none', letterSpacing: '0' }}>Client name</label>
+            <input type="text" placeholder="Filter..." value={filters.clientName} onChange={(e) => setFilters({...filters, clientName: e.target.value})} style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E0D9', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', backgroundColor: 'white', color: '#3A3732', transition: 'all 0.2s ease', outline: 'none' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#D7D1C7'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(74, 72, 67, 0.06)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E0D9'; e.currentTarget.style.boxShadow = 'none'; }} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sales Lead</label>
-            <input type="text" placeholder="Filter..." value={filters.salesLead} onChange={(e) => setFilters({...filters, salesLead: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '400', marginBottom: '8px', color: '#6B6B6B', textTransform: 'none', letterSpacing: '0' }}>Sales lead</label>
+            <input type="text" placeholder="Filter..." value={filters.salesLead} onChange={(e) => setFilters({...filters, salesLead: e.target.value})} style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E0D9', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', backgroundColor: 'white', color: '#3A3732', transition: 'all 0.2s ease', outline: 'none' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#D7D1C7'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(74, 72, 67, 0.06)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E0D9'; e.currentTarget.style.boxShadow = 'none'; }} />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Status</label>
-            <select value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }}>
-              <option value="">All Statuses</option>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '400', marginBottom: '8px', color: '#6B6B6B', textTransform: 'none', letterSpacing: '0' }}>Status</label>
+            <select value={filters.status} onChange={(e) => setFilters({...filters, status: e.target.value})} style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E0D9', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', backgroundColor: 'white', color: '#3A3732', transition: 'all 0.2s ease', outline: 'none', cursor: 'pointer' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#D7D1C7'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(74, 72, 67, 0.06)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E0D9'; e.currentTarget.style.boxShadow = 'none'; }}>
+              <option value="">All statuses</option>
               <option value="Pending">Pending</option>
               <option value="Approved">Approved</option>
               <option value="Confirmed">Confirmed</option>
@@ -2419,8 +2459,8 @@ export default function ProposalApp() {
             </select>
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', marginBottom: '6px', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Location</label>
-            <input type="text" placeholder="Filter..." value={filters.location} onChange={(e) => setFilters({...filters, location: e.target.value})} style={{ width: '100%', padding: '8px', border: '1px solid #d1d5db', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' }} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '400', marginBottom: '8px', color: '#6B6B6B', textTransform: 'none', letterSpacing: '0' }}>Location</label>
+            <input type="text" placeholder="Filter..." value={filters.location} onChange={(e) => setFilters({...filters, location: e.target.value})} style={{ width: '100%', padding: '10px 12px', border: '1px solid #E5E0D9', borderRadius: '6px', fontSize: '13px', boxSizing: 'border-box', backgroundColor: 'white', color: '#3A3732', transition: 'all 0.2s ease', outline: 'none' }} onFocus={(e) => { e.currentTarget.style.borderColor = '#D7D1C7'; e.currentTarget.style.boxShadow = '0 0 0 2px rgba(74, 72, 67, 0.06)'; }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E0D9'; e.currentTarget.style.boxShadow = 'none'; }} />
           </div>
         </div>
 
@@ -2436,10 +2476,10 @@ export default function ProposalApp() {
           style={{
             width: '100%',
             height: '12px',
-            backgroundColor: '#f1f1f1',
-            border: '1px solid #e5e7eb',
+            backgroundColor: '#FAF9F6',
+            border: 'none',
             borderBottom: 'none',
-            borderRadius: '4px 4px 0 0',
+            borderRadius: '6px 6px 0 0',
             overflowX: 'scroll',
             overflowY: 'hidden',
             position: 'sticky',
@@ -2460,10 +2500,10 @@ export default function ProposalApp() {
           }}
           style={{ 
             backgroundColor: 'white', 
-            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', 
-            borderRadius: '0 0 4px 4px', 
+            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)', 
+            borderRadius: '0 0 6px 6px', 
             overflowX: 'scroll', 
-            border: '1px solid #e5e7eb',
+            border: 'none',
             borderTop: 'none',
             position: 'relative',
             maxHeight: 'calc(100vh - 312px)',
@@ -2511,9 +2551,9 @@ export default function ProposalApp() {
             }
           `}</style>
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: '2000px' }}>
-            <thead style={{ backgroundColor: '#f8f7f4' }}>
+            <thead style={{ backgroundColor: '#FAF9F6' }}>
               <tr>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb' }}>Actions</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', textTransform: 'none', letterSpacing: '0', borderBottom: '1px solid #E5E0D9' }}>Actions</th>
                 <th 
                   onClick={() => {
                     if (sortBy === 'client') {
@@ -2528,10 +2568,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s',
@@ -2561,10 +2601,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2593,10 +2633,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2625,10 +2665,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb', 
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9', 
                     minWidth: '140px', 
                     width: '140px',
                     cursor: 'pointer',
@@ -2659,10 +2699,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2691,10 +2731,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2723,10 +2763,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2755,10 +2795,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2787,10 +2827,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2805,7 +2845,7 @@ export default function ProposalApp() {
                     </span>
                   </div>
                 </th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', minWidth: '200px', width: '200px' }}>Exceptions</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', textTransform: 'none', letterSpacing: '0', borderBottom: '1px solid #E5E0D9', minWidth: '200px', width: '200px' }}>Exceptions</th>
                 <th 
                   onClick={() => {
                     if (sortBy === 'cogs') {
@@ -2820,10 +2860,10 @@ export default function ProposalApp() {
                     textAlign: 'right', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2852,10 +2892,10 @@ export default function ProposalApp() {
                     textAlign: 'right', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
@@ -2884,10 +2924,10 @@ export default function ProposalApp() {
                     textAlign: 'left', 
                     fontSize: '11px', 
                     fontWeight: '600', 
-                    color: '#888888', 
-                    textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #e5e7eb',
+                    color: '#6B6B6B', 
+                    textTransform: 'none', 
+                    letterSpacing: '0', 
+                    borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
