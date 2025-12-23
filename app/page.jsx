@@ -2577,7 +2577,7 @@ export default function ProposalApp() {
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Client
                     <span style={{ fontSize: '10px', color: sortBy === 'client' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'client' ? '600' : '400' }}>
                       {sortBy === 'client' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2594,22 +2594,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Project #
                     <span style={{ fontSize: '10px', color: sortBy === 'projectNumber' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'projectNumber' ? '600' : '400' }}>
                       {sortBy === 'projectNumber' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2626,22 +2626,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Version
                     <span style={{ fontSize: '10px', color: sortBy === 'version' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'version' ? '600' : '400' }}>
                       {sortBy === 'version' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2675,7 +2675,7 @@ export default function ProposalApp() {
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
                   onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Event Date
                     <span style={{ fontSize: '10px', color: sortBy === 'eventDate' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'eventDate' ? '600' : '400' }}>
                       {sortBy === 'eventDate' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2692,22 +2692,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Venue
                     <span style={{ fontSize: '10px', color: sortBy === 'venue' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'venue' ? '600' : '400' }}>
                       {sortBy === 'venue' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2724,22 +2724,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     City, State
                     <span style={{ fontSize: '10px', color: sortBy === 'cityState' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'cityState' ? '600' : '400' }}>
                       {sortBy === 'cityState' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2756,22 +2756,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Status
                     <span style={{ fontSize: '10px', color: sortBy === 'status' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'status' ? '600' : '400' }}>
                       {sortBy === 'status' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2788,22 +2788,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Total
                     <span style={{ fontSize: '10px', color: sortBy === 'total' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'total' ? '600' : '400' }}>
                       {sortBy === 'total' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2820,22 +2820,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Discount
                     <span style={{ fontSize: '10px', color: sortBy === 'discount' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'discount' ? '600' : '400' }}>
                       {sortBy === 'discount' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2853,22 +2853,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'right', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', whiteSpace: 'nowrap' }}>
                     COGS
                     <span style={{ fontSize: '10px', color: sortBy === 'cogs' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'cogs' ? '600' : '400' }}>
                       {sortBy === 'cogs' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2897,10 +2897,10 @@ export default function ProposalApp() {
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px', whiteSpace: 'nowrap' }}>
                     Profit Margin
                     <span style={{ fontSize: '10px', color: sortBy === 'profitMargin' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'profitMargin' ? '600' : '400' }}>
                       {sortBy === 'profitMargin' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2917,22 +2917,22 @@ export default function ProposalApp() {
                     }
                   }}
                   style={{ 
-                    padding: '12px 16px', 
+                    padding: '16px 16px', 
                     textAlign: 'left', 
-                    fontSize: '11px', 
-                    fontWeight: '600', 
+                    fontSize: '12px', 
+                    fontWeight: '400', 
                     color: '#6B6B6B', 
                     textTransform: 'uppercase', 
-                    letterSpacing: '0.05em', 
-                    borderBottom: '1px solid #E5E0D9',
+                    letterSpacing: '0.08em', 
+                    borderBottom: '1px solid #F0EDE5',
                     cursor: 'pointer',
                     userSelect: 'none',
                     transition: 'background-color 0.2s'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f0ede5'}
-                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f8f7f4'}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#F8F7F4'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FCFBF9'}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', whiteSpace: 'nowrap' }}>
                     Last Edited
                     <span style={{ fontSize: '10px', color: sortBy === 'lastEdited' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'lastEdited' ? '600' : '400' }}>
                       {sortBy === 'lastEdited' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
@@ -2989,30 +2989,6 @@ export default function ProposalApp() {
                         window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`);
                       }} style={{ color: '#2C2C2C', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '13px', fontWeight: '500', padding: '0' }}>
                         View
-                      </button>
-                      <span style={{ color: '#E8E6E0', fontSize: '12px' }}>|</span>
-                      <button onClick={() => {
-                        // Generate client-specific URL using client domain: maykerevents.com/client/:projectNumber/:version
-                        const clientPath = `/client/${proposal.projectNumber || ''}${proposal.version ? `/${proposal.version}` : ''}`;
-                        // Use client domain for share links, regardless of which domain admin is on
-                        const protocol = typeof window !== 'undefined' ? window.location.protocol : 'https:';
-                        const clientUrl = `${protocol}//${CLIENT_DOMAIN}${clientPath}`;
-                        
-                        // Copy to clipboard
-                        navigator.clipboard.writeText(clientUrl).then(() => {
-                          alert('Client link copied to clipboard!');
-                        }).catch(() => {
-                          // Fallback for older browsers
-                          const textArea = document.createElement('textarea');
-                          textArea.value = clientUrl;
-                          document.body.appendChild(textArea);
-                          textArea.select();
-                          document.execCommand('copy');
-                          document.body.removeChild(textArea);
-                          alert('Client link copied to clipboard!');
-                        });
-                      }} style={{ color: '#8A8378', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline', fontSize: '12px', fontWeight: '400', padding: '0' }}>
-                        Share
                       </button>
                       <span style={{ color: '#E8E6E0', fontSize: '12px' }}>|</span>
                       <button onClick={async () => {
@@ -3106,7 +3082,7 @@ export default function ProposalApp() {
                                 fontFamily: 'inherit'
                               }}
                             >
-                              Archive<span style={{ fontSize: '9px', marginLeft: '1px', verticalAlign: 'middle', textDecoration: 'underline' }}>▼</span>
+                              Archive
                             </button>
                             {archiveMenuOpen === `${proposal.projectNumber}-${proposal.version || 1}-${index}` && (
                               <div style={{
