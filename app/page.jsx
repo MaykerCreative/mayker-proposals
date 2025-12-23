@@ -1461,10 +1461,35 @@ export default function ProposalApp() {
           minHeight: '100vh', 
           backgroundColor: '#f9fafb', 
           display: 'flex', 
+          flexDirection: 'column',
           alignItems: 'center', 
           justifyContent: 'center',
           fontFamily: "'Inter', sans-serif"
         }}>
+          <div style={{
+            marginBottom: '24px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <img 
+              src="/mayker_icon-black.svg" 
+              alt="Mayker Events" 
+              style={{ 
+                height: '48px', 
+                width: '48px'
+              }}
+              onError={(e) => {
+                if (!e.target.src.includes('/assets/')) {
+                  e.target.src = '/assets/mayker_icon-black.svg';
+                } else if (!e.target.src.includes('cdn')) {
+                  e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_icon-black.svg';
+                } else {
+                  e.target.style.display = 'none';
+                }
+              }}
+            />
+          </div>
           <p style={{
             fontSize: '18px',
             fontWeight: '500',
@@ -1491,22 +1516,39 @@ export default function ProposalApp() {
           textAlign: 'center',
           maxWidth: '500px'
         }}>
+          {/* Brand Mark */}
+          <div style={{
+            marginBottom: '32px',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <img 
+              src="/mayker_icon-black.svg" 
+              alt="Mayker Events" 
+              style={{ 
+                height: '64px', 
+                width: '64px'
+              }}
+              onError={(e) => {
+                if (!e.target.src.includes('/assets/')) {
+                  e.target.src = '/assets/mayker_icon-black.svg';
+                } else if (!e.target.src.includes('cdn')) {
+                  e.target.src = 'https://cdn.jsdelivr.net/gh/MaykerCreative/mayker-proposals@main/public/mayker_icon-black.svg';
+                } else {
+                  e.target.style.display = 'none';
+                }
+              }}
+            />
+          </div>
           <div style={{
             fontSize: '20px',
             fontWeight: '500',
             color: '#374151',
-            marginBottom: '12px',
-            fontFamily: "'Inter', sans-serif"
-          }}>
-            Loading the Mayker Events admin dashboard
-          </div>
-          <div style={{
-            fontSize: '14px',
-            color: '#6b7280',
             marginBottom: '24px',
             fontFamily: "'Inter', sans-serif"
           }}>
-            This may take a moment if you have many proposals.
+            Loading the Mayker Events admin dashboard
           </div>
           <div style={{
             width: '200px',
