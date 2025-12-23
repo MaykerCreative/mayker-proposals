@@ -1334,11 +1334,16 @@ export default function ProposalApp() {
   };
 
   // Helper function to check if a proposal has unreviewed change requests
+  // Since we only show latest version, check if ANY version of this project has unreviewed requests
   const hasUnreviewedChangeRequest = (proposal) => {
+    const projectNumber = String(proposal.projectNumber || '').trim();
+    if (!projectNumber) return false;
+    
     return changeRequests.some(cr => 
       !cr.reviewed &&
-      cr.originalProposal?.projectNumber === proposal.projectNumber &&
-      cr.originalProposal?.version === proposal.version
+      String(cr.originalProposal?.projectNumber || '').trim() === projectNumber
+      // Note: We check project number only, not version, since we're showing latest version
+      // and want to highlight if ANY version of this project has unreviewed requests
     );
   };
 
@@ -1367,9 +1372,50 @@ export default function ProposalApp() {
       return matchesSearch && matchesClientName && matchesSalesLead && matchesStatus && matchesLocation;
     });
     
-    // Sort: unreviewed change requests first, then by timestamp (newest first)
+    // DEDUPLICATION: Only show the latest version of each project
+    // Group proposals by projectNumber and keep only the latest version
+    const projectMap = new Map();
+    
+    filtered.forEach(proposal => {
+      const projectNumber = String(proposal.projectNumber || '').trim();
+      if (!projectNumber) {
+        // If no project number, include it (might be a draft)
+        projectMap.set(`no-project-${proposal.timestamp || Date.now()}`, proposal);
+        return;
+      }
+      
+      const existing = projectMap.get(projectNumber);
+      
+      if (!existing) {
+        // First proposal with this project number
+        projectMap.set(projectNumber, proposal);
+      } else {
+        // Compare versions - keep the one with higher version number
+        const existingVersion = existing.version || 0;
+        const currentVersion = proposal.version || 0;
+        
+        if (currentVersion > existingVersion) {
+          // Current proposal has higher version
+          projectMap.set(projectNumber, proposal);
+        } else if (currentVersion === existingVersion) {
+          // Same version - keep the one with more recent timestamp (most recently edited)
+          const existingTimestamp = existing.timestamp ? new Date(existing.timestamp).getTime() : 0;
+          const currentTimestamp = proposal.timestamp ? new Date(proposal.timestamp).getTime() : 0;
+          
+          if (currentTimestamp > existingTimestamp) {
+            projectMap.set(projectNumber, proposal);
+          }
+        }
+        // If current version is lower, keep the existing one
+      }
+    });
+    
+    // Convert map back to array
+    const deduplicated = Array.from(projectMap.values());
+    
+    // Sort: unreviewed change requests first, then by timestamp (most recently edited first)
     // Pre-compute timestamps once for better performance
-    const proposalsWithTimestamps = filtered.map(p => ({
+    const proposalsWithTimestamps = deduplicated.map(p => ({
       proposal: p,
       timestamp: p.timestamp ? new Date(p.timestamp).getTime() : 0,
       hasUnreviewed: hasUnreviewedChangeRequest(p)
@@ -1380,12 +1426,12 @@ export default function ProposalApp() {
       if (a.hasUnreviewed && !b.hasUnreviewed) return -1;
       if (!a.hasUnreviewed && b.hasUnreviewed) return 1;
       
-      // If both have or both don't have unreviewed change requests, sort by timestamp (newest first)
+      // If both have or both don't have unreviewed change requests, sort by timestamp (most recently edited first)
       return b.timestamp - a.timestamp;
     });
     
     return proposalsWithTimestamps.map(item => item.proposal);
-  }, [proposals, showArchived, searchTerm, filters]);
+  }, [proposals, showArchived, searchTerm, filters, changeRequests]);
 
   // Enforce client route restrictions - prevent dashboard access on client routes
   // Only check on client-side to avoid SSR errors
