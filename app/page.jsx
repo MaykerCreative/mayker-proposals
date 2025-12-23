@@ -3064,12 +3064,12 @@ export default function ProposalApp() {
                                 fontSize: '13px', 
                                 fontWeight: '500', 
                                 padding: '0',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '2px'
+                                display: 'inline',
+                                lineHeight: '1.2',
+                                fontFamily: 'inherit'
                               }}
                             >
-                              Archive<span style={{ fontSize: '10px', marginLeft: '2px' }}>▼</span>
+                              Archive<span style={{ fontSize: '9px', marginLeft: '1px', verticalAlign: 'middle', textDecoration: 'underline' }}>▼</span>
                             </button>
                             {archiveMenuOpen === `${proposal.projectNumber}-${proposal.version || 1}-${index}` && (
                               <div style={{
