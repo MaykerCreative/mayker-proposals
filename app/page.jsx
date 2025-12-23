@@ -2027,7 +2027,7 @@ export default function ProposalApp() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#FBF9F7', padding: '40px 48px' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'white', padding: '40px 48px' }}>
         <style dangerouslySetInnerHTML={{ __html: `
           /* Google Fonts loaded via link tag above for better performance */ 
         
@@ -2112,147 +2112,24 @@ export default function ProposalApp() {
         </div>
 
         {/* Action Bar */}
-        <div style={{ marginBottom: '40px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Secondary Actions Group */}
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <button 
-              onClick={fetchProposals} 
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: 'transparent', 
-                color: '#6B6B6B', 
-                border: 'none', 
-                borderRadius: '6px', 
-                cursor: 'pointer', 
-                fontSize: '13px', 
-                fontWeight: '400',
-                fontFamily: "'Neue Haas Unica', sans-serif",
-                transition: 'all 0.2s ease',
-                textTransform: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#3A3732';
-                e.currentTarget.style.backgroundColor = '#F5F2ED';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#6B6B6B';
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              Refresh
-            </button>
-            <div style={{ width: '1px', height: '16px', backgroundColor: '#E5E0D9', margin: '0 4px' }}></div>
-            <button 
-              onClick={async () => { 
-                setViewingChangeRequests(true); 
-                setIsCreatingNew(false);
-                setViewingNewSubmissions(false);
-                setSelectedProposal(null);
-                await fetchChangeRequests();
-              }} 
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: 'transparent', 
-                color: '#6B6B6B', 
-                border: 'none', 
-                borderRadius: '6px', 
-                cursor: 'pointer', 
-                fontSize: '13px', 
-                fontWeight: '400',
-                fontFamily: "'Neue Haas Unica', sans-serif",
-                position: 'relative',
-                transition: 'all 0.2s ease',
-                textTransform: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#3A3732';
-                e.currentTarget.style.backgroundColor = '#F5F2ED';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#6B6B6B';
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              Change requests
-              {changeRequests.filter(cr => !cr.reviewed).length > 0 && (
-                <span style={{ 
-                  marginLeft: '6px',
-                  padding: '2px 6px',
-                  backgroundColor: '#B15B3C', 
-                  color: 'white', 
-                  borderRadius: '10px', 
-                  fontSize: '10px', 
-                  fontWeight: '500'
-                }}>
-                  {changeRequests.filter(cr => !cr.reviewed).length}
-                </span>
-              )}
-            </button>
-            <button 
-              onClick={async () => { 
-                setViewingNewSubmissions(true); 
-                setIsCreatingNew(false);
-                setViewingChangeRequests(false);
-                setSelectedProposal(null);
-                await fetchNewSubmissions();
-              }} 
-              style={{ 
-                padding: '8px 16px', 
-                backgroundColor: 'transparent', 
-                color: '#6B6B6B', 
-                border: 'none', 
-                borderRadius: '6px', 
-                cursor: 'pointer', 
-                fontSize: '13px', 
-                fontWeight: '400',
-                fontFamily: "'Neue Haas Unica', sans-serif",
-                position: 'relative',
-                transition: 'all 0.2s ease',
-                textTransform: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = '#3A3732';
-                e.currentTarget.style.backgroundColor = '#F5F2ED';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = '#6B6B6B';
-                e.currentTarget.style.backgroundColor = 'transparent';
-              }}
-            >
-              New project inquiries
-              {newSubmissions.filter(s => !s.reviewed).length > 0 && (
-                <span style={{ 
-                  marginLeft: '6px',
-                  padding: '2px 6px',
-                  backgroundColor: '#B15B3C', 
-                  color: 'white', 
-                  borderRadius: '10px', 
-                  fontSize: '10px', 
-                  fontWeight: '500'
-                }}>
-                  {newSubmissions.filter(s => !s.reviewed).length}
-                </span>
-              )}
-            </button>
-          </div>
-          
-          {/* Primary Action */}
+        <div style={{ marginBottom: '40px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Primary Action - First */}
           <button 
             onClick={() => { setViewingChangeRequests(false); setIsCreatingNew(true); }} 
             style={{ 
-              padding: '12px 24px', 
-              backgroundColor: '#4A4843', // Refined charcoal/warm gray
+              padding: '10px 20px', 
+              backgroundColor: '#4A4843',
               color: 'white', 
               border: 'none', 
-              borderRadius: '6px', // Tailored corner radius
+              borderRadius: '6px',
               cursor: 'pointer', 
-              fontSize: '14px', 
+              fontSize: '13px', 
               fontWeight: '500',
               fontFamily: "'Neue Haas Unica', sans-serif",
               letterSpacing: '0',
-              textTransform: 'none', // Sentence case
+              textTransform: 'none',
               transition: 'all 0.2s ease',
-              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)' // Subtle shadow instead of heavy contrast
+              boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)'
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.backgroundColor = '#545142';
@@ -2264,6 +2141,126 @@ export default function ProposalApp() {
             }}
           >
             Create new proposal
+          </button>
+          
+          {/* Secondary Actions - Outlined Buttons */}
+          <button 
+            onClick={fetchProposals} 
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: 'white', 
+              color: '#3A3732', 
+              border: '1px solid #D7D1C7', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              fontSize: '13px', 
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', sans-serif",
+              transition: 'all 0.2s ease',
+              textTransform: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F5F2ED';
+              e.currentTarget.style.borderColor = '#C7C0B5';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.borderColor = '#D7D1C7';
+            }}
+          >
+            Refresh
+          </button>
+          <button 
+            onClick={async () => { 
+              setViewingChangeRequests(true); 
+              setIsCreatingNew(false);
+              setViewingNewSubmissions(false);
+              setSelectedProposal(null);
+              await fetchChangeRequests();
+            }} 
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: 'white', 
+              color: '#3A3732', 
+              border: '1px solid #D7D1C7', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              fontSize: '13px', 
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', sans-serif",
+              position: 'relative',
+              transition: 'all 0.2s ease',
+              textTransform: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F5F2ED';
+              e.currentTarget.style.borderColor = '#C7C0B5';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.borderColor = '#D7D1C7';
+            }}
+          >
+            Change requests
+            {changeRequests.filter(cr => !cr.reviewed).length > 0 && (
+              <span style={{ 
+                marginLeft: '6px',
+                padding: '2px 6px',
+                backgroundColor: '#B15B3C', 
+                color: 'white', 
+                borderRadius: '10px', 
+                fontSize: '10px', 
+                fontWeight: '500'
+              }}>
+                {changeRequests.filter(cr => !cr.reviewed).length}
+              </span>
+            )}
+          </button>
+          <button 
+            onClick={async () => { 
+              setViewingNewSubmissions(true); 
+              setIsCreatingNew(false);
+              setViewingChangeRequests(false);
+              setSelectedProposal(null);
+              await fetchNewSubmissions();
+            }} 
+            style={{ 
+              padding: '10px 20px', 
+              backgroundColor: 'white', 
+              color: '#3A3732', 
+              border: '1px solid #D7D1C7', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              fontSize: '13px', 
+              fontWeight: '500',
+              fontFamily: "'Neue Haas Unica', sans-serif",
+              position: 'relative',
+              transition: 'all 0.2s ease',
+              textTransform: 'none'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#F5F2ED';
+              e.currentTarget.style.borderColor = '#C7C0B5';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'white';
+              e.currentTarget.style.borderColor = '#D7D1C7';
+            }}
+          >
+            New project inquiries
+            {newSubmissions.filter(s => !s.reviewed).length > 0 && (
+              <span style={{ 
+                marginLeft: '6px',
+                padding: '2px 6px',
+                backgroundColor: '#B15B3C', 
+                color: 'white', 
+                borderRadius: '10px', 
+                fontSize: '10px', 
+                fontWeight: '500'
+              }}>
+                {newSubmissions.filter(s => !s.reviewed).length}
+              </span>
+            )}
           </button>
           <div style={{ flex: '1', maxWidth: '400px', minWidth: '200px', marginLeft: 'auto' }}>
             <input 
@@ -2553,7 +2550,7 @@ export default function ProposalApp() {
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: '2000px' }}>
             <thead style={{ backgroundColor: '#FAF9F6' }}>
               <tr>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', textTransform: 'none', letterSpacing: '0', borderBottom: '1px solid #E5E0D9' }}>Actions</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #E5E0D9' }}>Actions</th>
                 <th 
                   onClick={() => {
                     if (sortBy === 'client') {
@@ -2569,8 +2566,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2602,8 +2599,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2634,8 +2631,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2666,8 +2663,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9', 
                     minWidth: '140px', 
                     width: '140px',
@@ -2700,8 +2697,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2732,8 +2729,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2764,8 +2761,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2796,8 +2793,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2828,8 +2825,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2845,7 +2842,7 @@ export default function ProposalApp() {
                     </span>
                   </div>
                 </th>
-                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', textTransform: 'none', letterSpacing: '0', borderBottom: '1px solid #E5E0D9', minWidth: '200px', width: '200px' }}>Exceptions</th>
+                <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '12px', fontWeight: '500', color: '#6B6B6B', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #E5E0D9', minWidth: '200px', width: '200px' }}>Exceptions</th>
                 <th 
                   onClick={() => {
                     if (sortBy === 'cogs') {
@@ -2861,8 +2858,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2893,8 +2890,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
@@ -2925,8 +2922,8 @@ export default function ProposalApp() {
                     fontSize: '11px', 
                     fontWeight: '600', 
                     color: '#6B6B6B', 
-                    textTransform: 'none', 
-                    letterSpacing: '0', 
+                    textTransform: 'uppercase', 
+                    letterSpacing: '0.05em', 
                     borderBottom: '1px solid #E5E0D9',
                     cursor: 'pointer',
                     userSelect: 'none',
