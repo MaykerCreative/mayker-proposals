@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 
 // ============================================
 // CACHE SERVICE - Performance Optimization
@@ -795,6 +795,21 @@ export default function ProposalApp() {
   }, [archiveMenuOpen]);
   
   // Handle URL parameters to open specific proposal - runs when proposals load and when loading completes
+  // Sync scrollbars on mount and when table content changes
+  useEffect(() => {
+    if (tableContainerRef.current && topScrollbarRef.current) {
+      const syncScrollbars = () => {
+        if (tableContainerRef.current && topScrollbarRef.current) {
+          topScrollbarRef.current.scrollLeft = tableContainerRef.current.scrollLeft;
+        }
+      };
+      syncScrollbars();
+      // Sync on window resize
+      window.addEventListener('resize', syncScrollbars);
+      return () => window.removeEventListener('resize', syncScrollbars);
+    }
+  }, [filteredProposals]);
+
   useEffect(() => {
     // Only run on client-side
     if (typeof window === 'undefined') return;
@@ -2402,34 +2417,90 @@ export default function ProposalApp() {
           </div>
         </div>
 
-        <div style={{ 
-          backgroundColor: 'white', 
-          boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', 
-          borderRadius: '4px', 
-          overflowX: 'auto', 
-          border: '1px solid #e5e7eb',
-          position: 'relative'
-        }}>
+        {/* Top scrollbar - Always visible */}
+        <div 
+          ref={topScrollbarRef}
+          className="top-scrollbar"
+          onScroll={(e) => {
+            if (tableContainerRef.current) {
+              tableContainerRef.current.scrollLeft = e.target.scrollLeft;
+            }
+          }}
+          style={{
+            width: '100%',
+            height: '12px',
+            backgroundColor: '#f1f1f1',
+            border: '1px solid #e5e7eb',
+            borderBottom: 'none',
+            borderRadius: '4px 4px 0 0',
+            overflowX: 'scroll',
+            overflowY: 'hidden',
+            position: 'sticky',
+            top: 0,
+            zIndex: 10
+          }}
+        >
+          <div style={{ height: '1px', width: '2000px' }}></div>
+        </div>
+        
+        <div 
+          ref={tableContainerRef}
+          className="table-scroll-container"
+          onScroll={(e) => {
+            if (topScrollbarRef.current) {
+              topScrollbarRef.current.scrollLeft = e.target.scrollLeft;
+            }
+          }}
+          style={{ 
+            backgroundColor: 'white', 
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)', 
+            borderRadius: '0 0 4px 4px', 
+            overflowX: 'scroll', 
+            border: '1px solid #e5e7eb',
+            borderTop: 'none',
+            position: 'relative',
+            maxHeight: 'calc(100vh - 312px)',
+            overflowY: 'auto'
+          }}
+        >
           <style>{`
-            /* Custom scrollbar styling */
-            div::-webkit-scrollbar {
-              height: 12px;
+            /* Custom scrollbar styling - Always visible */
+            .table-scroll-container::-webkit-scrollbar,
+            .top-scrollbar::-webkit-scrollbar {
+              height: 12px !important;
+              width: 12px !important;
+              display: block !important;
+              -webkit-appearance: none !important;
+              background: #f1f1f1 !important;
             }
-            div::-webkit-scrollbar-track {
-              background: #f1f1f1;
-              border-radius: 6px;
+            .table-scroll-container::-webkit-scrollbar-track,
+            .top-scrollbar::-webkit-scrollbar-track {
+              background: #f1f1f1 !important;
+              border-radius: 6px !important;
             }
-            div::-webkit-scrollbar-thumb {
-              background: #545142;
-              border-radius: 6px;
+            .table-scroll-container::-webkit-scrollbar-thumb,
+            .top-scrollbar::-webkit-scrollbar-thumb {
+              background: #545142 !important;
+              border-radius: 6px !important;
+              border: 2px solid #f1f1f1 !important;
+              min-height: 12px !important;
             }
-            div::-webkit-scrollbar-thumb:hover {
-              background: #3d3a2f;
+            .table-scroll-container::-webkit-scrollbar-thumb:hover,
+            .top-scrollbar::-webkit-scrollbar-thumb:hover {
+              background: #3d3a2f !important;
             }
-            /* Firefox scrollbar */
-            div {
-              scrollbar-width: thin;
-              scrollbar-color: #545142 #f1f1f1;
+            /* Always show scrollbar - Force visibility */
+            .table-scroll-container,
+            .top-scrollbar {
+              scrollbar-width: thin !important;
+              scrollbar-color: #545142 #f1f1f1 !important;
+            }
+            /* Force horizontal scrollbar to always be visible */
+            .table-scroll-container {
+              overflow-x: scroll !important;
+            }
+            .top-scrollbar {
+              overflow-x: scroll !important;
             }
           `}</style>
           <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'auto', minWidth: '2000px' }}>
@@ -2464,11 +2535,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Client
-                    {sortBy === 'client' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'client' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'client' ? '600' : '400' }}>
+                      {sortBy === 'client' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2498,11 +2567,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Project #
-                    {sortBy === 'projectNumber' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'projectNumber' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'projectNumber' ? '600' : '400' }}>
+                      {sortBy === 'projectNumber' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2532,11 +2599,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Version
-                    {sortBy === 'version' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'version' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'version' ? '600' : '400' }}>
+                      {sortBy === 'version' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2568,11 +2633,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Event Date
-                    {sortBy === 'eventDate' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'eventDate' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'eventDate' ? '600' : '400' }}>
+                      {sortBy === 'eventDate' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2602,11 +2665,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Venue
-                    {sortBy === 'venue' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'venue' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'venue' ? '600' : '400' }}>
+                      {sortBy === 'venue' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2636,11 +2697,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     City, State
-                    {sortBy === 'cityState' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'cityState' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'cityState' ? '600' : '400' }}>
+                      {sortBy === 'cityState' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2670,11 +2729,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Status
-                    {sortBy === 'status' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'status' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'status' ? '600' : '400' }}>
+                      {sortBy === 'status' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2704,11 +2761,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Total
-                    {sortBy === 'total' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'total' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'total' ? '600' : '400' }}>
+                      {sortBy === 'total' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2738,11 +2793,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Discount
-                    {sortBy === 'discount' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'discount' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'discount' ? '600' : '400' }}>
+                      {sortBy === 'discount' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th style={{ padding: '12px 16px', textAlign: 'left', fontSize: '11px', fontWeight: '600', color: '#888888', textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: '1px solid #e5e7eb', minWidth: '200px', width: '200px' }}>Exceptions</th>
@@ -2773,11 +2826,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                     COGS
-                    {sortBy === 'cogs' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'cogs' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'cogs' ? '600' : '400' }}>
+                      {sortBy === 'cogs' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2807,11 +2858,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
                     Profit Margin
-                    {sortBy === 'profitMargin' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'profitMargin' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'profitMargin' ? '600' : '400' }}>
+                      {sortBy === 'profitMargin' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
                 <th 
@@ -2841,11 +2890,9 @@ export default function ProposalApp() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     Last Edited
-                    {sortBy === 'lastEdited' && (
-                      <span style={{ fontSize: '10px', color: '#545142' }}>
-                        {sortOrder === 'asc' ? '↑' : '↓'}
-                      </span>
-                    )}
+                    <span style={{ fontSize: '10px', color: sortBy === 'lastEdited' ? '#545142' : '#c0c0c0', fontWeight: sortBy === 'lastEdited' ? '600' : '400' }}>
+                      {sortBy === 'lastEdited' ? (sortOrder === 'asc' ? '↑' : '↓') : '⇅'}
+                    </span>
                   </div>
                 </th>
               </tr>
