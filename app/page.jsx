@@ -3,6 +3,111 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 
 // ============================================
+// CACHE SERVICE - Performance Optimization
+// ============================================
+
+const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
+const CACHE_PREFIX = 'admin_cache_';
+
+const cacheService = {
+  // Generate cache key from endpoint and params
+  getCacheKey(endpoint, params = {}) {
+    const paramsStr = Object.keys(params)
+      .sort()
+      .map(key => `${key}=${params[key]}`)
+      .join('&');
+    return `${CACHE_PREFIX}${endpoint}_${paramsStr}`;
+  },
+  
+  // Get cached response
+  get(key) {
+    try {
+      const cached = localStorage.getItem(key);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        if (Date.now() - timestamp < CACHE_DURATION) {
+          console.log(`[Cache] Hit for key: ${key.substring(0, 50)}...`);
+          return data;
+        } else {
+          console.log(`[Cache] Expired for key: ${key.substring(0, 50)}...`);
+          localStorage.removeItem(key);
+        }
+      }
+    } catch (error) {
+      console.error('[Cache] Error reading cache:', error);
+    }
+    return null;
+  },
+  
+  // Set cached response
+  set(key, data) {
+    try {
+      localStorage.setItem(key, JSON.stringify({
+        data,
+        timestamp: Date.now()
+      }));
+      console.log(`[Cache] Stored for key: ${key.substring(0, 50)}...`);
+    } catch (error) {
+      console.error('[Cache] Error writing cache:', error);
+      // If storage is full, clear old cache entries
+      this.clearOld();
+    }
+  },
+  
+  // Clear old cache entries (if storage is full)
+  clearOld() {
+    try {
+      const keys = Object.keys(localStorage);
+      const cacheKeys = keys.filter(k => k.startsWith(CACHE_PREFIX));
+      // Sort by timestamp and remove oldest 50%
+      const entries = cacheKeys.map(key => {
+        try {
+          const cached = localStorage.getItem(key);
+          if (cached) {
+            const { timestamp } = JSON.parse(cached);
+            return { key, timestamp };
+          }
+        } catch (e) {}
+        return { key, timestamp: 0 };
+      }).sort((a, b) => a.timestamp - b.timestamp);
+      
+      // Remove oldest 50%
+      const toRemove = entries.slice(0, Math.floor(entries.length / 2));
+      toRemove.forEach(({ key }) => localStorage.removeItem(key));
+      console.log(`[Cache] Cleared ${toRemove.length} old cache entries`);
+    } catch (error) {
+      console.error('[Cache] Error clearing old cache:', error);
+    }
+  },
+  
+  // Clear all cache
+  clear() {
+    try {
+      const keys = Object.keys(localStorage);
+      keys.filter(k => k.startsWith(CACHE_PREFIX)).forEach(key => {
+        localStorage.removeItem(key);
+      });
+      console.log('[Cache] Cleared all admin cache');
+    } catch (error) {
+      console.error('[Cache] Error clearing cache:', error);
+    }
+  },
+  
+  // Invalidate cache for specific endpoint
+  invalidate(endpoint) {
+    try {
+      const keys = Object.keys(localStorage);
+      keys.filter(k => k.startsWith(`${CACHE_PREFIX}${endpoint}_`)).forEach(key => {
+        localStorage.removeItem(key);
+      });
+      console.log(`[Cache] Invalidated cache for endpoint: ${endpoint}`);
+    } catch (error) {
+      console.error('[Cache] Error invalidating cache:', error);
+    }
+  }
+};
+
+// ============================================
 // CLIENT PORTAL CONFIGURATION
 // ============================================
 // URL for the client portal - update this to match your client portal deployment
@@ -803,7 +908,7 @@ export default function ProposalApp() {
     ]);
   };
 
-  const fetchProposals = async (updateSelected = false) => {
+  const fetchProposals = async (updateSelected = false, invalidateCache = false) => {
     try {
       const API_BASE = 'https://script.google.com/macros/s/AKfycbzB7gHa5o-gBep98SJgQsG-z2EsEspSWC6NXvLFwurYBGpxpkI-weD-HVcfY2LDA4Yz/exec';
       
@@ -811,11 +916,59 @@ export default function ProposalApp() {
       setLoading(true);
       setError(null);
       
+      // Check cache first (unless explicitly invalidating)
+      if (!invalidateCache) {
+        const cacheKey = cacheService.getCacheKey('proposals', {});
+        const cached = cacheService.get(cacheKey);
+        if (cached) {
+          console.log('✅ Using cached proposals data');
+          setProposals(cached.proposals || []);
+          setCatalog(cached.catalog || []);
+          setLoading(false);
+          
+          // Still fetch change requests and submissions in background (non-blocking)
+          Promise.allSettled([
+            fetchWithTimeout(`${API_BASE}?action=getChangeRequests`, {
+              method: 'GET',
+              mode: 'cors',
+              cache: 'default'
+            }, 15000),
+            fetchWithTimeout(`${API_BASE}?action=getNewProjectSubmissions`, {
+              method: 'GET',
+              mode: 'cors',
+              cache: 'default'
+            }, 15000)
+          ]).then(([crResponse, subsResponse]) => {
+            // Process change requests (non-blocking)
+            if (crResponse.status === 'fulfilled' && crResponse.value.ok) {
+              crResponse.value.json().then(crData => {
+                if (crData?.changeRequests) {
+                  setChangeRequests(crData.changeRequests.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+                }
+              }).catch(() => {});
+            }
+            // Process submissions (non-blocking)
+            if (subsResponse.status === 'fulfilled' && subsResponse.value.ok) {
+              subsResponse.value.json().then(subsData => {
+                if (subsData?.submissions) {
+                  setNewSubmissions(subsData.submissions.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp)));
+                }
+              }).catch(() => {});
+            }
+          });
+          
+          return; // Exit early with cached data
+        }
+      } else {
+        // Invalidate cache if requested
+        cacheService.invalidate('proposals');
+      }
+      
       // Use 30 second timeout for main proposals (critical), 15 seconds for secondary data
       const TIMEOUT_MAIN = 30000; // 30 seconds
       const TIMEOUT_SECONDARY = 15000; // 15 seconds
       
-      console.log('🔄 Starting to fetch proposals...', { updateSelected, timestamp: new Date().toISOString() });
+      console.log('🔄 Starting to fetch proposals...', { updateSelected, invalidateCache, timestamp: new Date().toISOString() });
       const startTime = Date.now();
       
       // Parallelize all API calls for faster loading, but with timeouts
@@ -823,7 +976,7 @@ export default function ProposalApp() {
         fetchWithTimeout(API_BASE, {
           method: 'GET',
           mode: 'cors',
-          cache: 'default' // Allow browser caching for better performance
+          cache: 'no-cache' // Don't use browser cache, we handle it ourselves
         }, TIMEOUT_MAIN),
         fetchWithTimeout(`${API_BASE}?action=getChangeRequests`, {
           method: 'GET',
@@ -909,6 +1062,13 @@ export default function ProposalApp() {
         
         setProposals(sortedProposals);
         setCatalog(data.catalog || []);
+        
+        // Cache the proposals data for faster future loads
+        const cacheKey = cacheService.getCacheKey('proposals', {});
+        cacheService.set(cacheKey, {
+          proposals: sortedProposals,
+          catalog: data.catalog || []
+        });
         
         // If we have a selected proposal, update it with the fresh data
         if (updateSelected && selectedProposal) {
@@ -1080,10 +1240,12 @@ export default function ProposalApp() {
       const result = await response.json();
       
       if (result.success) {
+        // Invalidate cache after deletion
+        cacheService.invalidate('proposals');
         alert('Proposal deleted successfully!');
         setDeleteConfirmModal({ isOpen: false, proposal: null });
-        // Refresh proposals list
-        fetchProposals();
+        // Refresh proposals list with cache invalidation
+        fetchProposals(false, true);
         // If the deleted proposal was selected, clear selection
         if (selectedProposal && 
             selectedProposal.projectNumber === proposal.projectNumber && 
@@ -1300,9 +1462,14 @@ export default function ProposalApp() {
           backgroundColor: '#f9fafb', 
           display: 'flex', 
           alignItems: 'center', 
-          justifyContent: 'center' 
+          justifyContent: 'center',
+          fontFamily: "'Inter', sans-serif"
         }}>
-          <p>Loading...</p>
+          <p style={{
+            fontSize: '18px',
+            fontWeight: '500',
+            color: '#374151'
+          }}>Loading the Mayker Events admin dashboard</p>
         </div>
       );
     }
@@ -1325,17 +1492,19 @@ export default function ProposalApp() {
           maxWidth: '500px'
         }}>
           <div style={{
-            fontSize: '18px',
+            fontSize: '20px',
             fontWeight: '500',
             color: '#374151',
-            marginBottom: '12px'
+            marginBottom: '12px',
+            fontFamily: "'Inter', sans-serif"
           }}>
-            Loading proposals...
+            Loading the Mayker Events admin dashboard
           </div>
           <div style={{
             fontSize: '14px',
             color: '#6b7280',
-            marginBottom: '24px'
+            marginBottom: '24px',
+            fontFamily: "'Inter', sans-serif"
           }}>
             This may take a moment if you have many proposals.
           </div>
@@ -1447,9 +1616,11 @@ export default function ProposalApp() {
           if (saveResult.success === false) {
             throw new Error(saveResult.error || 'Failed to save proposal');
           }
+          // Invalidate cache after creating proposal
+          cacheService.invalidate('proposals');
           alert('Proposal created successfully!');
           setIsCreatingNew(false);
-          fetchProposals();
+          fetchProposals(false, true); // Refresh with cache invalidation
         } catch (err) {
           alert('Error creating proposal: ' + err.message);
         }
@@ -4554,12 +4725,15 @@ function ProposalView({ proposal, catalog, onBack, onPrint, onRefresh, onRefresh
         throw new Error(saveResult.error || 'Failed to save proposal');
       }
       
+      // Invalidate cache after saving to ensure fresh data
+      cacheService.invalidate('proposals');
+      
       const successMsg = 'Proposal saved successfully. Use the "Print / Export as PDF" button to download the PDF.';
       alert(successMsg);
       setIsEditing(false);
-      // Refresh proposals list but don't auto-select the proposal
+      // Refresh proposals list but don't auto-select the proposal (with cache invalidation)
       if (onRefreshProposalsList) {
-        onRefreshProposalsList();
+        onRefreshProposalsList(true); // Pass true to invalidate cache
       }
     } catch (err) {
       alert('Error saving proposal: ' + err.message);
